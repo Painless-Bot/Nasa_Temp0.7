@@ -86,6 +86,22 @@ h1,h2,h3,h4{font-family:var(--f-head);margin:0;letter-spacing:.01em}
 .sos-btn:hover{filter:brightness(1.08)}
 .row2{max-width:1480px;margin:0 auto;padding:0 16px 10px;display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
 .roster{display:flex;gap:6px;flex-wrap:wrap}
+.crew-pick{position:relative}
+.crew-cur{padding-right:12px}
+.crew-cur .caret{font-size:14px;opacity:.8;margin-left:2px;transition:transform .15s}
+.crew-cur[aria-expanded="true"] .caret{transform:rotate(180deg)}
+.crew-cur .others-need{min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--g3);color:#fff;font-size:11px;font-weight:800;display:grid;place-items:center}
+.crew-menu{position:absolute;top:calc(100% + 6px);left:0;z-index:80;min-width:400px;max-width:calc(100vw - 32px);display:flex;flex-direction:column;gap:4px;padding:6px;border:1px solid var(--line);border-radius:14px;background:var(--panel);box-shadow:0 14px 36px rgba(0,0,0,.45)}
+body.on-body .crew-menu,body.on-home .crew-menu{background:#0e1829}   /* the header panel colour is see-through there */
+.crew-menu[hidden]{display:none}
+.top:has(.crew-menu:not([hidden])){z-index:75}   /* the open list sits above the crewmate alert band */
+.crew-menu .crew .need-t,.crew-menu .lv{white-space:nowrap}
+.crew-row{display:flex;align-items:center;gap:6px}
+.crew-menu .crew{flex:1;border-radius:10px;border-color:transparent;padding:8px 10px 8px 8px;font-size:13.5px;background:transparent;text-align:left}
+.crew-menu .crew:hover,.crew-menu .crew:focus-visible{background:color-mix(in srgb,var(--accent) 10%,transparent)}
+.crew-menu .crew[aria-pressed="true"]{border-color:var(--accent);box-shadow:none;background:color-mix(in srgb,var(--accent) 8%,transparent)}
+.crew-menu .crew .cw-name{flex:1}
+.crew-menu .crew.need{border-color:var(--g3)}
 .crew{display:flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:4px 10px 4px 5px;cursor:pointer;font-size:13px}
 .crew .av{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:11px;color:#fff}
 .crew[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 30%,transparent)}
@@ -111,7 +127,8 @@ h1,h2,h3,h4{font-family:var(--f-head);margin:0;letter-spacing:.01em}
 .aud{font-size:11px;font-weight:600;border:1px solid var(--line);border-radius:6px;padding:0 6px;color:var(--ink2)}
 .helping{flex-basis:100%;font-size:13px;background:rgba(255,255,255,.15);border-radius:8px;padding:4px 10px}
 .save-warn{flex-basis:100%;background:#fff;color:#000;border-radius:8px;padding:6px 10px;font-size:13px;font-weight:600;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.wait-band{position:sticky;top:0;z-index:60;max-width:1480px;margin:8px auto 0;padding:8px 14px;border-radius:10px;background:var(--g2);color:#000;display:flex;gap:10px 16px;align-items:center;flex-wrap:wrap;font-weight:600}
+/* alert bands stick just under the sticky header (--hdr-h, set by JS), never over the menus and SOS */
+.wait-band{position:sticky;top:calc(var(--hdr-h,0px) + 8px);z-index:60;max-width:1480px;margin:8px auto 0;padding:8px 14px;border-radius:10px;background:var(--g2);color:#000;display:flex;gap:10px 16px;align-items:center;flex-wrap:wrap;font-weight:600}
 .wait-band.due{background:var(--g3);color:#fff}
 .wait-band .mono{font-size:17px}
 /* floats above the page (never pushes the layout down) */
@@ -119,7 +136,7 @@ h1,h2,h3,h4{font-family:var(--f-head);margin:0;letter-spacing:.01em}
 .resume .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 .resume .rs-x{position:absolute;top:8px;right:8px;width:32px;height:32px;padding:0;display:grid;place-items:center}
 .save-warn[hidden],.wait-band[hidden],.resume[hidden],.cabin-band[hidden]{display:none}
-.crew-alert-band{position:sticky;top:0;z-index:65;max-width:1480px;width:calc(100% - 32px);box-sizing:border-box;margin:8px auto 0;padding:10px 16px;border-radius:12px;background:var(--g3);color:#fff;display:flex;gap:10px 16px;align-items:center;flex-wrap:wrap;font-weight:700;font-size:17px;box-shadow:0 6px 20px color-mix(in srgb,var(--g3) 35%,transparent);animation:needPulse 1.2s ease-in-out infinite}
+.crew-alert-band{position:sticky;top:calc(var(--hdr-h,0px) + 8px);z-index:65;max-width:1480px;width:calc(100% - 32px);box-sizing:border-box;margin:8px auto 0;padding:10px 16px;border-radius:12px;background:var(--g3);color:#fff;display:flex;gap:10px 16px;align-items:center;flex-wrap:wrap;font-weight:700;font-size:17px;box-shadow:0 6px 20px color-mix(in srgb,var(--g3) 35%,transparent);animation:needPulse 1.2s ease-in-out infinite}
 .crew-alert-band[hidden]{display:none}
 /* simplified screens (ui-ux branch): answer first, details on request */
 .demo-set{position:relative}
@@ -151,8 +168,13 @@ h1,h2,h3,h4{font-family:var(--f-head);margin:0;letter-spacing:.01em}
 #steps .fld input::placeholder{color:var(--ink3);opacity:.6;font-style:italic;font-family:var(--f-body)}
 .crew-alert-band .why{font-weight:500;font-size:14px;opacity:.95}
 .crew-alert-band .btn{background:#fff;color:var(--g3);border:0;font-weight:800;font-size:16px;padding:8px 16px}
-.cabin-band{max-width:1480px;margin:8px auto 0;padding:8px 14px;border-radius:10px;border:2px dashed var(--g2);background:var(--panel);display:flex;gap:10px 16px;align-items:center;flex-wrap:wrap;font-weight:600}
-.cabin-band.u{border-color:var(--g3);background:var(--g3bg)}
+/* cabin alert (CO₂, radiation: the whole crew): a compact chip in the header's badge row, not a full-width band */
+.cabin-chip{margin-left:auto;display:inline-flex;align-items:center;gap:6px;border:1.5px dashed var(--g2);background:var(--panel);border-radius:8px;padding:2px 4px 2px 9px;font-size:12px;font-weight:600;white-space:nowrap}
+.cabin-chip.u{border-color:var(--g3);background:color-mix(in srgb,var(--g3) 14%,var(--panel))}
+.cabin-chip[hidden]{display:none}
+.cabin-chip .pill{font-size:11px}
+.cabin-chip .btn{padding:2px 8px;font-size:12px;border-radius:6px}
+.cabin-chip:not([hidden]) + .badges{margin-left:0}
 .badges{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto}
 .btn.lang{gap:5px;font-size:13px;padding:7px 10px}
 .btn.lang .sep{opacity:.4}
@@ -174,9 +196,10 @@ section[hidden]{display:none!important}
 
 /* ---------- home ---------- */
 body.on-home .row2{display:none}
-body.on-home.crew-alert .row2{display:flex}  /* a crewmate needing help is shown on every tab */
+body.on-home.crew-alert .row2,body.on-home.cabin-alert .row2{display:flex}  /* a crewmate needing help is shown on every tab */
 body.on-home .top{color:#e9f1fb;--ink:#e9f1fb;--ink2:#b9c8dc;--ink3:#8fa2ba;--panel:rgba(16,28,48,.72);--line:#27405f;--accent:#5cb8ff;--accent-ink:#04121f;background:rgba(4,9,18,.86);border-bottom-color:#12233a}
 body.on-home main{max-width:none;padding:0}
+body.on-body .top{color:#e9f1fb;--ink:#e9f1fb;--ink2:#b9c8dc;--ink3:#8fa2ba;--panel:rgba(16,28,48,.6);--line:#27405f;--accent:#5cb8ff;--accent-ink:#04121f;background:rgba(4,9,18,.42);border-bottom-color:rgba(60,100,150,.25)}
 .wrap{max-width:1240px;margin:0 auto;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
 .hero{position:relative;background:#040912;color:#e9f1fb;min-height:min(820px,calc(100vh - 56px));display:flex;align-items:center;overflow:hidden;isolation:isolate}
 .hero-3d{position:absolute;inset:0;z-index:0}
@@ -311,8 +334,10 @@ body.on-home footer{margin-top:72px}
 .hud b{color:#e5f2ff;font-weight:500}
 .stage-tools{position:absolute;top:10px;right:10px;display:flex;flex-direction:column;gap:6px;align-items:flex-end}
 .stage-tools .row{display:flex;gap:6px}
-.stage .sbtn{background:rgba(10,22,40,.75);border:1px solid #24426b;color:#d6e9ff;border-radius:8px;padding:5px 10px;font-size:12.5px;cursor:pointer}
-.stage .sbtn[aria-pressed="true"]{background:#1a4a80;border-color:#3d84d1}
+.sbtn{background:rgba(10,22,40,.75);border:1px solid #24426b;color:#d6e9ff;border-radius:8px;padding:5px 10px;font-size:12.5px;cursor:pointer}
+.sbtn[aria-pressed="true"]{background:#1a4a80;border-color:#3d84d1}
+.sbtn.icon-btn{width:40px;height:40px;padding:0;display:grid;place-items:center;font-size:22px;line-height:1}
+.sbtn.icon-btn img{width:24px;height:24px;object-fit:contain;display:block}
 .layers{position:absolute;bottom:10px;left:10px;right:10px;display:flex;flex-wrap:wrap;gap:5px}
 .layers button{background:rgba(10,22,40,.75);border:1px solid #24426b;color:#9fb9d8;border-radius:999px;padding:3px 10px;font-size:12px;cursor:pointer}
 .layers button[aria-pressed="true"]{color:#e8f4ff;border-color:#4fb0ff;background:rgba(30,80,140,.6)}
@@ -335,14 +360,26 @@ body.on-home footer{margin-top:72px}
 /* My body: the first screen fits the viewport on every device (the page itself does not scroll there;
    long lists scroll inside their own panel). Simulate and "Method, data and sources" sit below, reached
    with the ↓ button. --top-h = where <main> starts (header and any bands), measured by fitBody(). */
-.body-fit{display:flex;flex-direction:column;height:calc(100vh - var(--top-h,64px) - 26px);height:calc(100dvh - var(--top-h,64px) - 26px);min-height:500px}
+.body-fit{position:relative;display:flex;flex-direction:column;height:calc(100vh - var(--top-h,64px) - 14px);height:calc(100dvh - var(--top-h,64px) - 14px);min-height:500px;padding-bottom:14px}
+/* the body fills the whole first screen under the menus (edge to edge); text floats over it on glass panels.
+   --bt/--bl/--br = distance from this box to the top of <main> and to the window edges, set by fitBody(). */
+.body-fit > .stage{position:absolute;top:calc(-1 * (var(--top-h,64px) + var(--bt,14px)));left:calc(-1 * var(--bl,16px));right:calc(-1 * var(--br,16px));bottom:0;height:auto;min-height:0;border:0;border-radius:0;z-index:0;
+  background:radial-gradient(ellipse at 50% 45%,#0f2240 0%,var(--stage) 72%)}
+.body-fit > :not(.stage){position:relative;z-index:1}
+/* the grid box covers the body: let clicks and drags through its empty parts to the 3D canvas underneath */
+.body-fit .body-grid{pointer-events:none}
+.body-fit .rail,.body-fit .detail{pointer-events:auto}
+.body-fit .stage-col{position:relative;pointer-events:none;color:var(--stage-ink)}
+.body-fit .stage-col > *{pointer-events:auto}
+.body-fit .stage-col > .stage-cap{pointer-events:none}
+.body-fit .card,.body-fit > .today-card,.body-fit > .tab-guide{background:color-mix(in srgb,var(--panel) 74%,transparent);-webkit-backdrop-filter:blur(10px) saturate(1.2);backdrop-filter:blur(10px) saturate(1.2);box-shadow:0 10px 30px rgba(0,0,0,.28)}
+.body-fit > .tab-guide{background:color-mix(in srgb,var(--accent) 10%,color-mix(in srgb,var(--panel) 74%,transparent))}
 .body-fit > .tab-guide{flex:none;margin-bottom:10px}
 .body-fit > .today-card{flex:none;margin-bottom:12px}
 .body-fit .body-grid{flex:1;min-height:0;align-items:stretch;grid-template-rows:minmax(0,1fr)}
 .body-fit .rail,.body-fit .detail{min-height:0;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;padding-right:2px}
 .body-fit .detail{padding-bottom:64px}   /* room to scroll the last card out from under the ↓ button */
 .body-fit .stage-col{min-height:0}
-.body-fit .stage{flex:1;height:auto;min-height:0}
 @media (max-width:1240px){
   .body-fit .body-grid{grid-template-columns:260px minmax(0,1fr);grid-template-rows:minmax(0,1fr) minmax(0,1.25fr);grid-template-areas:"rail stage" "detail stage"}
   .body-fit .rail{grid-area:rail}
@@ -362,9 +399,9 @@ body.on-home footer{margin-top:72px}
   /* phones: the crew row and the badges each take one line that scrolls sideways, instead of four wrapped lines */
   .row2{flex-wrap:nowrap;flex-direction:column;align-items:stretch;gap:6px}
   .row2 > .demo-set{align-self:flex-start}
-  .roster,.badges{display:flex;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;gap:6px;min-width:0}
-  .roster::-webkit-scrollbar,.badges::-webkit-scrollbar{display:none}
-  .roster > *,.badges > *{flex:none}
+  .badges{display:flex;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;gap:6px;min-width:0}
+  .badges::-webkit-scrollbar{display:none}
+  .badges > *{flex:none}
 }
 .body-more{padding-top:22px;display:flex;flex-direction:column;gap:12px}
 .more-down{position:fixed;right:max(18px,env(safe-area-inset-right,0px));bottom:max(18px,env(safe-area-inset-bottom,0px));z-index:55;width:48px;height:48px;border-radius:50%;border:1px solid var(--line);background:var(--panel);color:var(--ink);box-shadow:0 8px 24px rgba(0,0,0,.35);font-size:22px;font-weight:700;line-height:1;display:grid;place-items:center;cursor:pointer}
@@ -573,12 +610,12 @@ dialog::backdrop{background:rgba(3,8,16,.6)}
       </div>
     </details>
     <div class="roster" id="roster" role="group" aria-label="Crew"></div>
+    <div id="cabinBand" class="cabin-chip" role="status" aria-live="polite" hidden></div>
     <div class="badges" id="badges" aria-live="polite"></div>
   </div>
 </header>
 <div id="waitBand" class="wait-band" role="status" aria-live="polite" hidden></div>
 <div id="crewAlert" class="crew-alert-band" role="alert" hidden></div>
-<div id="cabinBand" class="cabin-band" role="status" aria-live="polite" hidden></div>
 <div id="resumeBox" class="resume" role="alertdialog" aria-labelledby="resumeH" hidden></div>
 
 <main id="main">
@@ -639,6 +676,14 @@ dialog::backdrop{background:rgba(3,8,16,.6)}
   <!-- ============ MY BODY ============ -->
   <section id="tab-body" data-tabpanel="body" aria-label="My body" hidden>
    <div class="body-fit" id="bodyFit">
+    <div class="stage" id="stage">
+      <div id="canvasHost" style="position:absolute;inset:0"></div>
+      <div class="labels" id="labels"></div>
+      <div class="fallback3d" id="fallback3d">
+        <strong data-t>3D view is not available on this device.</strong>
+        <span class="small" style="color:#9fb9d8" data-t>Everything else still works: use the body systems list on the left.</span>
+      </div>
+    </div>
     <div class="tab-guide" data-guide-tab="body"></div>
     <div class="today-card" id="todayCard" aria-live="polite"></div>
     <div class="body-grid">
@@ -662,24 +707,17 @@ dialog::backdrop{background:rgba(3,8,16,.6)}
         </div>
       </aside>
 
-      <div class="stage-col">
-        <div class="stage" id="stage">
-          <div id="canvasHost" style="position:absolute;inset:0"></div>
-          <div class="labels" id="labels"></div>
+      <div class="stage-col" id="stageCol">
           <div class="hud" id="hud" aria-label="Today's vital signs"></div>
           <div class="stage-tools">
             <div class="row">
-              <button class="sbtn" id="rescanBtn" type="button" data-t>Rescan</button>
-              <button class="sbtn" id="wholeBtn" type="button" aria-pressed="false" data-t>Whole body</button>
+              <button class="sbtn icon-btn" id="rescanBtn" type="button" data-tlabel="Rescan"><span aria-hidden="true">↻</span></button>
+              <!-- whole-body icon: put the image at img/whole-body.png (until then the 🧍 fallback shows) -->
+              <button class="sbtn icon-btn" id="wholeBtn" type="button" aria-pressed="false" data-tlabel="Whole body"><img src="img/whole-body.png" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'🧍'}))"></button>
             </div>
           </div>
           <div class="stage-cap" id="stageCap" data-t>Drag to turn · scroll or pinch to zoom · tap a glowing part</div>
           <div class="layers" id="layers" role="group" aria-label="3D layers"></div>
-          <div class="fallback3d" id="fallback3d">
-            <strong data-t>3D view is not available on this device.</strong>
-            <span class="small" style="color:#9fb9d8" data-t>Everything else still works: use the body systems list on the left.</span>
-          </div>
-        </div>
       </div>
 
       <div class="detail" id="detail"></div>
@@ -1529,7 +1567,7 @@ const KO = {
 "Flight engineer": "비행 엔지니어",
 "Fluid shift": "체액 이동",
 "Fluid shifts change blood pressure; a big change from your normal can mean dehydration or strain on the heart.": "체액 이동은 혈압을 바꿉니다. 평소보다 크게 변하면 탈수나 심장 부담일 수 있습니다.",
-"Follow the actions above and check again tomorrow.": "위의 조치를 하고 내일 다시 확인하세요.",
+"Follow today's to-do and check again tomorrow.": "오늘 할 일을 하고 내일 다시 확인하세요.",
 "Follow the beat: 110 per minute. Swap rescuers every 2 minutes.": "박자를 따라가세요: 분당 110회. 2분마다 구조자를 바꾸세요.",
 "Follow the daily routine and enter your readings.": "하루 루틴을 따라 측정값을 입력하세요.",
 "Follow the onboard checklist for low blood sugar.": "저혈당 기내 체크리스트를 따르세요.",
@@ -1692,6 +1730,7 @@ const KO = {
 "NASA's 5 Hazards in Orbit Guide": "Orbit Guide 속 NASA 5대 위험",
 "Nausea or vomiting in the first days of flight.": "비행 첫 며칠 동안의 메스꺼움이나 구토.",
 "Needs help": "도움 필요",
+"Switch crew member": "크루원 바꾸기",
 "New swelling or pain on one side of the neck, an arm or a leg.": "목, 팔, 다리 한쪽이 새로 붓거나 아픔.",
 "Next step": "다음 단계",
 "No": "아니요",
@@ -1995,7 +2034,6 @@ const KO = {
 "Resume emergency in progress?": "진행 중이던 응급 상황을 이어서 할까요?",
 "Later": "나중에",
 "Details, simulate and sources": "자세히, 시뮬레이션, 출처",
-"To do for {0}": "{0} 할 일",
 "Back to top": "맨 위로",
 "Resumed after the app was closed or reloaded.": "앱이 닫혔거나 새로고침된 뒤 이어서 진행.",
 "Rising blood sugar: a slow climb over 10 days is caught against Kim's own normal, long before a textbook limit.": "혈당 상승: 10일에 걸친 느린 상승을 교과서 한계보다 훨씬 전에 Kim의 평소 범위로 잡아냅니다.",
@@ -2150,6 +2188,7 @@ const TE = (s, ...a) => esc(T(s, ...a));
 function applyStatic(){
   document.documentElement.lang = S.lang;
   $$("[data-t]").forEach(el=>{ if(!el.dataset.t) el.dataset.t = el.textContent.trim(); el.textContent = T(el.dataset.t); });
+  $$("[data-tlabel]").forEach(el=>{ const l = T(el.dataset.tlabel); el.setAttribute("aria-label", l); el.title = l; });   // icon-only buttons
   $$("[data-th]").forEach(el=>{ if(!el.dataset.th) el.dataset.th = el.innerHTML.trim(); el.innerHTML = T(el.dataset.th); });
   $$("#langBtn [data-l]").forEach(el=>el.classList.toggle("on", el.dataset.l===S.lang));
   $("#copyBtn").textContent = T("Copy text");
@@ -2257,25 +2296,52 @@ function initCrew(){
   $("#crewAdd").addEventListener("submit", e=>{ e.preventDefault(); if(addCrew($("#caName").value, $("#caRole").value)){ $("#caName").value = ""; $("#caRole").value = ""; $("#caName").focus(); } });
   $("#crewReset").addEventListener("click", ()=>{ if(R && !R.finished) return; CREW.splice(0, CREW.length, ...CREW_DEFAULT.map(c=>({...c}))); crewChanged(); });
 }
+/* Crew picker: only the selected person shows; clicking them opens a list of everyone to switch to.
+   A crewmate who needs help is still flagged on the closed picker (red count) and in the alert band. */
 function renderRoster(){
-  $("#roster").innerHTML = CREW.map(c=>{
+  const info = CREW.map(c=>{
     const g = todayGrade(c.id);
     const need = personalWorst(g)===3 && c.id!==S.me;  // FR-TOP-07: a crewmate needs help (personal metrics only)
     const waiting = R && !R.finished && R.patient===c.id && R.status==="waiting";
-    return `<span class="crew-w"><button type="button" class="crew ${need?"need":""}" aria-pressed="${c.id===S.crew}" data-crew="${c.id}">
-      <span class="av" style="background:${c.col}">${c.n[0]}</span>
-      <span><strong>${esc(c.n)}</strong>${c.id===S.me?` <span class="muted small">(${TE("me")})</span>`:""} <span class="muted small">${TE(c.role)}</span></span>
-      <span class="pill l${g.worst} lv">${LVT(g.worst)}</span>${need?`<span class="need-t">${TE("Needs help")}</span>`:""}${waiting?`<span class="wait-t" title="${TE("Guide waiting on a timer")}">⏱</span>`:""}</button>
-      ${need && !(R && !R.finished && R.patient===c.id)?`<button type="button" class="help-btn" data-help="${c.id}">${TE("Help {0}", c.n)}</button>`:""}</span>`;
-  }).join("");
-  document.body.classList.toggle("crew-alert", !!$("#roster .crew.need"));
+    return {c, g, need, waiting};
+  });
+  const face = ({c, g, need, waiting})=>`<span class="av" style="background:${c.col}">${c.n[0]}</span>
+      <span class="cw-name"><strong>${esc(c.n)}</strong>${c.id===S.me?` <span class="muted small">(${TE("me")})</span>`:""} <span class="muted small">${TE(c.role)}</span></span>
+      <span class="pill l${g.worst} lv">${LVT(g.worst)}</span>${need?`<span class="need-t">${TE("Needs help")}</span>`:""}${waiting?`<span class="wait-t" title="${TE("Guide waiting on a timer")}">⏱</span>`:""}`;
+  const cur = info.find(x=>x.c.id===S.crew) || info[0];
+  const others = info.filter(x=>x.need && x.c.id!==cur.c.id).length;
+  $("#roster").innerHTML = `<div class="crew-pick">
+    <button type="button" class="crew crew-cur ${cur.need?"need":""}" id="crewCur" aria-haspopup="true" aria-expanded="false" aria-controls="crewMenu" title="${TE("Switch crew member")}">
+      ${face(cur)}${others?`<span class="others-need" title="${TE("Needs help")}">${others}</span>`:""}<span class="caret" aria-hidden="true">▾</span></button>
+    <div class="crew-menu" id="crewMenu" role="group" aria-label="${TE("Crew")}" hidden>
+      ${info.map(x=>`<div class="crew-row"><button type="button" class="crew ${x.need?"need":""}" aria-pressed="${x.c.id===S.crew}" data-crew="${x.c.id}">${face(x)}</button>
+      ${x.need && !(R && !R.finished && R.patient===x.c.id)?`<button type="button" class="help-btn" data-help="${x.c.id}">${TE("Help {0}", x.c.n)}</button>`:""}</div>`).join("")}
+    </div></div>`;
+  document.body.classList.toggle("crew-alert", info.some(x=>x.need));
   renderCrewAlert(); renderCabinBand();
-  $$("#roster .crew").forEach(b=>b.addEventListener("click", ()=>{ stopDemo(); setCrew(b.dataset.crew); }));
-  $$("#roster [data-help]").forEach(b=>b.addEventListener("click", ()=>{ stopDemo(); helpCrew(b.dataset.help); }));
+  $("#crewCur").addEventListener("click", e=>{ e.stopPropagation(); crewMenu($("#crewMenu").hidden); });
+  $$("#crewMenu .crew").forEach(b=>b.addEventListener("click", ()=>{ stopDemo(); crewMenu(false); setCrew(b.dataset.crew); }));
+  $$("#crewMenu [data-help]").forEach(b=>b.addEventListener("click", ()=>{ stopDemo(); crewMenu(false); helpCrew(b.dataset.help); }));
 }
+function crewMenu(open){
+  const m = $("#crewMenu"), b = $("#crewCur"); if(!m || !b) return;
+  m.hidden = !open; b.setAttribute("aria-expanded", String(open));
+  if(open){ const sel = m.querySelector('.crew[aria-pressed="true"]') || m.querySelector(".crew"); if(sel) sel.focus(); }
+}
+document.addEventListener("click", e=>{ const m = $("#crewMenu"); if(m && !m.hidden && !e.target.closest(".crew-pick")) crewMenu(false); });
+document.addEventListener("keydown", e=>{
+  const m = $("#crewMenu"); if(!m || m.hidden) return;
+  if(e.key==="Escape"){ crewMenu(false); $("#crewCur").focus(); }
+  else if(e.key==="ArrowDown" || e.key==="ArrowUp"){
+    const items = [...m.querySelectorAll(".crew")], i = items.indexOf(document.activeElement);
+    items[(i + (e.key==="ArrowDown" ? 1 : -1) + items.length) % items.length].focus(); e.preventDefault();
+  }
+});
 /* Crewmate alert band (every tab): a crewmate's own readings are Urgent → one big, unmissable Help button */
+/* a band showing or hiding moves where My body starts: re-fit right after the band is updated */
+function refitSoon(){ queueMicrotask(()=>{ if(S.tab==="body") fitBody(); }); }
 function renderCrewAlert(){
-  const el = $("#crewAlert"); if(!el) return;
+  const el = $("#crewAlert"); if(!el) return; refitSoon();
   const need = CREW.filter(c=>c.id!==S.me && personalWorst(todayGrade(c.id))===3);
   if(!need.length || (R && !R.finished)){ el.hidden = true; el.innerHTML = ""; return; }
   el.innerHTML = need.map(c=>{ const g = todayGrade(c.id);
@@ -2286,19 +2352,23 @@ function renderCrewAlert(){
 }
 /* Vehicle alert band: the worst cabin reading across the crew in this environment, with the matching guide */
 function renderCabinBand(){
-  const el = $("#cabinBand"); if(!el) return;
+  const el = $("#cabinBand"); if(!el) return; refitSoon();
   let co2 = {lv:0}, rad = {lv:0};
   for(const c of CREW){ const cc = c.id===S.crew && C ? C : computeFor(c.id); const i = cc.recs.length-1, g = gradeDay(cc.recs, i, cc.bl, ENVS[S.env]), r = cc.recs[i];
     if(g.ml.co2 > co2.lv) co2 = {lv:g.ml.co2, v:r.co2}; if(g.ml.radDay > rad.lv) rad = {lv:g.ml.radDay, v:r.radDay}; }
   const items = [];
   if(co2.lv>=2) items.push({t:T("Cabin CO₂ {0} mmHg", fmt("co2",co2.v)), lv:co2.lv, g: co2.lv===3 ? "toxic" : "head"});
   if(rad.lv>=2) items.push({t:T("Radiation today {0} mSv", fmt("radDay",rad.v)), lv:rad.lv, g:"solar"});
-  if(!items.length || (R && !R.finished)){ el.hidden = true; el.innerHTML = ""; return; }
+  const on = items.length && !(R && !R.finished);
+  document.body.classList.toggle("cabin-alert", !!on);
+  if(!on){ el.hidden = true; el.innerHTML = ""; return; }
   const worst = Math.max(...items.map(x=>x.lv));
   el.classList.toggle("u", worst===3);
-  el.innerHTML = `<span>🛰 ${TE("Cabin")}: ${items.map(x=>`${esc(x.t)} · <span class="pill l${x.lv}">${LVT(x.lv)}</span>`).join(" · ")}</span>
-    <span class="small muted">${TE("Affects the whole crew. Follow the vehicle procedure first.")}</span>
-    ${[...new Set(items.map(x=>x.g))].map(g=>`<button class="btn danger" type="button" data-cabin="${g}">⚠ ${TE(PROT[g].title)}</button>`).join("")}`;
+  el.title = T("Affects the whole crew. Follow the vehicle procedure first.");
+  /* the guide button only when the same guide is not already on screen (My body's flight-surgeon card offers it) */
+  const shown = S.tab==="body" && isToday() ? guideLinks(vi()) : [];
+  el.innerHTML = `<span>🛰 ${items.map(x=>`${esc(x.t)} <span class="pill l${x.lv}">${LVT(x.lv)}</span>`).join(" · ")}</span>
+    ${[...new Set(items.map(x=>x.g))].filter(g=>!shown.includes(g)).map(g=>`<button class="btn danger" type="button" data-cabin="${g}">⚠ ${TE(PROT[g].title)}</button>`).join("")}`;
   el.hidden = false;
   $$("#cabinBand [data-cabin]").forEach(b=>b.addEventListener("click", ()=>{ stopDemo(); startGuide(b.dataset.cabin, "Opened from the cabin alert", null, S.me); }));
 }
@@ -2393,6 +2463,8 @@ function setTab(t){
   const changed = S.tab !== t; S.tab = t;
   document.body.classList.toggle("sos-active", t==="sos");
   document.body.classList.toggle("on-home", t==="home");
+  document.body.classList.toggle("on-body", t==="body");
+  if(C) renderCabinBand();   // the chip's guide button depends on the tab
   $$("[data-tabpanel]").forEach(p=>p.hidden = p.dataset.tabpanel!==t);
   $$(".tabs a").forEach(a=>{ if(a.dataset.tab===t) a.setAttribute("aria-current","page"); else a.removeAttribute("aria-current"); });
   mount3D();
@@ -2410,6 +2482,19 @@ function fitBody(){
   const phone = matchMedia("(max-width:820px)").matches;
   if(phone && rail.parentElement!==more) more.prepend(rail);
   else if(!phone && rail.parentElement!==grid) grid.prepend(rail);
+  /* the background body reaches the window edges and the bottom of the header */
+  const fit = $("#bodyFit"), fr = fit.getBoundingClientRect(), mr = $("main").getBoundingClientRect(), R = document.documentElement.style;
+  R.setProperty("--bt", Math.round(fr.top - mr.top) + "px");
+  R.setProperty("--bl", Math.round(fr.left) + "px");
+  R.setProperty("--br", Math.round(document.documentElement.clientWidth - fr.right) + "px");
+  /* aim the camera at the middle of the open area between the panels */
+  const stg = $("#stage").getBoundingClientRect(), gap = $("#stageCol").getBoundingClientRect(), ch = $("#canvasHost");
+  if(stg.width && gap.width){
+    ch.dataset.sx = (((gap.left + gap.right) - (stg.left + stg.right)) / 2 / stg.width).toFixed(4);
+    ch.dataset.sy = (((gap.top + gap.bottom) - (stg.top + stg.bottom)) / 2 / stg.height).toFixed(4);
+    ch.dataset.k = Math.max(.35, Math.min(1, gap.height / (.8 * stg.height))).toFixed(3);   // the whole body fits the gap height
+    if(window.B3 && B3.resize) B3.resize();
+  }
   updBodyDown();
 }
 function updBodyDown(){
@@ -2428,7 +2513,11 @@ $("#bodyDown").addEventListener("click", ()=>{
 });
 addEventListener("scroll", updBodyDown, {passive:true});
 addEventListener("resize", ()=>{ if(S.tab==="body") fitBody(); });
-new ResizeObserver(()=>{ if(S.tab==="body") fitBody(); }).observe($(".top"));
+{ const ro = new ResizeObserver(()=>{ if(S.tab==="body") fitBody(); }); ro.observe($(".top")); ro.observe($("#stageCol"));
+  for(const id of ["#waitBand", "#crewAlert", "#cabinBand"]) ro.observe($(id)); }   // a band showing or hiding moves where My body starts
+/* height of the sticky header, so alert bands stick below it (0 on phones, where the header scrolls away) */
+function setHdrH(){ const t = $(".top"); document.documentElement.style.setProperty("--hdr-h", (getComputedStyle(t).position==="sticky" ? t.offsetHeight : 0) + "px"); }
+new ResizeObserver(setHdrH).observe($(".top")); addEventListener("resize", setHdrH); setHdrH();
 
 /* ---------------- rail ---------------- */
 function renderRing(){
@@ -2468,37 +2557,12 @@ function todoItems(){
   return items;
 }
 function todoState(){ const key = S.crew+"|"+S.env+"|"+S.view; return S.todos[key] || (S.todos[key] = {}); }
-/* One checklist, shown twice: all of today in the left rail, and the selected system's part in the detail panel.
-   Ticks are stored by action text, so ticking either copy ticks both. */
-function todoLis(items, src=true){
-  const st = todoState();
-  return items.map(it=>`<li><label><input type="checkbox" data-t0="${esc(it.t)}" ${st[it.t]?"checked":""}>
-    <span>${TE(it.t)}${src&&it.k?`<br><span class="src">${TE(METRICS[it.k].sh)} · <span class="pill l${it.lv}" style="padding:0 6px">${LVT(it.lv)}</span></span>`:""}</span></label></li>`).join("");
-}
-function bindTodo(root){
-  root.querySelectorAll("input[data-t0]").forEach(cb=>cb.addEventListener("change", ()=>{ todoState()[cb.dataset.t0] = cb.checked; LS.set("todos", S.todos); renderTodo(); renderSysTodo(); renderStreak(); }));
-}
 function renderTodo(){
   const items = todoItems(), st = todoState();
-  $("#todo").innerHTML = todoLis(items);
+  $("#todo").innerHTML = items.map(it=>`<li><label><input type="checkbox" data-t0="${esc(it.t)}" ${st[it.t]?"checked":""}>
+    <span>${TE(it.t)}${it.k?`<br><span class="src">${TE(METRICS[it.k].sh)} · <span class="pill l${it.lv}" style="padding:0 6px">${LVT(it.lv)}</span></span>`:""}</span></label></li>`).join("");
   $("#todoCount").textContent = T("{0}/{1} done", items.filter(x=>st[x.t]).length, items.length);
-  bindTodo($("#todo"));
-}
-/* the selected system's to-dos; if the 5-item day list left none for it, its own top actions */
-function sysTodoItems(){
-  const s = SYS[S.sys||"heart"], i = vi(), g = gradeAt(i), rec = C.recs[i];
-  if(!(g.sl[s.id]>0)) return [];
-  const own = todoItems().filter(it=>it.k && s.metrics.includes(it.k));
-  if(own.length) return own;
-  const worstK = s.metrics.slice().sort((a,b)=>g.ml[b]-g.ml[a])[0];
-  return actionsFor(worstK, rec, C.bl).slice(0,3).map(t=>({t, k:worstK, lv:g.ml[worstK]}));
-}
-function renderSysTodo(){
-  const el = $("#sysTodo"); if(!el) return;
-  const items = sysTodoItems();
-  el.innerHTML = items.length ? `<ul class="todo">${todoLis(items, false)}</ul>`
-    : `<p class="small" style="margin:0">${TE("Keep your daily routine: it is working.")} ${TE("Log your check-in tonight so changes are caught early.")}</p>`;
-  bindTodo(el);
+  $$("#todo input").forEach(cb=>cb.addEventListener("change", ()=>{ todoState()[cb.dataset.t0] = cb.checked; LS.set("todos", S.todos); renderTodo(); renderStreak(); }));
 }
 function renderSysList(){
   const g = gradeAt(vi());
@@ -2530,7 +2594,6 @@ function renderDetail(){
     <div class="d-head"><div><div class="small muted">${s.ic} ${TE("Body system")} · ${TE("Day {0}", S.view)}</div><h2>${TE(s.n)}</h2></div><span class="pill l${g.sl[s.id]}" style="font-size:13px">${LVT(g.sl[s.id])}</span></div>
     <p style="margin:8px 0 0">${TE(s.plain)}</p>${extra}
   </div></div>
-  <div class="card"><div class="card-h"><h3>${TE("To do for {0}", T(s.n))}</h3></div><div class="card-b" id="sysTodo"></div></div>
   ${surgeonCard()}
   <div class="card"><div class="card-h"><h3>${TE("Today's numbers")}</h3></div><div class="card-b">
     <div class="mrows">${ks.map(k=>k==="mood" && moodHidden() ? `<div class="mrow" aria-disabled="true"><span><span style="font-weight:600">${TE(METRICS[k].n)}</span><br><span class="rng">${TE("Private to {0}. Only the grade is shown.", crewObj().n)}</span></span><span class="v">—</span><span class="gr"><span class="pill l${g.ml[k]}">${LVT(g.ml[k])}</span></span></div>` : `<button type="button" class="mrow" data-m="${k}" aria-pressed="${k===S.metric}">
@@ -2540,7 +2603,6 @@ function renderDetail(){
     ${s.id==="heart" && C.bl.hr.mean>=40.5 && C.bl.hr.mean<50.5 ? `<p class="small muted" style="margin:6px 0 0">${TE("Your resting heart rate is usually low.")}</p>`:""}
   </div></div>
   `;
-  renderSysTodo();
   $("#detailMoreHost").innerHTML = `
   <details class="card more" id="detailMore" ${S.moreOpen!==false?"open":""}><summary><span aria-hidden="true">${s.ic}</span> ${TE(s.n)} · ${TE("More: trend, how to measure, how space affects this, sources")}</summary><div class="card-b more-grid">
     <div class="more-trend">
@@ -2586,7 +2648,7 @@ function surgeonCard(){
   let ans, sub;
   if(a.lv===3){ ans = T("Yes: call now."); sub = e.delay<60 ? T("The Earth link is live (about 1 second). Call the flight surgeon now and start onboard care.") : T("A reply takes at least about {0} minutes (round trip plus about 10 minutes to review). Start onboard care now; do not wait.", replyMin(e)); }
   else if(a.lv===2){ ans = T("Not urgent. Add it to today's medical report."); sub = T("Send a note with the next data downlink."); }
-  else if(a.lv===1){ ans = T("Not yet."); sub = T("Follow the actions above and check again tomorrow."); }
+  else if(a.lv===1){ ans = T("Not yet."); sub = T("Follow today's to-do and check again tomorrow."); }
   else { ans = T("No."); sub = e.delay<60 ? T("Nothing to report beyond your routine private medical conference.") : T("Nothing to send beyond the routine weekly summary. Onboard guides cover common problems."); }
   const links = isToday() ? guideLinks(i) : [];
   return `<div class="card fs-card k${a.lv}"><div class="card-h"><h3>${TE("Do I need the flight surgeon?")}</h3></div><div class="card-b">
@@ -3182,7 +3244,7 @@ function tickSOS(){
   const wb = $("#wbLeft"); if(wb) wb.textContent = left>0 ? hms(left) : T("due now");
 }
 function renderWaitBand(){
-  const el = $("#waitBand"); if(!el) return;
+  const el = $("#waitBand"); if(!el) return; refitSoon();
   const t = R && !R.finished && R.timer;
   if(!t || (!t.due && R.status!=="waiting")){ el.hidden = true; el.innerHTML = ""; return; }
   const left = (t.dueAt - Date.now())/1000;
@@ -3877,7 +3939,7 @@ for(const [k,o] of Object.entries(ORG)){
   await nextFrame();
 }
 const CENTER = {brain:new THREE.Vector3(0,.76,0), heart:new THREE.Vector3(.02,.37,.03), lungs:new THREE.Vector3(0,.4,0), metab:new THREE.Vector3(0,.17,.01), bone:new THREE.Vector3(0,-.3,0), whole:new THREE.Vector3(0,0,0)};
-const DIST = {brain:.95, heart:.85, lungs:1.05, metab:1.05, bone:2.1, whole:2.75};
+const DIST = {brain:1.3, heart:1.2, lungs:1.4, metab:1.4, bone:2.35, whole:2.75};   // camera distance when a system is picked (larger = less zoom)
 const LABEL_AT = {brain:[-.19,.82,0], heart:[.2,.34,.06], lungs:[-.24,.46,0], metab:[-.22,.17,0], bone:[.2,-.36,0], whole:[.29,.64,0]};
 const HOT = [["brain",.76,.13],["heart",.37,.1],["lungs",.4,.17],["metab",.17,.15],["bone",-.3,.3]];
 
@@ -4023,7 +4085,7 @@ function frame(){
   const oa = t*.55; guide.position.set(Math.cos(oa)*.78, Math.sin(oa)*.78, 0); guide.scale.setScalar(.075 + .015*Math.sin(t*3));
   for(let i=0;i<NT;i++){ const a = oa - i*.035, f = Math.pow(1 - i/NT, 2); trailPos[i*3] = Math.cos(a)*.78; trailPos[i*3+1] = Math.sin(a)*.78; trailPos[i*3+2] = 0; trailCol[i*3] = f; trailCol[i*3+1] = f*.62; trailCol[i*3+2] = f*.3; }
   trailGeo.attributes.position.needsUpdate = true; trailGeo.attributes.color.needsUpdate = true;
-  orbit.visible = !sel || sel==="whole";
+  orbit.visible = st.hero;   // the orbiting light is a Home-screen motif; My body shows the body only
   ticks.rotation.z = t*.12; earth.material.uniforms.uT.value = t; earth.rotation.y = 1.1 + t*.01;
   /* the home sky (Sun, planets, Moon, Milky Way): only on the home screen, faded in and out */
   marsA += ((st.hero ? 1 : 0) - marsA)*Math.min(1, dt*2.5);
@@ -4058,7 +4120,12 @@ function resize(){
   if(!host) return; const w = host.clientWidth, h = host.clientHeight; if(!w || !h) return;
   renderer.setSize(w, h, false); camera.aspect = w/h;
   const sh = +(host.dataset.shift||0);
-  if(sh && w > 900) camera.setViewOffset(w, h, -w*sh, 0, w, h); else camera.clearViewOffset();
+  /* My body: the canvas fills the screen behind the panels; draw the body centred in the open gap (sx, sy = gap
+     centre as a fraction of the canvas) and scaled by k so it fits there. k < 1 widens the view window. */
+  const sx = +(host.dataset.sx||0), sy = +(host.dataset.sy||0), k = +(host.dataset.k||1);
+  if(sh && w > 900) camera.setViewOffset(w, h, -w*sh, 0, w, h);
+  else if(sx || sy || k !== 1){ const fw = w*k, fh = h*k; camera.setViewOffset(fw, fh, fw/2 - w*(.5 + sx), fh/2 - h*(.5 + sy), w, h); }
+  else camera.clearViewOffset();
   camera.fov = (sh && w <= 900) ? 44 : 36;
   camera.updateProjectionMatrix();
   if(composer) composer.setSize(w, h);
@@ -4067,6 +4134,7 @@ function resize(){
 addEventListener("resize", resize);
 
 window.B3 = {
+  resize,
   update(o){ Object.assign(st, o); },
   select(sys){ st.selected = sys; st.whole = false; if(!st.hero) flyTo(sys); },
   whole(on){ st.whole = on; if(on) flyTo("whole"); else if(st.selected) flyTo(st.selected); },
