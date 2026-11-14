@@ -117,6 +117,11 @@ h1,h2,h3,h4{font-family:var(--f-head);margin:0;letter-spacing:.01em}
 .resume{max-width:760px;margin:12px auto;border:2px solid var(--g3);background:var(--panel);border-radius:12px;padding:14px 16px}
 .resume .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 .save-warn[hidden],.wait-band[hidden],.resume[hidden],.cabin-band[hidden]{display:none}
+.crew-alert-band{position:sticky;top:0;z-index:65;max-width:1480px;width:calc(100% - 32px);box-sizing:border-box;margin:8px auto 0;padding:10px 16px;border-radius:12px;background:var(--g3);color:#fff;display:flex;gap:10px 16px;align-items:center;flex-wrap:wrap;font-weight:700;font-size:17px;box-shadow:0 6px 20px color-mix(in srgb,var(--g3) 35%,transparent);animation:needPulse 1.2s ease-in-out infinite}
+.crew-alert-band[hidden]{display:none}
+#steps .fld input::placeholder{color:var(--ink3);opacity:.6;font-style:italic;font-family:var(--f-body)}
+.crew-alert-band .why{font-weight:500;font-size:14px;opacity:.95}
+.crew-alert-band .btn{background:#fff;color:var(--g3);border:0;font-weight:800;font-size:16px;padding:8px 16px}
 .cabin-band{max-width:1480px;margin:8px auto 0;padding:8px 14px;border-radius:10px;border:2px dashed var(--g2);background:var(--panel);display:flex;gap:10px 16px;align-items:center;flex-wrap:wrap;font-weight:600}
 .cabin-band.u{border-color:var(--g3);background:var(--g3bg)}
 .badges{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto}
@@ -470,6 +475,7 @@ dialog::backdrop{background:rgba(3,8,16,.6)}
   </div>
 </header>
 <div id="waitBand" class="wait-band" role="status" aria-live="polite" hidden></div>
+<div id="crewAlert" class="crew-alert-band" role="alert" hidden></div>
 <div id="cabinBand" class="cabin-band" role="status" aria-live="polite" hidden></div>
 <div id="resumeBox" class="resume" role="alertdialog" aria-labelledby="resumeH" hidden></div>
 
@@ -1893,6 +1899,9 @@ const KO = {
 "{0} for {1}, started {2} UTC. The clock and log continue from where they stopped.": "{1}의 {0}, {2} UTC 시작. 시계와 기록은 멈춘 곳부터 이어집니다.",
 "■ Stop": "■ 중지",
 "Q: {0} → {1}": "질문: {0} → {1}",
+"{0} needs help now": "{0}에게 지금 도움이 필요합니다",
+"Urgent: {0}": "긴급: {0}",
+"e.g. {0}": "예: {0}",
 "Cabin": "선체",
 "Cabin CO₂ {0} mmHg": "선내 CO₂ {0} mmHg",
 "Radiation today {0} mSv": "오늘 방사선 {0} mSv",
@@ -2067,9 +2076,20 @@ function renderRoster(){
       ${need && !(R && !R.finished && R.patient===c.id)?`<button type="button" class="help-btn" data-help="${c.id}">${TE("Help {0}", c.n)}</button>`:""}</span>`;
   }).join("");
   document.body.classList.toggle("crew-alert", !!$("#roster .crew.need"));
-  renderCabinBand();
+  renderCrewAlert(); renderCabinBand();
   $$("#roster .crew").forEach(b=>b.addEventListener("click", ()=>{ stopDemo(); setCrew(b.dataset.crew); }));
   $$("#roster [data-help]").forEach(b=>b.addEventListener("click", ()=>{ stopDemo(); helpCrew(b.dataset.help); }));
+}
+/* Crewmate alert band (every tab): a crewmate's own readings are Urgent → one big, unmissable Help button */
+function renderCrewAlert(){
+  const el = $("#crewAlert"); if(!el) return;
+  const need = CREW.filter(c=>c.id!==S.me && personalWorst(todayGrade(c.id))===3);
+  if(!need.length || (R && !R.finished)){ el.hidden = true; el.innerHTML = ""; return; }
+  el.innerHTML = need.map(c=>{ const g = todayGrade(c.id);
+    const why = SYSTEMS.filter(s=>s.metrics.some(k=>!CABIN_METRICS.includes(k) && g.ml[k]===3)).map(s=>T(s.n)).join(", ");
+    return `<span>⚠ ${TE("{0} needs help now", c.n)}</span><span class="why">${TE("Urgent: {0}", why)}</span><button class="btn" type="button" data-alert-help="${c.id}">${TE("Help {0}", c.n)} →</button>`; }).join("");
+  el.hidden = false;
+  $$("#crewAlert [data-alert-help]").forEach(b=>b.addEventListener("click", ()=>{ stopDemo(); helpCrew(b.dataset.alertHelp); }));
 }
 /* Vehicle alert band: the worst cabin reading across the crew in this environment, with the matching guide */
 function renderCabinBand(){
@@ -2429,7 +2449,7 @@ function renderCheckin(){
     <div><div class="tm">${TE(s.t)}</div><div class="st ${done[j]?"done":"todo"}">${done[j]?"✓ "+TE("Done"):TE("To do")}</div></div>
     <div><h3>${TE(s.n)}</h3><p class="how">${TE(s.how)}</p>
       <div class="fields">${s.f.map(k=>`<div class="fld"><label for="f-${k}">${TE(METRICS[k].n)} (${esc(k==="mood"?"1–5":unit(k))})</label>
-        <input id="f-${k}" name="${k}" inputmode="decimal" autocomplete="off" placeholder="${fmt(k, b[k] ?? C.recs[S.day-1][k])}" value="${ci[k]!==undefined?esc(ci[k]):""}" aria-describedby="e-${k}">
+        <input id="f-${k}" name="${k}" inputmode="decimal" autocomplete="off" placeholder="${TE("e.g. {0}", fmt(k, b[k] ?? C.recs[S.day-1][k]))}" value="${ci[k]!==undefined?esc(ci[k]):""}" aria-describedby="e-${k}">
         <div class="err" id="e-${k}"></div></div>`).join("")}
       ${s.id==="eve"?`<label class="chk"><input type="checkbox" name="head" ${ci.head?"checked":""}> ${TE("Headache")}</label><label class="chk"><input type="checkbox" name="vision" ${ci.vision?"checked":""}> ${TE("Blurred vision")}</label>`:""}
       </div>
@@ -2514,6 +2534,7 @@ function openNote(titleKey, text, lv, returnEl){
   const d = $("#noteDlg"); if(!d.open) d.showModal();
 }
 function sendNote(){
+  if(noteCtx && noteCtx.onSend){ noteCtx.onSend(); noteCtx.onSend = null; }
   const e = ENVS[S.env]; const deep = e.delay >= 60; const speed = deep ? 60 : 1;
   const dur = e.delay/speed; const dot = $("#txDot"); if(!dot) return; dot.hidden = false; $("#sendBtn").disabled = true;
   const t0 = performance.now();
@@ -2933,7 +2954,7 @@ function stopCPR(){ if(cprT){ clearInterval(cprT); cprT = null; log("CPR rhythm 
 function openEmergencyLog(btn, quiet){
   const p = curProt(), e = ENVS[S.env]; const i = stepIdx(R.cur);
   const pc = crewById(R.patient), rc = crewById(R.responder);
-  if(!quiet) log("Event log sent to Earth.");
+
   const L = [];
   L.push(`PRIORITY: MEDICAL EVENT LOG`);
   L.push(`TO:        Flight Surgeon, Mission Control (Earth), priority`);
@@ -2952,6 +2973,7 @@ function openEmergencyLog(btn, quiet){
   L.push(`REQUEST: Ground support. Do not wait for reply; crew is continuing the onboard procedure.`);
   L.push(""); L.push(`-- Orbit Guide hackathon prototype. Example procedure; not a medical device.`);
   openNote("Emergency log for Earth", L.join("\n"), 3, btn);
+  if(!quiet && R) noteCtx.onSend = () => { if(R) log("Event log sent to Earth."); };   // logged when actually sent, not when opened
 }
 
 /* ---------------- Method, data and sources ---------------- */
