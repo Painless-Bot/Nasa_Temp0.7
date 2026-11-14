@@ -3862,7 +3862,7 @@ function frame(){
   renderer.setClearColor(tc.setRGB(.0157*(1-.45*marsA), .0353*(1-.45*marsA), .0706*(1-.45*marsA), THREE.SRGBColorSpace), 1);   // #040912 → darker
   controls.autoRotateSpeed = .9 - .5*marsA;
   mars.visible = routeLine.visible = ship.visible = moon.visible = milky.visible = galaxy.visible = marsA > .01;
-  moon.material.uniforms.uA.value = marsA; milky.material.opacity = .18*marsA; galaxy.material.opacity = .3*marsA;
+  moon.material.uniforms.uA.value = marsA; milky.material.opacity = .07*marsA; galaxy.material.opacity = .15*marsA;
   mars.material.uniforms.uA.value = marsA; mars.rotation.y = .6 + t*.008;
   routeLine.material.opacity = .12*marsA;
   route.getPoint(.62 + .3*((t/90)%1), ship.position); ship.material.opacity = .55*marsA;
