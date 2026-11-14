@@ -1170,13 +1170,15 @@ const S = {
   me: LS.get("me", "kim"),               // who is holding the app (crewmate mode)
   patient: null,                         // who the emergency tab is for; null = me
 };
-const crewById = id => CREW.find(c=>c.id===id);
+/* patient null = not identified yet (CPR starts at once; who it is can be added later) */
+const UNKNOWN = {id:null, n:"Unidentified crewmate", role:"not identified"};
+const crewById = id => CREW.find(c=>c.id===id) || UNKNOWN;
 const isPeer = () => R ? R.patient!==R.responder : (S.patient||S.me)!==S.me;
 const nm = (str, id) => String(str).replace(/\{name\}/g, crewById(id).n);
 /* peer text: same medical content, only the subject changes (crewmate-mode guide §4) */
 function qText(p, pid){ const peer = pid!==S.me; return nm(peer && p.qp ? p.qp : p.q, pid); }
-function stText(st){ const peer = R && R.patient!==R.responder; return nm(peer && st.tp ? st.tp : st.text, R?R.patient:S.me); }
-function subText(st){ const peer = R && R.patient!==R.responder; return st.sub ? nm(peer && st.sp ? st.sp : st.sub, R?R.patient:S.me) : ""; }
+function stText(st){ const peer = R && R.patient && R.patient!==R.responder; return nm(peer && st.tp ? st.tp : st.text, R?R.patient:S.me); }
+function subText(st){ const peer = R && R.patient && R.patient!==R.responder; return st.sub ? nm(peer && st.sp ? st.sp : st.sub, R?R.patient:S.me) : ""; }
 const AUD = {self:"Self", crewmate:"Crewmate", both:"Self or crewmate"};
 
 /* Korean UI dictionary (AI-assisted translation, Claude, 2026-11-14; reviewed by Team Temp7).
@@ -1857,6 +1859,12 @@ const KO = {
 "{0} for {1}, started {2} UTC. The clock and log continue from where they stopped.": "{1}의 {0}, {2} UTC 시작. 시계와 기록은 멈춘 곳부터 이어집니다.",
 "■ Stop": "■ 중지",
 "Q: {0} → {1}": "질문: {0} → {1}",
+"Unidentified crewmate": "확인 안 된 크루원",
+"not identified": "미확인",
+"Patient not identified. When you can, tap who it is:": "환자 미확인. 여유가 생기면 누구인지 눌러 주세요:",
+"Patient identified: {0} ({1}).": "환자 확인: {0} ({1}).",
+"Earlier measurements saved to {0}'s record.": "앞서 잰 값을 {0}의 기록에 저장했습니다.",
+"Kept in the log. Saved to the patient's record once you tap who it is.": "기록에 남겨 둡니다. 누구인지 누르면 그 사람 기록에 저장됩니다.",
 "done": "완료",
 "measured": "측정함",
 "no values": "값 없음",
@@ -2549,7 +2557,7 @@ function offerResume(){
     <div class="acts"><button class="btn big danger" type="button" id="rsGo">${TE("Resume")}</button><button class="btn big" type="button" id="rsCopy">${TE("Copy log and close")}</button></div>`;
   box.hidden = false;
   const restore = () => { box.hidden = true; R = o; if(ENVS[o.env]) { S.env = o.env; $("#envSel").value = o.env; } if(o.day){ S.day = o.day; S.view = o.day; $("#dayIn").value = o.day; } delete R.env; delete R.day; delete R.v; };
-  $("#rsGo").addEventListener("click", ()=>{ restore(); log("Resumed after the app was closed or reloaded.", [], "warn"); enterRun(); setCrew(R.patient); renderRun(); });
+  $("#rsGo").addEventListener("click", ()=>{ restore(); log("Resumed after the app was closed or reloaded.", [], "warn"); enterRun(); if(R.patient) setCrew(R.patient); renderRun(); });
   $("#rsCopy").addEventListener("click", e=>{ restore(); log("Closed after reload; log copied.", [], "warn"); openEmergencyLog(e.currentTarget, true); $("#noteDlg").addEventListener("close", exitGuide, {once:true}); });
   $("#rsGo").focus();
 }
@@ -2566,20 +2574,26 @@ function startGuide(id, reason, triAns, patient){
   if(R && !R.finished){ location.hash = "#sos"; return; }   // one emergency at a time
   const p = PROT[id];
   patient = patient || patientId();
-  if(p.aud==="crewmate" && patient===S.me){               // FR-SOS-17: CPR cannot be done on yourself
-    pendingGuide = id; tri.ans = triAns||[]; location.hash = "#sos"; setTab("sos"); renderWho(); $("#whoCard").scrollIntoView({block:"start"}); return;
-  }
+  // FR-SOS-17 (revised): CPR is never done on yourself, but it must not wait for a "who?" screen.
+  // Start at once with the patient not identified; the responder can tap a name later in the band.
+  if(p.aud==="crewmate" && patient===S.me) patient = null;
   pendingGuide = null;
   const pc = crewById(patient), rc = crewById(S.me);
   R = {gid:id, t0:Date.now(), wall:new Date(), cur:p.steps[0].id, done:new Set(), hist:[], log:[], finished:false, chain:[id],
        patient, responder:S.me, status:"active", timer:null, saveFail:false};
-  R.log.push({t:0, key:"Patient: {0} ({1}). Responder: {2} ({3}). Mode: {4}.", args:[pc.n, pc.role, rc.n, rc.role, {t:patient===S.me?"Self":"Crewmate assist"}]});
+  R.log.push({t:0, key:"Patient: {0} ({1}). Responder: {2} ({3}). Mode: {4}.", args:[{t:pc.n}, {t:pc.role}, rc.n, rc.role, {t:patient===S.me?"Self":"Crewmate assist"}]});
   for(const [q,a] of (triAns||[])) R.log.push({t:0, key:"Triage: \"{0}\" → {1}", args:[{t:q},{t:a}]});
   R.log.push({t:0, key:"Started: {0}. Reason: {1}.", args:[{t:p.title},{t:reason}]});
   saveSOS();
-  if(S.crew!==patient){ S.crew = patient; }               // 3D, banner and roster follow the patient
-  enterRun(); setCrew(patient); renderRun();
+  enterRun(); if(patient) setCrew(patient); renderRun();   // 3D, banner and roster follow the patient
   window.scrollTo({top:0});
+}
+function identifyPatient(id){
+  if(!R || R.patient) return;
+  R.patient = id; const c = crewById(id);
+  log("Patient identified: {0} ({1}).", [c.n, c.role]);
+  if(R.pendingVals){ saveMeasure(R.pendingVals); log("Earlier measurements saved to {0}'s record.", [c.n]); delete R.pendingVals; }
+  setCrew(id); renderRun();
 }
 function switchGuide(id){
   const from = PROT[R.gid]; const p = PROT[id];
@@ -2672,6 +2686,7 @@ function renderWaitBand(){
 
 const KIND = {do:"Do this", ask:"Answer", timer:"Timed step", cpr:"Rhythm", measure:"Measure", switch:"Switch guide", report:"Report to Earth"};
 function usualText(id){
+  if(!id) return "—";
   const b = computeFor(id).bl;
   return `HR ${fmt("hr",b.hr.lo)}–${fmt("hr",b.hr.hi)} · SpO₂ ${fmt("spo2",b.spo2.lo)}–${fmt("spo2",b.spo2.hi)}% · Temp ${fmt("temp",b.temp.lo)}–${fmt("temp",b.temp.hi)} °C`;
 }
@@ -2687,7 +2702,7 @@ function renderRun(){
     <span class="lnk">${TE("Earth link")} ${esc(linkText(e))} · ${TE("earliest reply about {0} min", replyMin(e))}</span>
     ${cprT?`<button class="btn" type="button" id="cprStopBand" style="background:#fff;color:#000">■ ${TE("Stop CPR beat")}</button>`:""}
     <button class="btn" type="button" id="sndBtn" aria-pressed="${S.sound}" style="background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.4)">${S.sound?"🔊 "+TE("Sound on"):"🔇 "+TE("Sound off")}</button>
-    <span class="helping">${peer ? TE("Helping: {0} · usual {1}", pc.n, usualText(R.patient)) : TE("Self: {0} · usual {1}", pc.n, usualText(R.patient))}</span>
+    <span class="helping">${!R.patient ? `${TE("Patient not identified. When you can, tap who it is:")} ${CREW.filter(c=>c.id!==R.responder).map(c=>`<button class="btn" type="button" data-ident="${c.id}" style="padding:2px 10px;background:#fff;color:#000;margin-left:4px">${esc(c.n)}</button>`).join("")}` : peer ? TE("Helping: {0} · usual {1}", pc.n, usualText(R.patient)) : TE("Self: {0} · usual {1}", pc.n, usualText(R.patient))}</span>
     <span class="save-warn" hidden></span>
   </div>
   <div class="run-grid">
@@ -2718,7 +2733,7 @@ function stepHTML(s, i, p){
     ${s.sec>LONG_WAIT?`<div class="small muted" style="margin-top:8px">${tm?TE("Waiting. You can leave this screen: a band at the top counts down and turns red when the re-check is due."):TE("Long wait: once started you can leave this screen. A band at the top will remind you.")}</div>`:""}`;
   else if(s.type==="cpr") body = `<div class="cpr"><div class="beat" id="beat">110</div><div><div class="mono" id="cprInfo"></div><div class="small muted">${TE("110 compressions per minute · 2-minute cycles")}</div><div class="small" id="cprSwap"></div></div></div>
     <div class="acts"><button class="btn big danger" type="button" id="cprStart">${cprT?"■ "+TE("Stop beat"):"▶ "+TE("Start beat")}</button><button class="btn big" type="button" data-next>${TE("Next step")} →</button></div>`;
-  else if(s.type==="measure") body = `<div class="small muted" style="margin-top:6px">${TE("Saved to {0}'s record for today and graded at once.", crewById(R.patient).n)}</div><div class="fields" style="margin-top:12px">
+  else if(s.type==="measure") body = `<div class="small muted" style="margin-top:6px">${R.patient ? TE("Saved to {0}'s record for today and graded at once.", crewById(R.patient).n) : TE("Kept in the log. Saved to the patient's record once you tap who it is.")}</div><div class="fields" style="margin-top:12px">
       ${[["hr","Heart rate","bpm"],["sbp","Blood pressure (top)","mmHg"],["spo2","SpO₂","%"],["temp","Temperature","°C"]].map(([k,n,u])=>`<div class="fld"><label for="ms-${k}">${TE(n)} (${u})</label><input id="ms-${k}" inputmode="decimal" autocomplete="off" placeholder="${TE("optional")}"></div>`).join("")}
     </div><div class="acts"><button class="btn big danger" type="button" id="msLog">${TE("Log and continue")} →</button></div>`;
   else if(s.type==="report") body = `<div class="acts"><button class="btn big danger" type="button" id="repSend">✉ ${TE("Send log to Earth")}</button><button class="btn big" type="button" data-next>${TE("Finish procedure")} ✓</button></div>
@@ -2762,6 +2777,7 @@ function bindRun(s){
   on("#sendLog", e=>openEmergencyLog(e.currentTarget));
   on("#repSend", e=>openEmergencyLog(e.currentTarget));
   on("#backList", exitGuide);
+  $$("#sosRun [data-ident]").forEach(b=>b.addEventListener("click", ()=>identifyPatient(b.dataset.ident)));
   on("#sndBtn", ()=>{ S.sound = !S.sound; renderRun(); if(S.sound) beep(660); });
   on("#cprStopBand", ()=>{ stopCPR(); renderRun(); });
   if(s && !R.finished && s.type==="timer") on("#tmStart", ()=>startTimer(s));
@@ -2769,9 +2785,9 @@ function bindRun(s){
   if(s && !R.finished && s.type==="measure") on("#msLog", ()=>{
     const vals = {}; for(const k of ["hr","sbp","spo2","temp"]){ const v = $("#ms-"+k).value.trim().replace(",", "."); if(v!=="" && Number.isFinite(+v)) vals[k] = +v; }
     const txt = `HR ${vals.hr??"—"} bpm, BP ${vals.sbp??"—"} mmHg, SpO2 ${vals.spo2??"—"} %, Temp ${vals.temp??"—"} °C`;
-    log("Measured on {0}: {1}", [crewById(R.patient).n, txt]);
+    log("Measured on {0}: {1}", [{t:crewById(R.patient).n}, txt]);
     if(vals.spo2!==undefined && vals.spo2<=92) log("Warning: SpO2 92% or lower. Tell the crew and the flight surgeon.", [], "warn");
-    if(Object.keys(vals).length) saveMeasure(vals);
+    if(Object.keys(vals).length){ if(R.patient) saveMeasure(vals); else R.pendingVals = Object.assign(R.pendingVals||{}, vals); }
     go("next", Object.keys(vals).length ? "measured" : "no values", Object.keys(vals).length ? {measured:txt} : null); });
   const st = $("#stepTxt"); if(st) st.focus({preventScroll:true});
 }
@@ -2804,7 +2820,7 @@ function openEmergencyLog(btn, quiet){
   L.push(`RESPONDER: ${rc.n} (${rc.role})`);
   L.push(`MODE:      ${R.patient===R.responder ? "Self" : "Crewmate assist"}`);
   L.push(`LOCATION:  ${e.long} · mission day ${S.day} · ${e.delay<60 ? e.delay+" s, live" : Math.round(e.delay/60)+" min one way"}`);
-  L.push(`PATIENT USUAL RANGE (days 1-14): ${usualText(R.patient)}`);
+  L.push(`PATIENT USUAL RANGE (days 1-14): ${R.patient ? usualText(R.patient) : "unknown (patient not identified)"}`);
   L.push(`EVENT:     ${R.chain.map(g=>PROT[g].title).join(" -> ")}`);
   L.push(`STARTED:   ${R.wall.toISOString().replace("T"," ").slice(0,19)} UTC (T+00:00)`);
   L.push(`NOW:       T+${hms(tNow())}; ${R.finished?"procedure finished":"current step "+(i+1)+" of "+p.steps.length+": "+stText(p.steps[i])}${R.timer?"; timer "+(R.timer.due?"DUE":"due at "+new Date(R.timer.dueAt).toISOString().slice(11,16)+" UTC"):""}`);
