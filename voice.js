@@ -245,7 +245,7 @@
     if(!box){ box = document.createElement("span"); box.className = "voice-ctl"; const snd = band.querySelector("#sndBtn"); snd ? snd.after(box) : band.appendChild(box); }
     const L = (en, k) => ko() ? k : en;
     box.innerHTML = `<button class="btn" type="button" id="vSpeak" aria-pressed="${V.speak}" ${bs}>${V.speak?"🗣 "+L("Voice cues on","음성 안내 켜짐"):"🗣 "+L("Voice cues off","음성 안내 꺼짐")}</button>
-      <button class="btn" type="button" id="vListen" aria-pressed="${V.listen}" ${bs} ${SR?"":"disabled"}>${V.listen?"🎙 "+L("Hands-free on","핸즈프리 켜짐"):"🎙 "+L("Hands-free off","핸즈프리 꺼짐")}</button>
+      <button class="btn" type="button" id="vListen" aria-pressed="${V.listen}" ${bs} ${SR || (location.protocol!=="file:" && navigator.mediaDevices) ? "" : "disabled"}>${V.listen?"🎙 "+L("Hands-free on","핸즈프리 켜짐"):"🎙 "+L("Hands-free off","핸즈프리 꺼짐")}</button>
       ${V.listen?`<span class="small v-hint">${V.engine==="vosk"
         ? L('Say "start", "stop", "next", "yes", "no", "back" or "repeat"','영어로 "start", "stop", "next", "yes", "no", "back", "repeat"라고 말하세요')
         : L('Say "Start", "Stop", "Next", "Yes", "No", "Back" or "Repeat"','"시작", "멈춰", "다음", "예", "아니오", "이전", "다시"라고 말하세요')}${V.lastCmd?` · ${L("heard","인식")}: “${esc(V.lastCmd)}”`:""}</span>`:""}

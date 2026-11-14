@@ -32,9 +32,9 @@ On a Moon or Mars mission a message to the flight surgeon can take 4–24 minute
 Use the GitHub Pages link, or serve the folder locally (`python -m http.server 8000`, then open `http://localhost:8000`). No build step.
 
 - Keep `index.html`, `voice.js` and the `vendor/` folder together.
-- **Offline:** everything except hands-free voice commands works without the internet when the page is served (GitHub Pages after it has loaded, or localhost). three.js r160 is bundled in `vendor/three/` (MIT licence included); web fonts fall back to system fonts.
+- **Offline:** everything works without the internet when the page is served (GitHub Pages after it has loaded, or localhost). three.js r160 is bundled in `vendor/three/` (MIT); hands-free voice commands run on the device with Vosk (`vendor/vosk/`, Apache-2.0, English command words; the 41 MB model loads the first time hands-free is turned on). Web fonts fall back to system fonts.
 - Opening `index.html` by double-click also works, but browsers block local module files there, so the 3D body then loads three.js from the jsDelivr CDN (internet needed for 3D only).
-- Hands-free voice commands use the browser's Web Speech API: **Chrome or Edge, with a network connection**, and the page must be served over **https** (GitHub Pages) for microphone permission.
+- Hands-free voice commands need microphone permission, so serve the page over **https** (GitHub Pages) or localhost. If the offline engine cannot load, the app falls back to the browser's Web Speech API (Chrome or Edge, network needed).
 - If the 3D body cannot load, every other feature still works.
 
 ## NASA data and resources
