@@ -654,6 +654,7 @@ dialog::backdrop{background:rgba(3,8,16,.6)}
         <div class="save-bar" style="margin-top:12px">
           <button class="btn primary" type="submit" data-t>Save today's log</button>
           <button class="btn" type="button" id="wearBtn" data-t>⌚ Fill from wearable (simulated)</button>
+          <button class="btn" type="button" id="randBtn" title="Demo only" data-t>🎲 Random reading (demo)</button>
           <span class="small" id="chkMsg" aria-live="polite" role="status"></span>
         </div>
       </form>
@@ -1943,6 +1944,9 @@ const KO = {
 "■ Stop": "■ 중지",
 "Q: {0} → {1}": "질문: {0} → {1}",
 "Body check": "몸 상태 확인",
+"🎲 Random reading (demo)": "🎲 랜덤 측정값 (데모)",
+"Demo values filled. Off today: {0}. Check them, then save.": "데모 값을 채웠습니다. 오늘 벗어난 항목: {0}. 확인하고 저장하세요.",
+"Demo values filled: a normal morning. Check them, then save.": "데모 값을 채웠습니다: 정상인 아침입니다. 확인하고 저장하세요.",
 "Mission settings": "임무 설정",
 "Simulate: replay the mission or try a situation": "시뮬레이션: 임무 다시 보기, 상황 가정해 보기",
 "More: trend, how to measure, how space affects this, sources": "더 보기: 추세, 측정 방법, 우주가 미치는 영향, 출처",
@@ -2534,6 +2538,26 @@ const CHK_STEPS = [
   {id:"eve", t:"21:30", n:"Evening check", how:"Rate your mood honestly (1 very low, 5 great) and tick any symptoms.", f:["mood"]},
   {id:"sleep", t:"On waking", n:"Sleep", how:"Hours of sleep last night, from the wrist sensor or your own note.", f:["sleep"]},
 ];
+/* Demo only: fill the whole check-in with a realistic morning. Most values sit near this crew member's own
+   normal; sometimes one or two are off, but always to values a real person could show (no 90 °C). */
+const RAND_OFF = {   // [low range], [high range] a body can really reach; [] = that direction is not used
+  hr:[[42,48],[101,124]], sbp:[[92,99],[141,168]], spo2:[[90,93],[]], temp:[[35.4,35.9],[38.1,39.4]],
+  glu:[[60,68],[108,142]], sleep:[[4.2,5.7],[]], mood:[[1,2],[]]};   // exercise is graded on a 7-day average, so one low day would change nothing
+function randomReading(){
+  const b = crewObj().base, rnd = (a,z) => a + Math.random()*(z-a), n = () => (Math.random()+Math.random()+Math.random()-1.5)/1.5;
+  const v = { hr:b.hr+n()*3, sbp:b.sbp+n()*5, spo2:Math.min(99.5,b.spo2+n()*0.6), temp:b.temp+n()*0.2, glu:b.glu+n()*5,
+              sleep:b.sleep+n()*0.5, mood:Math.round(b.mood+n()*0.6), ex:b.ex+n()*12 };
+  const keys = Object.keys(RAND_OFF), off = [];
+  const howMany = Math.random() < 0.35 ? 0 : (Math.random() < 0.7 ? 1 : 2);     // about 1 in 3 mornings is all normal
+  while(off.length < howMany){ const k = keys[Math.floor(Math.random()*keys.length)]; if(!off.includes(k)) off.push(k); }
+  for(const k of off){ const sides = RAND_OFF[k].filter(r=>r.length); const [a,z] = sides[Math.floor(Math.random()*sides.length)]; v[k] = rnd(a,z); }
+  const dec = {hr:0, sbp:0, spo2:0, temp:1, glu:0, sleep:1, mood:0, ex:0};
+  for(const k of Object.keys(v)){ const [lo,hi] = VALID[k]; const x = Math.min(hi, Math.max(lo, v[k])); $("#f-"+k).value = x.toFixed(dec[k]); }
+  const form = $("#chkForm"); form.elements.head.checked = off.includes("sleep") && Math.random()<0.5; form.elements.vision.checked = false;
+  $("#chkMsg").textContent = off.length
+    ? T("Demo values filled. Off today: {0}. Check them, then save.", off.map(k=>T(METRICS[k].n)).join(", "))
+    : T("Demo values filled: a normal morning. Check them, then save.");
+}
 const VALID = {hr:[30,200], sbp:[70,220], spo2:[50,100], temp:[34,42], glu:[40,400], ex:[0,300], mood:[1,5], sleep:[0,16]};
 function renderCheckin(){
   const ci = todayCheckin()||{}; const b = crewObj().base; const done = routineDone();
@@ -2551,6 +2575,7 @@ function renderCheckin(){
 }
 function initCheckin(){
   $("#chkForm").addEventListener("submit", e=>{ e.preventDefault(); saveCheckin(); });
+  $("#randBtn").addEventListener("click", randomReading);
   $("#wearBtn").addEventListener("click", ()=>{
     const sim = DataSource.build({crewId:S.crew, envId:S.env, day:S.day, scenarios:S.scen[S.crew]||[], checkins:{}})[S.day-1];
     for(const k of ["hr","sbp","spo2","temp","sleep"]){ $("#f-"+k).value = fmt(k, sim[k]).replace(/,/g,""); }
