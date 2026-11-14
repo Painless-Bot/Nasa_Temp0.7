@@ -1,8 +1,9 @@
 /* ===== Voice: spoken emphasis cues + hands-free voice commands (emergency guides) =====
    1) Spoken cues: on key steps only, a short emphasised phrase is read aloud ("Start CPR now!").
       Not a chatbot: nothing else is spoken, and the crew never has to talk to it.
-   2) Hands-free: with the mic on, saying "Next step" moves to the next step, as if the button was pressed.
-      "Start" starts the CPR beat or a timer on the current step (and speaks its cue).
+   2) Hands-free: with the mic on, saying "Next" moves to the next step, as if the button was pressed
+      (it also stops a running CPR beat). "Start" starts the CPR beat or a timer on the current step
+      (and speaks its cue); "Stop" stops the CPR beat.
       Also "Yes" / "No" on question steps, "Back" to undo, "Repeat" to hear the cue again.
    Uses the browser's built-in Web Speech API (speechSynthesis, SpeechRecognition). Every voice command is
    written to the event log, so the flight surgeon sees which steps were moved by voice. */
@@ -40,7 +41,7 @@
   };
   if(typeof KO!=="undefined") Object.assign(KO, {
     "Voice command: \"{0}\" → {1}": "음성 명령: \"{0}\" → {1}",
-    "next step": "다음 단계", "start": "시작", "yes": "예", "no": "아니오", "undo": "되돌리기", "repeat": "다시 듣기",
+    "next step": "다음 단계", "start": "시작", "stop beat": "박자 멈춤", "yes": "예", "no": "아니오", "undo": "되돌리기", "repeat": "다시 듣기",
   });
 
   const ko = () => S.lang==="ko";
@@ -51,7 +52,7 @@
     listen: false,                             // mic always starts off: it needs the user's permission
     rec: null, lastKey: null, busyUntil: 0, heard: "", note: "",
   };
-  V.version = "voice v4 (11-14 20:15)";
+  V.version = "voice v5 (11-14)";
   window.__voice = V;
 
   /* ---------- speaking ---------- */
@@ -92,17 +93,30 @@
     if(/\b(repeat|again|say again)\b|다시 ?말|반복|다시 ?듣/.test(t)) return "repeat";
     if(/\b(no|nope|negative)\b|^아니|아니요|아니오|아뇨/.test(t)) return "no";
     if(/\b(yes|yeah|yep|affirmative)\b|^(예|네|응)(\s|$)|맞아/.test(t)) return "yes";
+    if(/\bstop\b|\bhalt\b|스톱|멈춰|멈춤|정지|그만/.test(t)) return "stop";
     if(/\bstart\b|\bbegin\b|스타트|시작/.test(t)) return "start";
-    if(/\bnext step\b|\bgo next\b|다음 ?단계|다음으로|넥스트 ?스텝/.test(t)) return "next";
+    if(/\bnext\b|다음|넥스트/.test(t)) return "next";
     return null;
   }
+  const CMD_LABEL = {next:"next step", start:"start", stop:"stop beat"};
   function act(cmd, heard){
     if(!R || R.finished) return false;
     const q = sel => document.querySelector("#sosRun "+sel);
     const s = PROT[R.gid].steps.find(x=>x.id===R.cur);
     let btn = null;
+    if(cmd==="stop"){
+      if(!cprT) return false;                                            // no beat running: ignore
+      log("Voice command: \"{0}\" → {1}", [heard, {t: CMD_LABEL.stop}]);
+      stopCPR(); renderRun();
+      return true;
+    }
     if(cmd==="next"){
-      if(s && s.type==="ask"){ say(pick(EVENT_SAY.ask)); return false; }
+      const hadBeat = !!cprT;
+      if(hadBeat) stopCPR();                                             // "next" also stops the CPR beat
+      if(s && s.type==="ask"){
+        if(hadBeat){ log("Voice command: \"{0}\" → {1}", [heard, {t: CMD_LABEL.stop}]); renderRun(); }
+        say(pick(EVENT_SAY.ask)); return hadBeat;
+      }
       btn = q("[data-next]") || q("#msLog");
     }
     else if(cmd==="start"){
@@ -115,7 +129,7 @@
     else if(cmd==="undo") btn = q("#prevBtn:not([disabled])");
     else if(cmd==="repeat"){ const st = document.querySelector("#stepTxt"); say(cueNow() || (st ? st.textContent : "")); return true; }
     if(!btn) return false;
-    log("Voice command: \"{0}\" → {1}", [heard, {t: cmd==="next"?"next step":cmd==="start"?"start":cmd}]);
+    log("Voice command: \"{0}\" → {1}", [heard, {t: CMD_LABEL[cmd] || cmd}]);
     V.lastKey = null;                 // let the new step speak its own cue
     btn.click();
     return true;
@@ -132,13 +146,14 @@
         if(!ev.results[i].isFinal) continue;
         const alts = Array.from({length:ev.results[i].length}, (_,j)=>norm(ev.results[i][j].transcript));
         const now = Date.now();
-        V.heard = alts[0]; V.hist = [alts[0], ...(V.hist||[])].slice(0,3); paint();
+        V.heard = alts[0];
         if(now < V.busyUntil){ console.info("[voice] ignored (speaking):", alts); continue; }   // a cue is playing
         if(isEcho(alts[0])){ console.info("[voice] ignored (echo):", alts); continue; }         // our own voice
         if(now < (V.cmdUntil||0)){ console.info("[voice] ignored (cooldown):", alts); continue; } // one command at a time
         const c = alts.map(matchCmd).find(Boolean) || null;
         console.info("[voice] heard:", alts, "→", c);
         if(!c) continue;
+        V.lastCmd = alts.find(a=>matchCmd(a)===c) || alts[0]; paint();   // show only the latest command
         if(c==="next" && now < (V.startedAt||0) + 4000){ console.info("[voice] ignored next right after start"); continue; }
         V.cmdUntil = now + 2500;                                 // ignore anything else for 2.5 s
         if(act(c, alts[0]) && c==="start") V.startedAt = now;
@@ -167,7 +182,7 @@
     const L = (en, k) => ko() ? k : en;
     box.innerHTML = `<button class="btn" type="button" id="vSpeak" aria-pressed="${V.speak}" ${bs}>${V.speak?"🗣 "+L("Voice cues on","음성 안내 켜짐"):"🗣 "+L("Voice cues off","음성 안내 꺼짐")}</button>
       <button class="btn" type="button" id="vListen" aria-pressed="${V.listen}" ${bs} ${SR?"":"disabled"}>${V.listen?"🎙 "+L("Hands-free on","핸즈프리 켜짐"):"🎙 "+L("Hands-free off","핸즈프리 꺼짐")}</button>
-      ${V.listen?`<span class="small v-hint">${L('Say "Start", "Next step", "Yes", "No", "Back" or "Repeat"','"시작", "다음 단계", "예", "아니오", "이전", "다시"라고 말하세요 (다음은 꼭 "다음 단계")')}${V.hist&&V.hist.length?` · ${L("heard","인식")}: ${V.hist.map(h=>`“${esc(h)}”`).join(" ← ")}`:""}</span>`:""}
+      ${V.listen?`<span class="small v-hint">${L('Say "Start", "Stop", "Next", "Yes", "No", "Back" or "Repeat"','"시작", "멈춰", "다음", "예", "아니오", "이전", "다시"라고 말하세요')}${V.lastCmd?` · ${L("heard","인식")}: “${esc(V.lastCmd)}”`:""}</span>`:""}
       ${V.note?`<span class="small v-hint">⚠ ${esc(V.note)}</span>`:""}
       <span class="small v-hint" style="opacity:.6">${V.version}</span>`;
     box.querySelector("#vSpeak").onclick = () => { V.speak = !V.speak; LS.set("voice.speak", V.speak); if(!V.speak && window.speechSynthesis) speechSynthesis.cancel(); else say(cueNow()); paint(); };
