@@ -119,6 +119,23 @@ h1,h2,h3,h4{font-family:var(--f-head);margin:0;letter-spacing:.01em}
 .save-warn[hidden],.wait-band[hidden],.resume[hidden],.cabin-band[hidden]{display:none}
 .crew-alert-band{position:sticky;top:0;z-index:65;max-width:1480px;width:calc(100% - 32px);box-sizing:border-box;margin:8px auto 0;padding:10px 16px;border-radius:12px;background:var(--g3);color:#fff;display:flex;gap:10px 16px;align-items:center;flex-wrap:wrap;font-weight:700;font-size:17px;box-shadow:0 6px 20px color-mix(in srgb,var(--g3) 35%,transparent);animation:needPulse 1.2s ease-in-out infinite}
 .crew-alert-band[hidden]{display:none}
+/* first-time guidance (ui-ux branch) */
+#introDlg{width:min(860px,calc(100vw - 24px))}
+.intro-lead{font-size:16px;margin:0 0 14px;color:var(--ink2)}
+.intro-steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:760px){.intro-steps{grid-template-columns:1fr}}
+.intro-steps li{border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:8px;background:var(--panel2)}
+.intro-steps .num{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-weight:800;background:var(--accent);color:#fff}
+.intro-steps li.sos .num{background:var(--g3)}
+.intro-steps h3{font-size:17px;margin:0}
+.intro-steps p{margin:0;font-size:14px;color:var(--ink2);flex:1}
+.intro-steps a{font-weight:700;font-size:14px}
+.tab-guide{display:flex;gap:10px 14px;align-items:flex-start;border:1px solid color-mix(in srgb,var(--accent) 45%,var(--line));background:color-mix(in srgb,var(--accent) 8%,var(--panel));border-radius:12px;padding:10px 14px;margin-bottom:12px;font-size:14.5px}
+.tab-guide[hidden]{display:none}
+.tab-guide .ic{font-size:18px;line-height:1.3}
+.tab-guide b{font-weight:700}
+.tab-guide .x{margin-left:auto;border:0;background:transparent;font-size:18px;cursor:pointer;color:var(--ink3);padding:0 4px}
+.lv-key{display:inline-flex;gap:6px;flex-wrap:wrap;vertical-align:middle}
 #steps .fld input::placeholder{color:var(--ink3);opacity:.6;font-style:italic;font-family:var(--f-body)}
 .crew-alert-band .why{font-weight:500;font-size:14px;opacity:.95}
 .crew-alert-band .btn{background:#fff;color:var(--g3);border:0;font-weight:800;font-size:16px;padding:8px 16px}
@@ -458,6 +475,7 @@ dialog::backdrop{background:rgba(3,8,16,.6)}
     </nav>
     <div class="ctrls">
       <button class="btn lang" id="langBtn" type="button" aria-label="Switch language / 언어 전환"><span data-l="en">EN</span><span class="sep">/</span><span data-l="ko">한국어</span></button>
+      <button class="btn" id="helpBtn" type="button" aria-haspopup="dialog" data-t>? How it works</button>
       <button class="btn" id="demoBtn" type="button" data-t>▶ Guided demo</button>
       <button class="sos-btn" id="sosBtn" type="button" aria-label="SOS: open emergency guides">SOS</button>
     </div>
@@ -490,10 +508,10 @@ dialog::backdrop{background:rgba(3,8,16,.6)}
         <h2 class="hero-h" data-t>A health guide that stays in orbit around you.</h2>
         <p class="hero-p" data-t>When Earth is up to 20 minutes away, Orbit Guide helps a crew member with no medical training see what is changing in their body, and know what to do first.</p>
         <div class="hero-cta">
-          <a class="hbtn primary" href="#body" data-t>Check my body</a>
+          <button class="hbtn primary" type="button" id="heroDemo" data-t>▶ Watch the 1-minute demo</button>
+          <a class="hbtn" href="#body" data-t>Check my body</a>
           <a class="hbtn" href="#checkin" data-t>Daily check-in</a>
           <a class="hbtn sos" href="#sos" data-t>Emergency guides</a>
-          <button class="hbtn ghost" type="button" id="heroDemo" data-t>▶ Guided demo</button>
         </div>
         <div class="hero-strip" id="heroStrip"></div>
       </div>
@@ -536,6 +554,7 @@ dialog::backdrop{background:rgba(3,8,16,.6)}
 
   <!-- ============ MY BODY ============ -->
   <section id="tab-body" data-tabpanel="body" aria-label="My body" hidden>
+    <div class="tab-guide" data-guide-tab="body"></div>
     <div class="body-grid">
       <aside class="rail">
         <div class="card"><div class="card-b">
@@ -599,6 +618,7 @@ dialog::backdrop{background:rgba(3,8,16,.6)}
 
   <!-- ============ CHECK-IN ============ -->
   <section id="tab-checkin" data-tabpanel="checkin" aria-label="Daily check-in" hidden>
+    <div class="tab-guide" data-guide-tab="checkin"></div>
     <div class="chk-grid">
       <form id="chkForm" novalidate>
         <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:10px">
@@ -639,6 +659,7 @@ dialog::backdrop{background:rgba(3,8,16,.6)}
   <!-- ============ SOS ============ -->
   <section id="tab-sos" data-tabpanel="sos" aria-label="Emergency guides" hidden>
     <div id="sosHome">
+      <div class="tab-guide" data-guide-tab="sos"></div>
       <div class="sos-notice" data-th><strong>Example procedures, not flight checklists.</strong> These guides support the onboard medical checklist and the flight surgeon; they are not medical advice. Medicine is only ever "as the onboard checklist or flight surgeon says". Hackathon prototype.</div>
       <div class="card who" id="whoCard"></div>
       <div class="sos-grid">
@@ -664,6 +685,18 @@ dialog::backdrop{background:rgba(3,8,16,.6)}
   <p class="disc" data-t>Orbit Guide · Team Temp7 · NASA Space Apps Challenge 2026. Hackathon prototype with simulated data. Not a medical device and not medical advice.</p>
 </footer>
 
+<dialog id="introDlg" aria-labelledby="introTitle">
+  <div class="m-h"><h2 id="introTitle" style="font-size:20px" data-t>Orbit Guide in 30 seconds</h2><button class="btn ghost" type="button" data-close aria-label="Close">✕</button></div>
+  <div class="m-b">
+    <p class="intro-lead" data-t>A health guide for astronauts far from Earth. It turns NASA’s health knowledge into simple steps that a crew member with no medical training can follow, and keeps a record for the doctor on Earth.</p>
+    <ol class="intro-steps" id="introSteps"></ol>
+  </div>
+  <div class="m-f">
+    <span class="small muted" style="margin-right:auto;align-self:center" data-t>Simulated data · not a medical device</span>
+    <button class="btn" type="button" id="introSkip" data-t>Explore on my own</button>
+    <button class="btn primary" type="button" id="introDemo" data-t>▶ Watch the 1-minute demo</button>
+  </div>
+</dialog>
 <dialog id="crewDlg" aria-labelledby="crewTitle">
   <div class="m-h"><h2 id="crewTitle" style="font-size:19px" data-t>Manage crew</h2><button class="btn ghost" type="button" data-close aria-label="Close">✕</button></div>
   <div class="m-b">
@@ -1899,6 +1932,29 @@ const KO = {
 "{0} for {1}, started {2} UTC. The clock and log continue from where they stopped.": "{1}의 {0}, {2} UTC 시작. 시계와 기록은 멈춘 곳부터 이어집니다.",
 "■ Stop": "■ 중지",
 "Q: {0} → {1}": "질문: {0} → {1}",
+"? How it works": "? 사용법",
+"▶ Watch the 1-minute demo": "▶ 1분 데모 보기",
+"Orbit Guide in 30 seconds": "30초로 보는 Orbit Guide",
+"A health guide for astronauts far from Earth. It turns NASA’s health knowledge into simple steps that a crew member with no medical training can follow, and keeps a record for the doctor on Earth.": "지구에서 멀리 떨어진 우주인을 위한 건강 가이드입니다. NASA의 건강 지식을 의료 훈련이 없는 크루원도 따라 할 수 있는 단계로 바꾸고, 지구의 의사를 위한 기록을 남깁니다.",
+"Simulated data · not a medical device": "시뮬레이션 데이터 · 의료기기 아님",
+"Explore on my own": "직접 둘러보기",
+"See your body": "내 몸 보기",
+"Each part of the 3D body is colored against your own normal. Tap a part to read what it means and what to do.": "3D 몸의 각 부위가 내 평소 범위와 비교해 색으로 표시됩니다. 부위를 누르면 무슨 뜻인지, 무엇을 해야 하는지 나옵니다.",
+"Open My body": "내 몸 열기",
+"Check in every morning": "매일 아침 체크인",
+"Five quick measurements, with how to take each one. The app grades them and updates your body.": "재는 방법과 함께 빠른 측정 다섯 가지. 앱이 등급을 매기고 몸 상태를 바로 업데이트합니다.",
+"Open the check-in": "체크인 열기",
+"Help a crewmate": "동료 돕기",
+"If someone collapses, one tap opens step-by-step emergency guides with voice cues and a timed log for Earth.": "누군가 쓰러지면 한 번만 누르면 단계별 응급 가이드가 열립니다. 음성 안내와 지구로 보낼 시간 기록이 함께합니다.",
+"What is this?": "이 화면은?",
+"Try:": "해 보기:",
+"Hide this tip": "이 안내 숨기기",
+"Your body today. Each part is colored against your own normal:": "오늘의 내 몸입니다. 각 부위는 내 평소 범위와 비교한 색으로 표시됩니다:",
+"tap a glowing part, or pick a situation under Mission timeline to see what changes.": "빛나는 부위를 누르거나, 임무 타임라인 아래에서 상황을 골라 무엇이 바뀌는지 보세요.",
+"Your morning routine. Enter readings and save: the app grades them and updates your body.": "아침 루틴입니다. 측정값을 넣고 저장하면 앱이 등급을 매기고 몸 상태를 업데이트합니다.",
+"press ⌚ Fill from wearable, then Save today’s log.": "⌚ 웨어러블에서 채우기를 누른 뒤 오늘 기록 저장을 누르세요.",
+"Emergency guides. Pick who needs help, answer yes/no questions, then follow one step per screen.": "응급 가이드입니다. 누가 도움이 필요한지 고르고, 예/아니오 질문에 답한 뒤, 한 화면에 한 단계씩 따라 하세요.",
+"open any guide. It is safe to practise, and the log shows what was done and when.": "아무 가이드나 열어 보세요. 연습해도 안전하며, 기록에 무엇을 언제 했는지 남습니다.",
 "{0} needs help now": "{0}에게 지금 도움이 필요합니다",
 "Urgent: {0}": "긴급: {0}",
 "e.g. {0}": "예: {0}",
@@ -1965,7 +2021,7 @@ function applyStatic(){
 function setLang(l){
   S.lang = l; LS.set("lang", l);
   applyStatic(); renderEnvSel(); renderStageStatic(); renderAll(false); renderTriage(); renderGuideList(); renderMethod(); drawLearn();
-  renderWho(); renderWaitBand();
+  renderWho(); renderWaitBand(); renderTabGuides(); if($("#introDlg").open) renderIntro();
   if(R) renderRun();
 }
 
@@ -3053,6 +3109,45 @@ function stopDemo(){
   if(!(R && !R.finished)){ S.patient = null; renderAll(false); renderWho(); renderTriage(); }
 }
 
+/* ---------------- first-time guidance (ui-ux branch) ----------------
+   A judge or new crew member opens the page knowing nothing: a 30-second intro on the first visit, a "How it
+   works" button to reopen it, and a one-line "what is this screen / what to try" strip on each tab. */
+const INTRO = [
+  {n:1, h:"See your body", p:"Each part of the 3D body is colored against your own normal. Tap a part to read what it means and what to do.", go:"#body", a:"Open My body"},
+  {n:2, h:"Check in every morning", p:"Five quick measurements, with how to take each one. The app grades them and updates your body.", go:"#checkin", a:"Open the check-in"},
+  {n:3, h:"Help a crewmate", p:"If someone collapses, one tap opens step-by-step emergency guides with voice cues and a timed log for Earth.", go:"#sos", a:"Open emergency guides", sos:true}];
+const TAB_GUIDE = {
+  body:   {ic:"🧍", what:"Your body today. Each part is colored against your own normal:", key:true, tryit:"tap a glowing part, or pick a situation under Mission timeline to see what changes."},
+  checkin:{ic:"📋", what:"Your morning routine. Enter readings and save: the app grades them and updates your body.", tryit:"press ⌚ Fill from wearable, then Save today’s log."},
+  sos:    {ic:"🆘", what:"Emergency guides. Pick who needs help, answer yes/no questions, then follow one step per screen.", tryit:"open any guide. It is safe to practise, and the log shows what was done and when."}};
+function renderIntro(){
+  $("#introSteps").innerHTML = INTRO.map(s=>`<li class="${s.sos?"sos":""}"><span class="num">${s.n}</span><h3>${TE(s.h)}</h3><p>${TE(s.p)}</p><a href="${s.go}" data-intro-go>${TE(s.a)} →</a></li>`).join("");
+  $$("#introSteps [data-intro-go]").forEach(a=>a.addEventListener("click", ()=>$("#introDlg").close()));
+}
+function openIntro(){ renderIntro(); const d = $("#introDlg"); if(!d.open) d.showModal(); }
+function renderTabGuides(){
+  const hidden = LS.get("tabguide.hidden", {});
+  $$("[data-guide-tab]").forEach(el=>{
+    const k = el.dataset.guideTab, g = TAB_GUIDE[k];
+    if(!g || hidden[k]){ el.hidden = true; return; }
+    const key = g.key ? ` <span class="lv-key">${[0,1,2,3].map(i=>`<span class="pill l${i}">${LVT(i)}</span>`).join("")}</span>` : "";
+    el.innerHTML = `<span class="ic" aria-hidden="true">${g.ic}</span><span><b>${TE("What is this?")}</b> ${TE(g.what)}${key}<br><b>${TE("Try:")}</b> ${TE(g.tryit)}</span><button class="x" type="button" aria-label="${TE("Hide this tip")}" data-guide-x="${k}">✕</button>`;
+    el.hidden = false;
+  });
+  $$("[data-guide-x]").forEach(b=>b.addEventListener("click", ()=>{ const h = LS.get("tabguide.hidden", {}); h[b.dataset.guideX] = true; LS.set("tabguide.hidden", h); renderTabGuides(); }));
+}
+function initIntro(){
+  const d = $("#introDlg");
+  $$("#introDlg [data-close]").forEach(b=>b.addEventListener("click", ()=>d.close()));
+  d.addEventListener("close", ()=>LS.set("intro.v1", true));
+  $("#introSkip").addEventListener("click", ()=>d.close());
+  $("#introDemo").addEventListener("click", ()=>{ d.close(); runDemo(); });
+  $("#helpBtn").addEventListener("click", ()=>{ stopDemo(); openIntro(); });
+  renderTabGuides();
+  // first visit only, and never on top of an emergency or the resume prompt
+  if(!LS.get("intro.v1", false)) setTimeout(()=>{ if(!R && $("#resumeBox").hidden && !demo) openIntro(); }, 600);
+}
+
 /* ---------------- boot ---------------- */
 function boot(){
   applyStatic(); initTop(); initStage(); initCheckin(); initNote();
@@ -3061,6 +3156,7 @@ function boot(){
   setTab(location.hash.slice(1) || "home");
   sosTick = setInterval(tickSOS, 1000);   // timers keep counting on every tab
   offerResume();                          // an emergency left open by a reload or crash
+  initIntro();
   // 3D arrives asynchronously from the module script
   window.addEventListener("og3d-ready", ()=>{
     $("#heroLoad").hidden = true;
