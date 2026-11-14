@@ -85,6 +85,28 @@ h1,h2,h3,h4{font-family:var(--f-head);margin:0;letter-spacing:.01em}
 .crew .av{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:11px;color:#fff}
 .crew[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 30%,transparent)}
 .crew .lv{font-size:11px;font-weight:600}
+/* crewmate mode + emergency stability (AI-assisted, Claude, 2026-11-14) */
+.crew-w{display:inline-flex;align-items:center;gap:4px}
+.crew.need{border-color:var(--g3);box-shadow:0 0 0 2px color-mix(in srgb,var(--g3) 35%,transparent);animation:needPulse 1.2s ease-in-out infinite}
+.crew .need-t{font-size:11px;font-weight:700;color:var(--g3)}
+.crew .wait-t{font-size:11px}
+@keyframes needPulse{50%{box-shadow:0 0 0 6px color-mix(in srgb,var(--g3) 10%,transparent)}}
+.help-btn{background:var(--g3);color:#fff;border:0;border-radius:999px;padding:5px 11px;font-weight:700;font-size:12.5px;cursor:pointer}
+.me-sel{font-size:13px}
+.who{margin-bottom:14px}
+.who .who-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.who .who-b{display:flex;flex-direction:column;align-items:flex-start;gap:3px;min-width:120px;border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:10px 14px;cursor:pointer;font-size:15px;font-weight:600}
+.who .who-b[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 30%,transparent)}
+.who .ask-mate{border:1px solid var(--g3);background:var(--g3bg);border-radius:10px;padding:10px 12px;margin-top:8px}
+.aud{font-size:11px;font-weight:600;border:1px solid var(--line);border-radius:6px;padding:0 6px;color:var(--ink2)}
+.helping{flex-basis:100%;font-size:13px;background:rgba(255,255,255,.15);border-radius:8px;padding:4px 10px}
+.save-warn{flex-basis:100%;background:#fff;color:#000;border-radius:8px;padding:6px 10px;font-size:13px;font-weight:600;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.wait-band{position:sticky;top:0;z-index:60;max-width:1480px;margin:8px auto 0;padding:8px 14px;border-radius:10px;background:var(--g2);color:#000;display:flex;gap:10px 16px;align-items:center;flex-wrap:wrap;font-weight:600}
+.wait-band.due{background:var(--g3);color:#fff}
+.wait-band .mono{font-size:17px}
+.resume{max-width:760px;margin:12px auto;border:2px solid var(--g3);background:var(--panel);border-radius:12px;padding:14px 16px}
+.resume .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.save-warn[hidden],.wait-band[hidden],.resume[hidden]{display:none}
 .badges{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto}
 .btn.lang{gap:5px;font-size:13px;padding:7px 10px}
 .btn.lang .sep{opacity:.4}
@@ -106,6 +128,7 @@ section[hidden]{display:none!important}
 
 /* ---------- home ---------- */
 body.on-home .row2{display:none}
+body.on-home.crew-alert .row2{display:flex}  /* a crewmate needing help is shown on every tab */
 body.on-home .top{color:#e9f1fb;--ink:#e9f1fb;--ink2:#b9c8dc;--ink3:#8fa2ba;--panel:rgba(16,28,48,.72);--line:#27405f;--accent:#5cb8ff;--accent-ink:#04121f;background:rgba(4,9,18,.86);border-bottom-color:#12233a}
 body.on-home main{max-width:none;padding:0}
 .wrap{max-width:1240px;margin:0 auto;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
@@ -394,7 +417,7 @@ dialog::backdrop{background:rgba(3,8,16,.6)}
 .tx .dot{position:absolute;top:8px;left:24px;width:12px;height:12px;border-radius:50%;background:#4fb0ff;box-shadow:0 0 12px #4fb0ff;transform:translateX(-50%)}
 .tx .st{font-family:var(--f-mono);font-size:12.5px}
 .reply{margin-top:10px;border-left:3px solid #4fb0ff;padding:6px 10px;font-size:13.5px;background:rgba(79,176,255,.08);border-radius:0 8px 8px 0}
-@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}.crew.need{animation:none}}
 </style>
 </head>
 <body>
@@ -428,10 +451,15 @@ dialog::backdrop{background:rgba(3,8,16,.6)}
     <label class="field-inline"><span data-t>Mission day</span>
       <input id="dayIn" type="number" min="21" max="400" value="45" aria-label="Mission day (21 to 400)">
     </label>
+    <label class="field-inline"><span data-t>I am</span>
+      <select id="meSel" class="me-sel" aria-label="Who is using the app"></select>
+    </label>
     <div class="roster" id="roster" role="group" aria-label="Crew"></div>
     <div class="badges" id="badges" aria-live="polite"></div>
   </div>
 </header>
+<div id="waitBand" class="wait-band" role="status" aria-live="polite" hidden></div>
+<div id="resumeBox" class="resume" role="alertdialog" aria-labelledby="resumeH" hidden></div>
 
 <main id="main">
   <!-- ============ HOME ============ -->
@@ -594,12 +622,13 @@ dialog::backdrop{background:rgba(3,8,16,.6)}
   <section id="tab-sos" data-tabpanel="sos" aria-label="Emergency guides" hidden>
     <div id="sosHome">
       <div class="sos-notice" data-th><strong>Example procedures, not flight checklists.</strong> These guides support the onboard medical checklist and the flight surgeon; they are not medical advice. Medicine is only ever "as the onboard checklist or flight surgeon says". Hackathon prototype.</div>
+      <div class="card who" id="whoCard"></div>
       <div class="sos-grid">
         <div class="card triage" id="triage"></div>
         <div>
           <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:10px;flex-wrap:wrap">
             <h2 style="font-size:22px" data-t>I know what's happening</h2>
-            <span class="muted small" data-t>10 guides, most dangerous first</span>
+            <span class="muted small" id="gcount"></span>
           </div>
           <div class="glist" id="glist"></div>
         </div>
@@ -684,6 +713,9 @@ const SOURCES = {
   aasm:      {t:"Seven or more hours of sleep per night: a health necessity for adults", org:"American Academy of Sleep Medicine", url:"https://aasm.org/seven-or-more-hours-of-sleep-per-night-a-health-necessity-for-adults/", check:true},
   nhs:       {t:"Pulse oximetry at home: when a blood oxygen level of 92% or less needs urgent help", org:"NHS (UK)", url:"https://www.nhs.uk/", check:true},
   radBrief:  {t:"NASA-STD-3001 Technical Brief: Radiation Protection (solar particle event limit 250 mSv)", org:"NASA OCHMO", url:"https://www.nasa.gov/ochmo/human-spaceflight-and-aviation-standards/", check:true},
+  venous:    {t:"Venous Haemostasis (NASA and ESA study; related risk: venous thromboembolism during spaceflight)", org:"NASA / ESA", url:"https://www.nasa.gov/reference/venous-haemostasis/"},
+  nhsPanic:  {t:"Panic disorder: what to do during a panic attack", org:"NHS (UK)", url:"https://www.nhs.uk/mental-health/conditions/panic-disorder/"},
+  ntrsPHS:   {t:"Health and Fitness Evaluations for Long Duration Microgravity Exposure (crew examine each other monthly)", org:"NASA NTRS", url:"https://ntrs.nasa.gov/api/citations/20060051792/downloads/20060051792.pdf"},
   csaBio:    {t:"Bio-Monitor: wearable health monitoring on the ISS", org:"Canadian Space Agency (partner)", url:"https://www.asc-csa.gc.ca/eng/sciences/bio-monitor.asp"},
   csaRad:    {t:"Monitoring radiation to protect astronaut health (2026-02-26)", org:"Canadian Space Agency (partner)", url:"https://www.asc-csa.gc.ca/eng/news/articles/2026/2026-02-26-monitoring-radiation-astronaut-health.asp"},
   csaWhy:    {t:"Why do we conduct science experiments in space?", org:"Canadian Space Agency (partner)", url:"https://www.asc-csa.gc.ca/eng/iss/science/why-do-we-conduct-science-experiments-in-space.asp"},
@@ -710,7 +742,7 @@ const ENVS = {
 
 /* ---------- Crew (simulated baselines) ---------- */
 const CREW = [
-  {id:"kim",    n:"Kim",    role:"Commander",          col:"#3b82f6", streak:6, base:{hr:58,sbp:116,spo2:98.0,temp:36.6,glu:88,sleep:6.9,mood:4.0,ex:110}},
+  {id:"kim",    n:"Kim",    role:"Commander, CMO",          col:"#3b82f6", streak:6, base:{hr:58,sbp:116,spo2:98.0,temp:36.6,glu:88,sleep:6.9,mood:4.0,ex:110}},
   {id:"okafor", n:"Okafor", role:"Pilot",              col:"#a855f7", streak:3, base:{hr:63,sbp:121,spo2:97.6,temp:36.7,glu:92,sleep:7.2,mood:3.9,ex:100}},
   {id:"novak",  n:"Novak",  role:"Flight engineer",    col:"#14b8a6", streak:9, base:{hr:55,sbp:112,spo2:98.2,temp:36.5,glu:85,sleep:6.6,mood:4.2,ex:118}},
   {id:"park",   n:"Park",   role:"Mission specialist", col:"#f59e0b", streak:2, base:{hr:67,sbp:118,spo2:97.8,temp:36.8,glu:95,sleep:7.4,mood:3.8,ex:104}},
@@ -813,21 +845,25 @@ const SCENARIOS = [
   {id:"co2",   n:"Stuffy cabin air", dur:3, sys:"lungs"},
   {id:"fever", n:"Fever", dur:2, sys:"whole"},
   {id:"solar", n:"Solar storm", dur:1, sys:"whole"},
+  {id:"collapse", n:"Crewmate collapse", dur:1, sys:"lungs"},
 ];
 
 const LV = ["Normal","Watch","Act","Urgent"];
 
 /* ---------- Emergency guides (design §7) ----------
    Step types: do, ask (yes/no branch), timer, cpr, measure, switch, report.
-   Branch targets: step id, "next", "end", or "switch:<guideId>". Every guide ends with a report step. */
+   Branch targets: step id, "next", "end", or "switch:<guideId>". Every guide ends with a report step.
+   Crewmate mode (peer-mode guide): aud = "self" | "crewmate" | "both". qp / tp / sp are the same question, step
+   text or sub-text written for a responder helping {name}; they change who is addressed, never the medical
+   content. When a peer text is missing the self text is used. */
 const PROTOCOLS = [
-  {id:"cpr", title:"Unresponsive or not breathing (CPR)", short:"Someone does not respond or is not breathing normally.", sev:3, sys:"heart", hz:["dist","env"],
-   q:"Is someone not responding, or not breathing normally?", src:["ntrsCPR","rCardio","csaBio"],
+  {id:"cpr", title:"Unresponsive or not breathing (CPR)", short:"Someone does not respond or is not breathing normally.", sev:3, sys:"heart", hz:["dist","env"], aud:"crewmate",
+   q:"Is someone not responding, or not breathing normally?", qp:"Is {name} not responding, or not breathing normally?", src:["ntrsCPR","rCardio","csaBio"],
    steps:[
     {id:"a", type:"do", text:"Call a medical emergency out loud.", sub:"Tell every crewmate and the ground. One person leads, one person helps."},
-    {id:"b", type:"ask", text:"Tap the shoulders and shout their name. Do they respond?", yes:"i", no:"next"},
+    {id:"b", type:"ask", text:"Tap the shoulders and shout their name. Do they respond?", tp:"Tap {name}'s shoulders and shout their name. Does {name} respond?", yes:"i", no:"next"},
     {id:"c", type:"ask", text:"Watch the chest for 10 seconds. Are they breathing normally?", yes:"i", no:"next"},
-    {id:"d", type:"do", text:"Strap the person to the medical restraint.", sub:"In weightlessness, brace your feet on the ceiling or a handrail so each push does not float you away."},
+    {id:"d", type:"do", text:"Strap the person to the medical restraint.", tp:"Strap {name} to the medical restraint.", sub:"In weightlessness, brace your feet on the ceiling or a handrail so each push does not float you away."},
     {id:"e", type:"cpr", text:"Push hard and fast in the centre of the chest.", sub:"Follow the beat: 110 per minute. Swap rescuers every 2 minutes."},
     {id:"f", type:"do", text:"Attach the AED (heart shock device) and follow its voice.", sub:"Keep pushing while the pads go on. Stop only when it tells you to."},
     {id:"g", type:"do", text:"Give oxygen from the medical kit, as the onboard checklist describes."},
@@ -835,41 +871,41 @@ const PROTOCOLS = [
     {id:"i", type:"do", text:"Put them in the recovery position and stay with them.", sub:"Keep them restrained. Check breathing every minute."},
     {id:"j", type:"report", text:"Send the event log to Earth.", sub:"Do not wait for the answer. Keep watching the patient."},
    ]},
-  {id:"toxic", title:"Smoke, ammonia or toxic air", short:"Smoke, a chemical smell, or a toxic air alarm.", sev:3, sys:"lungs", hz:["env"],
+  {id:"toxic", title:"Smoke, ammonia or toxic air", short:"Smoke, a chemical smell, or a toxic air alarm.", sev:3, sys:"lungs", hz:["env"], aud:"both",
    q:"Is there smoke, a chemical smell, or a toxic air alarm?", src:["ntrsNH3","rHypoxia"],
    steps:[
     {id:"a", type:"do", text:"Put on your emergency mask first.", sub:"Then help the people near you with theirs."},
     {id:"b", type:"timer", sec:300, text:"Move with the crew to the safe module and close the hatch.", sub:"Aim to be sealed in within about 5 minutes."},
     {id:"c", type:"do", text:"Count the crew. Read the air monitor in the safe module."},
-    {id:"d", type:"ask", text:"Did anything touch your eyes or skin?", yes:"next", no:"f"},
+    {id:"d", type:"ask", text:"Did anything touch your eyes or skin?", tp:"Did anything touch {name}'s eyes or skin?", yes:"next", no:"f"},
     {id:"e", type:"timer", sec:900, text:"Rinse eyes and skin with clean water for 15 minutes."},
     {id:"f", type:"measure", text:"Check each person: heart rate, blood oxygen, breathing."},
     {id:"g", type:"report", text:"Send the event log to Earth.", sub:"Stay in the safe module until the air is confirmed clean."},
    ]},
-  {id:"chest", title:"Chest pain or irregular heartbeat", short:"Chest pain, or a heartbeat that is racing or uneven.", sev:3, sys:"heart", hz:["grav","dist"],
-   q:"Do you have chest pain, or a fast or uneven heartbeat?", src:["csaBio","rCardio"],
+  {id:"chest", title:"Chest pain or irregular heartbeat", short:"Chest pain, or a heartbeat that is racing or uneven.", sev:3, sys:"heart", hz:["grav","dist"], aud:"both",
+   q:"Do you have chest pain, or a fast or uneven heartbeat?", qp:"Does {name} have chest pain, or a fast or uneven heartbeat?", src:["csaBio","rCardio"],
    steps:[
-    {id:"a", type:"do", text:"Stop what you are doing. Hold on or strap in.", sub:"Tell a crewmate to stay with you."},
+    {id:"a", type:"do", text:"Stop what you are doing. Hold on or strap in.", sub:"Tell a crewmate to stay with you.", tp:"Have {name} stop, then hold on or strap in.", sp:"Stay with {name}."},
     {id:"b", type:"measure", text:"Measure heart rate, blood pressure and blood oxygen.", sub:"Record a heart trace (ECG) too if the kit has one."},
     {id:"c", type:"ask", text:"Is blood oxygen below 94%?", yes:"next", no:"e"},
     {id:"d", type:"do", text:"Start oxygen from the medical kit, as the checklist describes."},
     {id:"e", type:"do", text:"Open the onboard cardiac checklist and follow it.", sub:"Take medicine only as that checklist or the flight surgeon says."},
-    {id:"f", type:"timer", sec:300, text:"Wait 5 minutes, resting."},
+    {id:"f", type:"timer", sec:300, text:"Wait 5 minutes, resting.", tp:"Keep {name} resting for 5 minutes."},
     {id:"g", type:"measure", text:"Measure again: heart rate, blood pressure, blood oxygen."},
     {id:"h", type:"report", text:"Send the event log to Earth.", sub:"Keep measuring every 5 minutes while you wait for the reply."},
    ]},
-  {id:"dcs", title:"Pain or tingling after a spacewalk (DCS)", short:"Joint pain, numbness or itching after a spacewalk.", sev:3, sys:"whole", hz:["env"],
-   q:"After a spacewalk, do you have joint pain, numbness or itching?", src:["stdDCS","rDCS","rEVA"],
+  {id:"dcs", title:"Pain or tingling after a spacewalk (DCS)", short:"Joint pain, numbness or itching after a spacewalk.", sev:3, sys:"whole", hz:["env"], aud:"both",
+   q:"After a spacewalk, do you have joint pain, numbness or itching?", qp:"After a spacewalk, does {name} have joint pain, numbness or itching?", src:["stdDCS","rDCS","rEVA"],
    steps:[
     {id:"a", type:"ask", text:"Any serious signs: trouble breathing, chest pain, confusion, weakness or trouble seeing?", yes:"next", no:"c"},
     {id:"b", type:"do", text:"Tell the ground: \"serious decompression signs\".", sub:"Do not wait for the reply. Go on to the next step."},
-    {id:"c", type:"do", text:"Breathe 100% oxygen with the medical kit mask."},
+    {id:"c", type:"do", text:"Breathe 100% oxygen with the medical kit mask.", tp:"Give {name} 100% oxygen with the medical kit mask."},
     {id:"d", type:"do", text:"Raise the pressure only as the ground or the checklist directs.", sub:"For example to 16.4 psia or higher. Do not change pressure on your own."},
-    {id:"e", type:"timer", sec:900, text:"Every 15 minutes, check feeling, strength and speech."},
+    {id:"e", type:"timer", sec:900, text:"Every 15 minutes, check feeling, strength and speech.", tp:"Every 15 minutes, check {name}'s feeling, strength and speech."},
     {id:"f", type:"measure", text:"Log heart rate, blood pressure and blood oxygen."},
     {id:"g", type:"report", text:"Send the event log to Earth."},
    ]},
-  {id:"solar", title:"Solar storm", short:"A radiation or solar storm warning.", sev:2, sys:"whole", hz:["rad"],
+  {id:"solar", title:"Solar storm", short:"A radiation or solar storm warning.", sev:2, sys:"whole", hz:["rad"], aud:"both",
    q:"Is there a radiation alarm or solar storm warning?", src:["lunarRad","rRad","csaRad","hazards"],
    steps:[
     {id:"a", type:"do", text:"Go to the storm shelter now.", sub:"Line it with stowage bags and water containers: they block radiation."},
@@ -878,60 +914,72 @@ const PROTOCOLS = [
     {id:"d", type:"do", text:"When the all-clear comes, add the storm dose to each person's mission total."},
     {id:"e", type:"report", text:"Send the event log to Earth."},
    ]},
-  {id:"clot", title:"One-sided swelling in neck, arm or leg (blood clot)", short:"New swelling or pain on one side of the neck, an arm or a leg.", sev:2, sys:"heart", hz:["grav"],
-   q:"Is one side of your neck, an arm or a leg newly swollen or painful?", src:["nejm2020","rCardio"],
+  {id:"clot", title:"One-sided swelling in neck, arm or leg (blood clot)", short:"New swelling or pain on one side of the neck, an arm or a leg.", sev:2, sys:"heart", hz:["grav"], aud:"both",
+   q:"Is one side of your neck, an arm or a leg newly swollen or painful?", qp:"Is one side of {name}'s neck, an arm or a leg newly swollen or painful?", src:["venous","rCardio"],
    steps:[
-    {id:"a", type:"ask", text:"Are you suddenly short of breath, or do you have chest pain?", yes:"switch:chest", no:"next"},
+    {id:"a", type:"ask", text:"Are you suddenly short of breath, or do you have chest pain?", tp:"Is {name} suddenly short of breath, or does {name} have chest pain?", yes:"switch:chest", no:"next"},
     {id:"b", type:"do", text:"Do not rub or massage the swollen area."},
     {id:"c", type:"do", text:"Compare both sides. Take photos of both for the ground."},
     {id:"d", type:"measure", text:"Log heart rate, blood pressure and blood oxygen."},
     {id:"e", type:"do", text:"Set up the ultrasound. The ground team will guide the scan."},
-    {id:"f", type:"do", text:"Take blood-thinning medicine only if the flight surgeon tells you to."},
+    {id:"f", type:"do", text:"Take blood-thinning medicine only if the flight surgeon tells you to.", tp:"Give blood-thinning medicine only if the flight surgeon says to."},
     {id:"g", type:"report", text:"Send the event log to Earth."},
    ]},
-  {id:"eye", title:"Something in the eye", short:"Something got in the eye, or the eye hurts and is red.", sev:2, sys:"brain", hz:["env","grav"],
-   q:"Did something get in your eye, or is it painful and red?", src:["cornea24","ntrsSANS","rSANS"],
+  {id:"eye", title:"Something in the eye", short:"Something got in the eye, or the eye hurts and is red.", sev:2, sys:"brain", hz:["env","grav"], aud:"both",
+   q:"Did something get in your eye, or is it painful and red?", qp:"Did something get in {name}'s eye, or is it painful and red?", src:["cornea24","ntrsSANS","rSANS"],
    steps:[
-    {id:"a", type:"do", text:"Do not rub your eye."},
+    {id:"a", type:"do", text:"Do not rub your eye.", tp:"Make sure {name} does not rub the eye."},
     {id:"b", type:"timer", sec:300, text:"Rinse the eye with the eyewash for 5 minutes."},
-    {id:"c", type:"ask", text:"Is your vision getting worse, or is something stuck in the eye?", yes:"next", no:"e"},
+    {id:"c", type:"ask", text:"Is your vision getting worse, or is something stuck in the eye?", tp:"Is {name}'s vision getting worse, or is something stuck in the eye?", yes:"next", no:"e"},
     {id:"d", type:"do", text:"Tape an eye shield over it without pressing, and call the flight surgeon.", next:"g"},
     {id:"e", type:"do", text:"Use antibiotic eye drops only as the onboard checklist says."},
-    {id:"f", type:"do", text:"Check your vision with the eye chart every day until it is back to normal."},
+    {id:"f", type:"do", text:"Check your vision with the eye chart every day until it is back to normal.", tp:"Check {name}'s vision with the eye chart every day until it is back to normal."},
     {id:"g", type:"report", text:"Send the event log to Earth."},
    ]},
-  {id:"fever", title:"Fever, infection or rash", short:"Fever above 38 °C, a rash, or feeling unwell.", sev:2, sys:"whole", hz:["env","iso"],
-   q:"Do you have a fever above 38 °C, a rash, or feel unwell?", src:["crucian16","rImmune","rMicrobe"],
+  {id:"fever", title:"Fever, infection or rash", short:"Fever above 38 °C, a rash, or feeling unwell.", sev:2, sys:"whole", hz:["env","iso"], aud:"both",
+   q:"Do you have a fever above 38 °C, a rash, or feel unwell?", qp:"Does {name} have a fever above 38 °C, a rash, or look unwell?", src:["crucian16","rImmune","rMicrobe"],
    steps:[
     {id:"a", type:"measure", text:"Measure temperature, heart rate and blood oxygen."},
-    {id:"b", type:"do", text:"Protect your crewmates.", sub:"Wear a mask, clean shared surfaces, and sleep apart if you can."},
-    {id:"c", type:"do", text:"Rest and drink fluids."},
+    {id:"b", type:"do", text:"Protect your crewmates.", tp:"Protect the rest of the crew.", sub:"Wear a mask, clean shared surfaces, and sleep apart if you can."},
+    {id:"c", type:"do", text:"Rest and drink fluids.", tp:"Make sure {name} rests and drinks fluids."},
     {id:"d", type:"ask", text:"Temperature above 39 °C, trouble breathing, or a stiff neck?", yes:"next", no:"f"},
     {id:"e", type:"do", text:"This is urgent. Call the flight surgeon now.", sub:"Keep resting and measuring while you wait.", next:"g"},
-    {id:"f", type:"timer", sec:14400, text:"Measure your temperature again in 4 hours."},
+    {id:"f", type:"timer", sec:14400, text:"Measure your temperature again in 4 hours.", tp:"Measure {name}'s temperature again in 4 hours."},
     {id:"g", type:"report", text:"Send the event log to Earth."},
    ]},
-  {id:"head", title:"Headache or blurred vision", short:"A headache, or your vision got blurry.", sev:1, sys:"brain", hz:["env","grav"],
-   q:"Do you have a headache, or has your vision become blurry?", src:["stdCO2","ntrsSANS","rSANS"],
+  {id:"head", title:"Headache or blurred vision", short:"A headache, or your vision got blurry.", sev:1, sys:"brain", hz:["env","grav"], aud:"self",
+   q:"Do you have a headache, or has your vision become blurry?", qp:"Does {name} have a headache, or blurry vision?", src:["stdCO2","ntrsSANS","rSANS"],
    steps:[
     {id:"a", type:"ask", text:"Read the cabin CO₂. Is it above 3 mmHg?", yes:"next", no:"c"},
     {id:"b", type:"do", text:"Move to a module with better airflow and tell the crew CO₂ is high."},
-    {id:"c", type:"ask", text:"Has your vision changed: blurry up close or far away?", yes:"next", no:"e"},
+    {id:"c", type:"ask", text:"Has your vision changed: blurry up close or far away?", tp:"Has {name}'s vision changed: blurry up close or far away?", yes:"next", no:"e"},
     {id:"d", type:"do", text:"Do the SANS eye check in the checklist.", sub:"SANS means the back of the eye swells and focus shifts.", next:"f"},
-    {id:"e", type:"do", text:"Rest and drink water."},
+    {id:"e", type:"do", text:"Rest and drink water.", tp:"Have {name} rest and drink water."},
     {id:"f", type:"measure", text:"Measure heart rate, blood pressure and blood oxygen."},
     {id:"g", type:"report", text:"Send the event log to Earth."},
    ]},
-  {id:"sms", title:"Early space motion sickness", short:"Nausea or vomiting in the first days of flight.", sev:1, sys:"brain", hz:["grav"],
-   q:"Is it early in the flight, and do you feel sick or have you vomited?", src:["ntrsSAS","rSensori"],
+  {id:"sms", title:"Early space motion sickness", short:"Nausea or vomiting in the first days of flight.", sev:1, sys:"brain", hz:["grav"], aud:"self",
+   q:"Is it early in the flight, and do you feel sick or have you vomited?", qp:"Is it early in the flight, and does {name} feel sick or has {name} vomited?", src:["ntrsSAS","rSensori"],
    steps:[
-    {id:"a", type:"do", text:"Keep your head still. Fix your eyes on one spot in the cabin."},
+    {id:"a", type:"do", text:"Keep your head still. Fix your eyes on one spot in the cabin.", tp:"Help {name} keep the head still and fix the eyes on one spot."},
     {id:"b", type:"do", text:"Keep a sick bag within reach."},
     {id:"c", type:"do", text:"Sip small amounts of water.", sub:"Take motion-sickness medicine only as the onboard checklist says."},
-    {id:"d", type:"ask", text:"Have you vomited many times, or can you not keep water down?", yes:"next", no:"f"},
+    {id:"d", type:"ask", text:"Have you vomited many times, or can you not keep water down?", tp:"Has {name} vomited many times, or can {name} not keep water down?", yes:"next", no:"f"},
     {id:"e", type:"measure", text:"Check for dehydration: heart rate and blood pressure. Tell the flight surgeon."},
     {id:"f", type:"do", text:"Most people adapt within a few days. Log how you feel tonight."},
     {id:"g", type:"report", text:"Send the event log to Earth."},
+   ]},
+  {id:"panic", title:"Sudden anxiety or panic", short:"Sudden intense fear or anxiety, with a racing heart or shortness of breath.", sev:2, sys:"brain", hz:["iso","dist"], aud:"both",
+   q:"Did sudden, intense fear or anxiety start, with a fast heartbeat or shortness of breath?", qp:"Did {name} suddenly become very anxious or afraid, with a fast heartbeat or shortness of breath?", src:["nhsPanic","rBehave","stdIMM"],
+   steps:[
+    {id:"a", type:"ask", text:"First rule out other causes. Is there chest pain?", tp:"First rule out other causes. Does {name} have chest pain?", sub:"Panic can feel like a heart problem. Chest pain goes to the chest pain guide.", yes:"switch:chest", no:"next"},
+    {id:"b", type:"ask", text:"Is there smoke, a CO₂ alarm, or SpO₂ 92% or lower?", sub:"Bad air causes the same racing heart and breathlessness.", yes:"switch:toxic", no:"next"},
+    {id:"c", type:"measure", text:"Measure heart rate and blood oxygen.", tp:"Measure {name}'s heart rate and blood oxygen."},
+    {id:"d", type:"do", text:"If it is safe, stay where you are. Ask a crewmate to stay with you.", tp:"If it is safe, stay where you are and stay with {name}."},
+    {id:"e", type:"do", text:"Breathe slowly and deeply.", tp:"Help {name} breathe slowly and deeply."},
+    {id:"f", type:"do", text:"Remind yourself that the attack will pass.", tp:"Remind {name} that the attack will pass."},
+    {id:"g", type:"ask", text:"Measure again. Are symptoms getting worse, or is there new chest pain?", tp:"Measure {name} again. Are symptoms getting worse, or is there new chest pain?", yes:"switch:chest", no:"next"},
+    {id:"h", type:"report", text:"When calm, ask for a private medical conference with the flight surgeon and time to contact family.", tp:"When {name} is calm, ask for a private medical conference with the flight surgeon for {name}."},
    ]},
 ];
 const PROT = Object.fromEntries(PROTOCOLS.map(p=>[p.id,p]));
@@ -970,6 +1018,7 @@ const DataSource = {
         if(s.id==="co2"){ rec.co2 += [0.5,1.0,1.5][k]||1.5; rec.sleep -= 0.3; if(k>=1) rec.head = true; }
         if(s.id==="fever"){ rec.temp += 0.8 + 0.8*f; rec.hr += 10 + 9*f; }
         if(s.id==="solar"){ rec.radDay += 38; }
+        if(s.id==="collapse"){ rec.spo2 = 90; rec.hr = 128; }
       }
       const ci = checkins[d];
       if(ci) for(const k of Object.keys(ci)) if(ci[k]!==null && ci[k]!==undefined && ci[k]!=="") rec[k] = ci[k];
@@ -1010,7 +1059,7 @@ const CHART_LINES = {
   ex:[[90,1,"<90 min"],[45,2,"<45 min"]],
   bone:[[-5,2,"≤−5%"]],
 };
-const SRC_OF = {hr:"NEWS2", sbp:"NEWS2 / AHA", temp:"NEWS2", spo2:"NEWS2", glu:"CDC / ADA", sleep:"AASM", co2:"NASA-STD-3001", radTot:"NASA-STD-3001", ex:"NASA HRP", bone:"NASA HRP", radDay:"NASA radiation brief", mood:"Personal baseline"};
+const SRC_OF = {hr:"NEWS2", sbp:"NEWS2 / AHA", temp:"NEWS2", spo2:"NEWS2", glu:"CDC / ADA", sleep:"AASM", co2:"NASA-STD-3001", radTot:"NASA-STD-3001", ex:"NASA HRP (7-day average)", bone:"NASA HRP", radDay:"NASA radiation brief", mood:"Personal baseline"};
 const roundTo = (v, d) => { const f = Math.pow(10, d); return Math.round(v*f)/f; };
 function absGrade(key, value){
   const rule = ABS_RULES[key];
@@ -1061,10 +1110,12 @@ function specialGrade(k, recs, i, env){
   }
   return 0;
 }
+/* Exercise is graded on the last 7 days' average, so one rest day does not raise a flag (stability guide §2). */
+function ex7(recs, i){ const d = recs.slice(Math.max(0, i-6), i+1).filter(r=>r.ex!=null); return d.length ? d.reduce((a,r)=>a+r.ex,0)/d.length : null; }
 /* grade = max(personal baseline (capped at Act), absolute, special). Also says which rule decided. */
 function gradeInfo(k, recs, i, bl, env){
   const base = Math.min(baselineGrade(k, recs, i, bl), 2);
-  const abs = absGrade(k, recs[i][k]);
+  const abs = absGrade(k, k==="ex" ? ex7(recs, i) : recs[i][k]);
   const sp = specialGrade(k, recs, i, env);
   let lv = Math.max(base, abs, sp);
   if(["sleep","mood","bone","ex"].includes(k)) lv = Math.min(lv, 2);   // these never become Urgent
@@ -1086,7 +1137,7 @@ function rangeText(k, bl, env){
   const m = METRICS[k];
   if(m.kind==="p") return `Your normal ${fmt(k,bl[k].lo)}–${fmt(k,bl[k].hi)} ${m.u}`;
   if(m.kind==="r") return `Normal here about ${env.dose.toFixed(2)} ${m.u}/day`;
-  if(k==="ex") return `Target 90 min or more`;
+  if(k==="ex") return `Target 90 min or more (7-day average)`;
   if(k==="bone") return `Watch at 1.0% per month`;
   if(k==="co2") return `NASA limit 3.0 mmHg`;
   if(k==="radTot") return `Career limit 600 mSv`;
@@ -1116,7 +1167,17 @@ const S = {
   practiced: new Set(LS.get("practiced", [])),
   layers: {skin:true, organs:true, skeleton:true, vessels:true, fluid:true, radiation:true},
   whole:false, sound:false,
+  me: LS.get("me", "kim"),               // who is holding the app (crewmate mode)
+  patient: null,                         // who the emergency tab is for; null = me
 };
+const crewById = id => CREW.find(c=>c.id===id);
+const isPeer = () => R ? R.patient!==R.responder : (S.patient||S.me)!==S.me;
+const nm = (str, id) => String(str).replace(/\{name\}/g, crewById(id).n);
+/* peer text: same medical content, only the subject changes (crewmate-mode guide §4) */
+function qText(p, pid){ const peer = pid!==S.me; return nm(peer && p.qp ? p.qp : p.q, pid); }
+function stText(st){ const peer = R && R.patient!==R.responder; return nm(peer && st.tp ? st.tp : st.text, R?R.patient:S.me); }
+function subText(st){ const peer = R && R.patient!==R.responder; return st.sub ? nm(peer && st.sp ? st.sp : st.sub, R?R.patient:S.me) : ""; }
+const AUD = {self:"Self", crewmate:"Crewmate", both:"Self or crewmate"};
 
 /* ---------------- language ---------------- */
 window.__miss = new Set();
@@ -1137,6 +1198,7 @@ function applyStatic(){
 function setLang(l){
   S.lang = l; LS.set("lang", l);
   applyStatic(); renderEnvSel(); renderStageStatic(); renderAll(false); renderTriage(); renderGuideList(); renderMethod(); drawLearn();
+  renderWho(); renderWaitBand();
   if(R) renderRun();
 }
 
@@ -1158,7 +1220,8 @@ function rangeT(k){
   const m = METRICS[k], bl = C.bl, env = ENVS[S.env];
   if(m.kind==="p") return T("Your normal {0}–{1} {2}", fmt(k,bl[k].lo), fmt(k,bl[k].hi), unit(k));
   if(m.kind==="r") return T("Normal here about {0} mSv/day", env.dose.toFixed(2));
-  return T({ex:"Target 90 min or more", bone:"Watch at 1.0% per month", co2:"NASA limit 3.0 mmHg", radTot:"Career limit 600 mSv"}[k]);
+  if(k==="ex"){ const a = ex7(C.recs, vi()); return T("7-day average {0} min · target 90", a==null?"—":a.toFixed(0)); }
+  return T({bone:"Watch at 1.0% per month", co2:"NASA limit 3.0 mmHg", radTot:"Career limit 600 mSv"}[k]);
 }
 
 /* ---------------- top bar ---------------- */
@@ -1169,29 +1232,47 @@ function initTop(){
   const di = $("#dayIn");
   di.addEventListener("change", ()=>{ stopDemo(); let v = Math.round(+di.value||45); v = Math.max(21, Math.min(400, v)); di.value = v; S.day = v; S.view = v; renderAll(true); });
   $("#sosBtn").addEventListener("click", ()=>{ location.hash = "#sos"; });
+  renderMeSel(); $("#meSel").addEventListener("change", e=>{ stopDemo(); setMe(e.target.value); });
   $("#demoBtn").addEventListener("click", runDemo);
   $("#heroDemo").addEventListener("click", runDemo);
   $("#demoStop").addEventListener("click", stopDemo);
   $("#langBtn").addEventListener("click", ()=>setLang(S.lang==="en" ? "ko" : "en"));
   $("#heroDown").addEventListener("click", e=>{ e.preventDefault(); $("#homeWhy").scrollIntoView({behavior:"smooth"}); });
 }
-function setEnv(id){ S.env = id; $("#envSel").value = id; renderAll(true); }
+function setEnv(id){ S.env = id; $("#envSel").value = id; renderAll(true); renderWho(); }
 function setCrew(id){
   S.crew = id; S.view = S.day; C = computeFor(id);
   const g = gradeAt(vi()); const worst = SYSTEMS.slice().sort((a,b)=>g.sl[b.id]-g.sl[a.id])[0];
   S.sys = g.worst>0 ? worst.id : (S.sys||"heart"); S.metric = null;
   renderAll(true);
 }
+function todayGrade(id){ const cc = id===S.crew && C ? C : computeFor(id); return gradeDay(cc.recs, cc.recs.length-1, cc.bl, ENVS[S.env]); }
+function renderMeSel(){
+  const sel = $("#meSel"); if(!sel) return;
+  sel.innerHTML = CREW.map(c=>`<option value="${c.id}">${esc(c.n)}</option>`).join(""); sel.value = S.me;
+}
+function setMe(id){ S.me = id; LS.set("me", id); S.patient = null; renderMeSel(); renderAll(false); renderWho(); renderTriage(); }
 function renderRoster(){
   $("#roster").innerHTML = CREW.map(c=>{
-    const cc = c.id===S.crew ? C : computeFor(c.id);
-    const g = gradeDay(cc.recs, cc.recs.length-1, cc.bl, ENVS[S.env]);
-    return `<button type="button" class="crew" aria-pressed="${c.id===S.crew}" data-crew="${c.id}">
+    const g = todayGrade(c.id);
+    const need = g.worst===3 && c.id!==S.me;           // FR-TOP-07: a crewmate needs help
+    const waiting = R && !R.finished && R.patient===c.id && R.status==="waiting";
+    return `<span class="crew-w"><button type="button" class="crew ${need?"need":""}" aria-pressed="${c.id===S.crew}" data-crew="${c.id}">
       <span class="av" style="background:${c.col}">${c.n[0]}</span>
-      <span><strong>${esc(c.n)}</strong> <span class="muted small">${TE(c.role)}</span></span>
-      <span class="pill l${g.worst} lv">${LVT(g.worst)}</span></button>`;
+      <span><strong>${esc(c.n)}</strong>${c.id===S.me?` <span class="muted small">(${TE("me")})</span>`:""} <span class="muted small">${TE(c.role)}</span></span>
+      <span class="pill l${g.worst} lv">${LVT(g.worst)}</span>${need?`<span class="need-t">${TE("Needs help")}</span>`:""}${waiting?`<span class="wait-t" title="${TE("Guide waiting on a timer")}">⏱</span>`:""}</button>
+      ${need && !(R && !R.finished && R.patient===c.id)?`<button type="button" class="help-btn" data-help="${c.id}">${TE("Help {0}", c.n)}</button>`:""}</span>`;
   }).join("");
+  document.body.classList.toggle("crew-alert", !!$("#roster .crew.need"));
   $$("#roster .crew").forEach(b=>b.addEventListener("click", ()=>{ stopDemo(); setCrew(b.dataset.crew); }));
+  $$("#roster [data-help]").forEach(b=>b.addEventListener("click", ()=>{ stopDemo(); helpCrew(b.dataset.help); }));
+}
+/* Help {name}: patient already known, so skip "Who needs help?" and ask the triage about that crewmate */
+function helpCrew(id){
+  if(R && !R.finished){ location.hash = "#sos"; return; }
+  S.patient = id; tri = {i:0, ans:[]}; pendingGuide = null;
+  setCrew(id); location.hash = "#sos"; setTab("sos");
+  renderWho(); renderTriage(); const q = $("#triQ"); if(q) q.focus();
 }
 function routineDone(){
   const ci = todayCheckin()||{};
@@ -1245,7 +1326,7 @@ function renderHome(){
      li:["Vitals, blood sugar, exercise, mood, sleep","Fill from a wearable","Typos are caught before saving","Streak, XP and 9 badges"], go:"Open check-in"},
     {id:"sos", href:"#sos", red:true, ic:ICON.sos, h:"Emergency guides", p:"One step per screen, with timers and a CPR beat. Built to be followed to the end without waiting for Earth.",
      live:`<span class="pill l3">${sev(3)} ${TE("Life-threatening")}</span><span class="pill l2">${sev(2)} ${TE("Serious")}</span><span class="pill l1">${sev(1)} ${TE("Common")}</span>`,
-     li:["10 yes/no triage questions","10 guides with agency sources","Timers, CPR rhythm, measurements","Automatic T+ event log"], go:"Open emergency guides"},
+     li:[T("{0} yes/no triage questions", PROTOCOLS.length),T("{0} guides with agency sources", PROTOCOLS.length),"For yourself or a crewmate","Timers, CPR rhythm, measurements","Automatic T+ event log"], go:"Open emergency guides"},
     {id:"note", href:"#body", ic:ICON.note, h:"Note for Earth", p:"Everything you measured and did becomes a clear note for the flight surgeon, sent with the real signal delay in mind.",
      live:`<span class="mono">${TE("Earth link")} ${esc(linkText(e))}</span><span class="muted">· ${TE("earliest reply about {0} min", replyMin(e))}</span>`,
      li:["Written automatically","Numbers next to your normal","Transmission and reply simulated","Emergency logs use the same channel"], go:"Write today's note"}];
@@ -1344,11 +1425,13 @@ function selectSystem(id, fly=true){
 }
 
 /* ---------------- detail ---------------- */
+/* NFR-12: a crewmate's mood score is private; only the Brain & mind grade shows. Shown during an emergency guide. */
+const moodHidden = () => S.crew!==S.me && !(R && !R.finished);
 function streakDays(k, i, lv){ let n=0; for(let j=i; j>=0; j--){ if(gradeMetric(k, C.recs, j, C.bl, ENVS[S.env]) >= lv) n++; else break; } return n; }
 function renderDetail(){
   const s = SYS[S.sys||"heart"]; const i = vi(); const g = gradeAt(i); const rec = C.recs[i];
   const ks = s.metrics;
-  if(!S.metric || !ks.includes(S.metric)) S.metric = ks.slice().sort((a,b)=>g.ml[b]-g.ml[a])[0];
+  if(!S.metric || !ks.includes(S.metric) || (S.metric==="mood" && moodHidden())) S.metric = ks.filter(k=>!(k==="mood"&&moodHidden())).sort((a,b)=>g.ml[b]-g.ml[a])[0];
   const worstK = ks.slice().sort((a,b)=>g.ml[b]-g.ml[a])[0];
   const acts = g.sl[s.id]>0 ? actionsFor(worstK, rec, C.bl).slice(0,4) : ["Keep your daily routine: it is working.", "Log your check-in tonight so changes are caught early."];
   const m = METRICS[S.metric];
@@ -1362,7 +1445,7 @@ function renderDetail(){
     <div class="tags">${s.risks.map(r=>`<a class="tag" href="${SOURCES[r].url}" target="_blank" rel="noopener">HRP Risk: ${esc(SOURCES[r].t.replace(/^Risk (of|from) /,""))} ↗</a>`).join("")}</div>
   </div></div>
   <div class="card"><div class="card-h"><h3>${TE("Today's numbers")}</h3><span class="small muted">${TE("tap one for its trend")}</span></div><div class="card-b">
-    <div class="mrows">${ks.map(k=>`<button type="button" class="mrow" data-m="${k}" aria-pressed="${k===S.metric}">
+    <div class="mrows">${ks.map(k=>k==="mood" && moodHidden() ? `<div class="mrow" aria-disabled="true"><span><span style="font-weight:600">${TE(METRICS[k].n)}</span><br><span class="rng">${TE("Private to {0}. Only the grade is shown.", crewObj().n)}</span></span><span class="v">—</span><span class="gr"><span class="pill l${g.ml[k]}">${LVT(g.ml[k])}</span></span></div>` : `<button type="button" class="mrow" data-m="${k}" aria-pressed="${k===S.metric}">
       <span><span style="font-weight:600">${TE(METRICS[k].n)}</span><br><span class="rng">${esc(rangeT(k))}</span></span>
       <span class="v">${fmt(k, rec[k])} <span class="muted small">${esc(unit(k))}</span></span>
       <span class="gr"><span class="pill l${g.ml[k]}">${LVT(g.ml[k])}</span>${g.ml[k]>0?`<span class="srcTag">${TE(g.info[k].src)}</span>`:""}</span></button>`).join("")}</div>
@@ -1379,10 +1462,10 @@ function renderDetail(){
     <p class="small muted" style="margin:6px 0 0">${TE("Source:")} <a href="${SOURCES.hazards.url}" target="_blank" rel="noopener">NASA HRP, 5 Hazards of Human Spaceflight</a> · HRP Risks</p></div></div>
   <div class="card"><div class="card-h"><h3>${TE("What to do now")}</h3></div><div class="card-b"><ol class="do-list">${acts.map(a=>`<li>${TE(a)}</li>`).join("")}</ol></div></div>
   ${surgeonCard()}`;
-  $$("#detail .mrow").forEach(b=>b.addEventListener("click", ()=>{ S.metric = b.dataset.m; renderDetail(); }));
+  $$("#detail button.mrow").forEach(b=>b.addEventListener("click", ()=>{ S.metric = b.dataset.m; renderDetail(); }));
   drawTrend($("#trend"), S.metric);
   const nb = $("#detail [data-note]"); if(nb) nb.addEventListener("click", e=>openDailyNote(e.currentTarget));
-  $$("#detail [data-guide]").forEach(b=>b.addEventListener("click", ()=>{ location.hash="#sos"; startGuide(b.dataset.guide, "Opened from My body"); }));
+  $$("#detail [data-guide]").forEach(b=>b.addEventListener("click", ()=>{ location.hash="#sos"; startGuide(b.dataset.guide, "Opened from My body", null, S.crew); }));
 }
 function surgeonAssess(i){
   const g = gradeDay(C.recs, i, C.bl, ENVS[S.env]);
@@ -1401,6 +1484,7 @@ function guideLinks(i){
   if(roundTo(rec.temp,1) > 38.0) out.push("fever");
   if(g.ml.radDay>=2) out.push("solar");
   if(roundTo(rec.co2,1) > 2.5 || rec.head || rec.vision) out.push("head");
+  if(g.ml.mood>=2) out.push("panic");                 // button only: never opened automatically
   return out;
 }
 function surgeonCard(){
@@ -1518,7 +1602,7 @@ const CHK_STEPS = [
 const VALID = {hr:[30,200], sbp:[70,220], spo2:[50,100], temp:[34,42], glu:[40,400], ex:[0,300], mood:[1,5], sleep:[0,16]};
 function renderCheckin(){
   const ci = todayCheckin()||{}; const b = crewObj().base; const done = routineDone();
-  $("#chkWho").textContent = `${crewObj().n} · ${T(ENVS[S.env].n)} · ${T("Mission day")} ${S.day}`;
+  $("#chkWho").textContent = (S.crew!==S.me ? T("Measuring for {0} (by {1})", crewObj().n, crewById(S.me).n) + " · " : crewObj().n + " · ") + `${T(ENVS[S.env].n)} · ${T("Mission day")} ${S.day}` + (ci.measuredBy && ci.measuredBy!==S.crew ? " · " + T("Measured by {0}", crewById(ci.measuredBy).n) : "");
   $("#steps").innerHTML = CHK_STEPS.map((s,j)=>`<div class="step">
     <div><div class="tm">${TE(s.t)}</div><div class="st ${done[j]?"done":"todo"}">${done[j]?"✓ "+TE("Done"):TE("To do")}</div></div>
     <div><h3>${TE(s.n)}</h3><p class="how">${TE(s.how)}</p>
@@ -1551,6 +1635,7 @@ function saveCheckin(){
   }
   if(firstBad){ firstBad.focus(); $("#chkMsg").textContent = T("Not saved: please fix the highlighted number."); return; }
   out.head = form.elements.head.checked; out.vision = form.elements.vision.checked;
+  out.measuredBy = S.me;
   const all = S.checkins[S.crew] || (S.checkins[S.crew] = {});
   all[ciKey()] = Object.assign({}, all[ciKey()]||{}, out);
   LS.set("checkins", S.checkins);
@@ -1646,6 +1731,7 @@ function openDailyNote(btn){
   const L = [];
   L.push(`TO:    Flight Surgeon, Mission Control (Earth)`);
   L.push(`FROM:  ${c.n} (${c.role}), ${e.long}`);
+  L.push(`PATIENT: ${c.n} (${c.role}) · PREPARED BY: ${crewById(S.me).n} (${crewById(S.me).role})`);
   L.push(`DATE:  Mission day ${S.view}${isToday()?"":" (past day review)"}`);
   L.push(`LINK:  ${e.delay<60?"live, about "+e.delay+" s one way":"about "+Math.round(e.delay/60)+" min one way; earliest reply ~"+replyMin(e)+" min"}`);
   L.push("");
@@ -1657,12 +1743,13 @@ function openDailyNote(btn){
   for(const s of SYSTEMS){
     L.push(`- ${s.n}: ${LV[a.g.sl[s.id]].toUpperCase()}`);
     for(const k of s.metrics){ const lv = a.g.ml[k]; const m = METRICS[k];
+      if(k==="mood" && moodHidden()){ L.push(`    ${m.n}: private to patient  ${LV[lv]}`); continue; }
       L.push(`    ${m.n}: ${fmt(k,r[k])} ${m.u}  [${rangeEN(k)}]  ${LV[lv]}${lv>0?", "+streakDays(k,i,lv)+" day(s)":""}`); }
   }
   const st = S.todos[S.crew+"|"+S.env+"|"+S.view]||{}; const started = Object.keys(st).filter(k=>st[k]);
   L.push("");
   L.push(`ACTIONS STARTED: ${started.length? started.join("; ") : "none ticked yet"}`);
-  L.push(`SYMPTOMS: headache ${r.head?"YES":"no"}; blurred vision ${r.vision?"YES":"no"}; mood ${fmt("mood",r.mood)}/5`);
+  L.push(`SYMPTOMS: headache ${r.head?"YES":"no"}; blurred vision ${r.vision?"YES":"no"}; mood ${moodHidden()?"(private to patient; grade "+LV[a.g.ml.mood]+")":fmt("mood",r.mood)+"/5"}`);
   L.push(`TODAY'S VITALS: HR ${fmt("hr",r.hr)} bpm, BP ${fmt("sbp",r.sbp)} mmHg (systolic), SpO2 ${fmt("spo2",r.spo2)} %, Temp ${fmt("temp",r.temp)} C, fasting glucose ${fmt("glu",r.glu)} mg/dL, sleep ${fmt("sleep",r.sleep)} h, exercise ${fmt("ex",r.ex)} min`);
   L.push(`ENVIRONMENT: cabin CO2 ${fmt("co2",r.co2)} mmHg; radiation today ${fmt("radDay",r.radDay)} mSv, mission total ${fmt("radTot",r.radTot)} mSv; est. bone loss ${fmt("bone",r.bone)} %`);
   L.push(`REQUEST: ${["None. For the record.","None yet. Will recheck tomorrow.","Please review with the next downlink.","Please advise as soon as possible. Onboard care has started; crew will not wait for the reply."][a.lv]}`);
@@ -1671,10 +1758,33 @@ function openDailyNote(btn){
   openNote("Note for Earth", L.join("\n"), a.lv, btn);
 }
 
-/* ---------------- SOS: triage, list, runner ---------------- */
+/* ---------------- SOS: who, triage, list, runner ----------------
+   Crewmate mode + emergency stability (peer-mode guide, stability guide). AI-assisted code (Claude), written 2026-11-14. */
 let tri = {i:0, ans:[]};
+let pendingGuide = null;          // a crewmate-only guide (CPR) chosen with patient = me
+const patientId = () => S.patient || S.me;
+function renderWho(){
+  const el = $("#whoCard"); if(!el) return;
+  const order = CREW.slice().sort((a,b)=>(a.id===S.me?-1:b.id===S.me?1:0) || (todayGrade(b.id).worst===3) - (todayGrade(a.id).worst===3));
+  const urgentFirst = [...order.filter(c=>c.id===S.me), ...order.filter(c=>c.id!==S.me && todayGrade(c.id).worst===3), ...order.filter(c=>c.id!==S.me && todayGrade(c.id).worst!==3)];
+  el.innerHTML = `<div class="card-b">
+    <h2 style="font-size:20px">${TE("Who needs help?")}</h2>
+    <div class="small muted">${TE("You are {0}. Pick yourself or a crewmate; the questions and steps are written for that person.", crewById(S.me).n)}</div>
+    ${pendingGuide?`<div class="ask-mate"><strong>${TE("Ask a crewmate to run this guide for you.")}</strong> ${TE("{0} is done by a crewmate. Who is not responding?", T(PROT[pendingGuide].title))}</div>`:""}
+    <div class="who-row" role="group" aria-label="${TE("Who needs help?")}">${urgentFirst.map(c=>{ const g = todayGrade(c.id);
+      if(pendingGuide && c.id===S.me) return "";
+      return `<button type="button" class="who-b" data-who="${c.id}" aria-pressed="${!pendingGuide && patientId()===c.id}">
+        <span>${c.id===S.me ? TE("Me ({0})", c.n) : esc(c.n)}</span><span class="pill l${g.worst}">${LVT(g.worst)}</span></button>`; }).join("")}</div>
+  </div>`;
+  $$("#whoCard [data-who]").forEach(b=>b.addEventListener("click", ()=>{
+    const id = b.dataset.who; S.patient = id===S.me ? null : id;
+    if(pendingGuide){ const g = pendingGuide; pendingGuide = null; startGuide(g, "Chosen from the guide list", tri.ans.slice(), id); return; }
+    tri = {i:0, ans:[]}; if(S.crew!==id) setCrew(id); renderWho(); renderTriage();
+  }));
+}
 function renderTriage(){
-  const el = $("#triage");
+  const el = $("#triage"); const pid = patientId();
+  const gc = $("#gcount"); if(gc) gc.textContent = T("{0} guides, most dangerous first", PROTOCOLS.length);
   if(tri.i >= PROTOCOLS.length){
     el.innerHTML = `<div class="card-b"><div class="small muted">${TE("Not sure what's happening?")}</div>
       <div class="q">${TE("No emergency signs from these questions.")}</div>
@@ -1683,32 +1793,32 @@ function renderTriage(){
     $("#triAgain").addEventListener("click", ()=>{ tri = {i:0, ans:[]}; renderTriage(); });
     return;
   }
-  const p = PROTOCOLS[tri.i];
+  const p = PROTOCOLS[tri.i]; const q = qText(p, pid);
   el.innerHTML = `<div class="card-b">
-    <div class="small muted">${TE("Not sure what's happening? Answer a few questions, most dangerous first.")}</div>
+    <div class="small muted">${pid!==S.me ? TE("Helping {0}. Answer for them, most dangerous first.", crewById(pid).n) : TE("Not sure what's happening? Answer a few questions, most dangerous first.")}</div>
     <div class="prog" style="margin-top:10px" aria-hidden="true">${PROTOCOLS.map((_,j)=>`<i class="${j<=tri.i?"on":""}"></i>`).join("")}</div>
     <div class="small mono">${TE("Question {0} of {1}", tri.i+1, PROTOCOLS.length)}</div>
-    <div class="q" id="triQ" tabindex="-1">${TE(p.q)}</div>
+    <div class="q" id="triQ" tabindex="-1">${esc(T(q))}</div>
     <div class="yn"><button class="btn big danger" type="button" id="triYes">${TE("Yes")}</button><button class="btn big" type="button" id="triNo">${TE("No")}</button></div>
     ${tri.i>0?`<button class="btn ghost small" type="button" id="triBack" style="margin-top:10px">← ${TE("Previous question")}</button>`:""}
   </div>`;
-  $("#triYes").addEventListener("click", ()=>{ tri.ans.push([p.q,"Yes"]); const ans = tri.ans.slice(); tri = {i:0, ans:[]}; startGuide(p.id, "Triage: answered yes", ans); });
-  $("#triNo").addEventListener("click", ()=>{ tri.ans.push([p.q,"No"]); tri.i++; renderTriage(); const q=$("#triQ"); if(q) q.focus(); });
+  $("#triYes").addEventListener("click", ()=>{ tri.ans.push([q,"Yes"]); const ans = tri.ans.slice(); tri = {i:0, ans:[]}; startGuide(p.id, "Triage: answered yes", ans, pid); });
+  $("#triNo").addEventListener("click", ()=>{ tri.ans.push([q,"No"]); tri.i++; renderTriage(); const qq=$("#triQ"); if(qq) qq.focus(); });
   const bk = $("#triBack"); if(bk) bk.addEventListener("click", ()=>{ tri.i--; tri.ans.pop(); renderTriage(); });
 }
 function renderGuideList(){
   $("#glist").innerHTML = PROTOCOLS.map(p=>`<button type="button" class="gcard" data-g="${p.id}">
     <span class="sev s${p.sev}">${TE(SEV[p.sev])} · ${TE("{0} steps", p.steps.length)}</span>
     <h4>${TE(p.title)}</h4><p>${TE(p.short)}</p>
-    <span class="gmeta">${p.hz.map(h=>`<span class="tag">${TE("NASA Hazard")}: ${TE(HAZARDS[h].s)}</span>`).join("")}</span>
+    <span class="gmeta"><span class="aud">${TE("For:")} ${TE(AUD[p.aud||"both"])}</span>${p.hz.map(h=>`<span class="tag">${TE("NASA Hazard")}: ${TE(HAZARDS[h].s)}</span>`).join("")}</span>
     <span class="small muted">${TE("Based on:")} ${esc([...new Set(p.src.map(s=>SOURCES[s].org.replace(/ \(.*\)/,"")))].join(", "))}</span>
     ${S.practiced.has(p.id)?`<span class="small" style="color:var(--g0)">✓ ${TE("Practiced")}</span>`:""}
   </button>`).join("");
-  $$("#glist .gcard").forEach(b=>b.addEventListener("click", ()=>startGuide(b.dataset.g, "Chosen from the guide list")));
+  $$("#glist .gcard").forEach(b=>b.addEventListener("click", ()=>startGuide(b.dataset.g, "Chosen from the guide list", null, patientId())));
 }
 
 /* The event log stores English text (it is sent to Mission Control) and is shown translated on screen. */
-let R = null, clockT = null, cprT = null, timerT = null, audioCtx = null;
+let R = null, clockT = null, cprT = null, audioCtx = null, sosTick = null;
 function beep(freq=880, dur=0.12, vol=0.15){
   if(!S.sound) return;
   try{ audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)(); const o = audioCtx.createOscillator(), g = audioCtx.createGain();
@@ -1716,70 +1826,181 @@ function beep(freq=880, dur=0.12, vol=0.15){
 }
 function tNow(){ return R ? (Date.now()-R.t0)/1000 : 0; }
 /* log(key, args, cls): args that are themselves translatable are passed as {t:"..."} */
-function log(key, args=[], cls){ if(!R) return; R.log.push({t:tNow(), key, args, cls}); renderLog(); }
+function log(key, args=[], cls){ if(!R) return; R.log.push({t:tNow(), key, args, cls}); saveSOS(); renderLog(); }
 const logEN = l => l.key.replace(/\{(\d)\}/g, (m,i)=>{ const a = l.args[i]; return a && a.t!==undefined ? a.t : a; });
 const logTX = l => T(l.key, ...l.args.map(a => a && a.t!==undefined ? T(a.t) : a));
-function startGuide(id, reason, triAns){
-  stopDemo();
-  if(location.hash!=="#sos") location.hash = "#sos";
-  const p = PROT[id];
-  R = {gid:id, t0:Date.now(), wall:new Date(), cur:p.steps[0].id, done:new Set(), hist:[], log:[], finished:false, chain:[id]};
-  for(const [q,a] of (triAns||[])) R.log.push({t:0, key:"Triage: \"{0}\" → {1}", args:[{t:q},{t:a}]});
-  R.log.push({t:0, key:"Started: {0}. Reason: {1}.", args:[{t:p.title},{t:reason}]});
+const dk = (g, id) => g+":"+id;      // done-set key, unique across switched guides
+const hms = s => { s = Math.max(0, Math.round(s)); const h = Math.floor(s/3600); return (h? String(h).padStart(2,"0")+":" : "") + mmss(s%3600); };
+
+/* ----- persistence (stability guide §5): survives reload / crash ----- */
+const SOS_KEY = "orbitguide.sos.v1";
+function saveSOS(){
+  if(!R) return;
+  const o = Object.assign({}, R, {done:[...R.done], wall:R.wall.toISOString(), env:S.env, day:S.day, v:1});
+  try{ localStorage.setItem(SOS_KEY, JSON.stringify(o)); if(R.saveFail){ R.saveFail = false; renderSaveWarn(); } }
+  catch(e){ if(!R.saveFail){ R.saveFail = true; renderSaveWarn(); } }
+}
+function loadSOS(){ try{ const o = JSON.parse(localStorage.getItem(SOS_KEY)||"null"); if(!o || o.v!==1 || !PROT[o.gid]) return null; o.done = new Set(o.done); o.wall = new Date(o.wall); return o; }catch(e){ return null; } }
+function clearSOS(){ try{ localStorage.removeItem(SOS_KEY); }catch(e){} }
+function renderSaveWarn(){
+  const html = R && R.saveFail ? `<span>⚠ ${TE("Log is not being saved — copy it now.")}</span><button class="btn" type="button" data-copylog>${TE("Copy log")}</button>` : "";
+  $$(".save-warn").forEach(el=>{ el.innerHTML = html; el.hidden = !html; });
+  $$("[data-copylog]").forEach(b=>b.addEventListener("click", e=>openEmergencyLog(e.currentTarget, true)));
+}
+function offerResume(){
+  const o = loadSOS(); if(!o) return;
+  if(o.finished){ clearSOS(); return; }
+  const box = $("#resumeBox");
+  box.innerHTML = `<h2 id="resumeH" style="font-size:20px">⚠ ${TE("Resume emergency in progress?")}</h2>
+    <p class="small" style="margin:6px 0 0">${TE("{0} for {1}, started {2} UTC. The clock and log continue from where they stopped.", T(PROT[o.gid].title), crewById(o.patient).n, o.wall.toISOString().slice(11,16))}</p>
+    <div class="acts"><button class="btn big danger" type="button" id="rsGo">${TE("Resume")}</button><button class="btn big" type="button" id="rsCopy">${TE("Copy log and close")}</button></div>`;
+  box.hidden = false;
+  const restore = () => { box.hidden = true; R = o; if(ENVS[o.env]) { S.env = o.env; $("#envSel").value = o.env; } if(o.day){ S.day = o.day; S.view = o.day; $("#dayIn").value = o.day; } delete R.env; delete R.day; delete R.v; };
+  $("#rsGo").addEventListener("click", ()=>{ restore(); log("Resumed after the app was closed or reloaded.", [], "warn"); enterRun(); setCrew(R.patient); renderRun(); });
+  $("#rsCopy").addEventListener("click", e=>{ restore(); log("Closed after reload; log copied.", [], "warn"); openEmergencyLog(e.currentTarget, true); $("#noteDlg").addEventListener("close", exitGuide, {once:true}); });
+  $("#rsGo").focus();
+}
+
+function enterRun(){
   document.body.classList.add("emergency");
   $("#sosHome").hidden = true; $("#sosRun").hidden = false;
   clearInterval(clockT); clockT = setInterval(updClock, 1000);
-  S.tab = "sos"; renderRun();
+  if(location.hash!=="#sos") location.hash = "#sos";
+  S.tab = "sos"; setTab("sos");
+}
+function startGuide(id, reason, triAns, patient){
+  stopDemo();
+  if(R && !R.finished){ location.hash = "#sos"; return; }   // one emergency at a time
+  const p = PROT[id];
+  patient = patient || patientId();
+  if(p.aud==="crewmate" && patient===S.me){               // FR-SOS-17: CPR cannot be done on yourself
+    pendingGuide = id; tri.ans = triAns||[]; location.hash = "#sos"; setTab("sos"); renderWho(); $("#whoCard").scrollIntoView({block:"start"}); return;
+  }
+  pendingGuide = null;
+  const pc = crewById(patient), rc = crewById(S.me);
+  R = {gid:id, t0:Date.now(), wall:new Date(), cur:p.steps[0].id, done:new Set(), hist:[], log:[], finished:false, chain:[id],
+       patient, responder:S.me, status:"active", timer:null, saveFail:false};
+  R.log.push({t:0, key:"Patient: {0} ({1}). Responder: {2} ({3}). Mode: {4}.", args:[pc.n, pc.role, rc.n, rc.role, {t:patient===S.me?"Self":"Crewmate assist"}]});
+  for(const [q,a] of (triAns||[])) R.log.push({t:0, key:"Triage: \"{0}\" → {1}", args:[{t:q},{t:a}]});
+  R.log.push({t:0, key:"Started: {0}. Reason: {1}.", args:[{t:p.title},{t:reason}]});
+  saveSOS();
+  if(S.crew!==patient){ S.crew = patient; }               // 3D, banner and roster follow the patient
+  enterRun(); setCrew(patient); renderRun();
   window.scrollTo({top:0});
 }
 function switchGuide(id){
   const from = PROT[R.gid]; const p = PROT[id];
   R.log.push({t:tNow(), key:"Switched guide: {0} → {1} (more dangerous sign).", args:[{t:from.title},{t:p.title}], cls:"warn"});
-  R.gid = id; R.cur = p.steps[0].id; R.done = new Set(); R.hist = []; R.chain.push(id);
+  R.gid = id; R.cur = p.steps[0].id; R.chain.push(id);
   renderRun();
 }
 function curProt(){ return PROT[R.gid]; }
-function stepIdx(id){ return curProt().steps.findIndex(s=>s.id===id); }
-function go(target){
+function stepIdx(id, g){ return PROT[g||R.gid].steps.findIndex(s=>s.id===id); }
+function stepOf(g, id){ return PROT[g].steps.find(s=>s.id===id); }
+/* go(target, ans, extra): every move forward pushes one history entry, also across guide switches (stability §6) */
+function go(target, ans, extra){
   const p = curProt(); const i = stepIdx(R.cur); const s = p.steps[i];
-  stopTimer();
-  if(typeof target==="string" && target.startsWith("switch:")){ R.done.add(R.cur); switchGuide(target.slice(7)); return; }
-  R.done.add(R.cur); R.hist.push(R.cur);
+  clearTimerFor(R.gid, R.cur, false);
+  R.done.add(dk(R.gid, R.cur));
+  R.hist.push(Object.assign({g:R.gid, id:R.cur, ans:ans||null, type:s.type}, extra||{}));
+  if(typeof target==="string" && target.startsWith("switch:")){ R.hist[R.hist.length-1].sw = true; switchGuide(target.slice(7)); return; }
   const nid = target==="next" || !target ? (s.next || (p.steps[i+1]||{}).id) : target;
   if(!nid || target==="end"){ finishGuide(); return; }
   R.cur = nid; renderRun();
 }
-function back(){ if(!R.hist.length) return; stopTimer(); const prev = R.hist.pop(); R.done.delete(prev); R.cur = prev; log("Went back to step {0}.", [stepIdx(prev)+1]); renderRun(); }
+function back(){
+  if(!R.hist.length) return;
+  const e = R.hist.pop();
+  clearTimerFor(R.gid, R.cur, true); clearTimerFor(e.g, e.id, true);
+  if(e.g!==R.gid){                                       // undo a guide switch
+    R.log.push({t:tNow(), key:"Undone: switch to {0}.", args:[{t:PROT[R.gid].title}], cls:"warn"});
+    R.chain.pop(); R.gid = e.g;
+  }
+  R.cur = e.id;
+  R.done = new Set(R.hist.map(h=>dk(h.g, h.id)));         // recompute branches from the remaining path
+  const st = stepOf(e.g, e.id);
+  log("Undone: {0} → {1}", [{t:stText(st)}, {t:e.ans || "done"}], "warn");
+  if(e.measured) log("Measurements from the undone step are kept in the record: {0}", [e.measured]);
+  renderRun();
+}
 function finishGuide(){
-  R.finished = true; stopTimer(); stopCPR();
+  R.finished = true; R.status = "finished"; R.timer = null; stopCPR();
   R.log.push({t:tNow(), key:"Procedure finished.", args:[]});
   R.chain.forEach(g=>S.practiced.add(g)); LS.set("practiced", [...S.practiced]);
-  renderRun(); renderStreak();
+  clearSOS();
+  renderRun(); renderStreak(); renderWaitBand(); renderRoster();
 }
 function exitGuide(){
-  stopTimer(); stopCPR(); clearInterval(clockT);
-  R = null; document.body.classList.remove("emergency");
+  stopCPR(); clearInterval(clockT);
+  R = null; clearSOS(); pendingGuide = null; S.patient = null; tri = {i:0, ans:[]};
+  document.body.classList.remove("emergency");
   $("#sosRun").hidden = true; $("#sosHome").hidden = false; $("#sosRun").innerHTML = "";
   if(window.B3){ B3.emergency(null); mount3D(); }
-  renderGuideList(); renderTriage();
+  renderWaitBand(); renderAll(false); renderWho(); renderGuideList(); renderTriage();
 }
-function updClock(){ const c = $("#emClock"); if(c && R) c.textContent = "T+"+mmss(tNow()); }
+function updClock(){ const c = $("#emClock"); if(c && R) c.textContent = "T+"+hms(tNow()); }
+
+/* ----- timers with a due time (stability §4): long waits run in the background ----- */
+const LONG_WAIT = 600;
+function startTimer(s){
+  R.timer = {g:R.gid, stepId:s.id, sec:s.sec, dueAt:Date.now()+s.sec*1000, label:stText(s), due:false};
+  R.status = s.sec > LONG_WAIT ? "waiting" : "active";
+  log("Timer started: {0} ({1})", [hms(s.sec), {t:stText(s)}]);
+  if(R.status==="waiting") log("Waiting: re-check due at {0} UTC. Other work can continue.", [new Date(R.timer.dueAt).toISOString().slice(11,16)]);
+  renderRun(); renderWaitBand(); renderRoster();
+}
+function clearTimerFor(g, id, undo){
+  if(!R || !R.timer || R.timer.g!==g || R.timer.stepId!==id) return;
+  if(undo) R.log.push({t:tNow(), key:"Timer cleared (step undone).", args:[]});
+  R.timer = null; if(R.status==="waiting") R.status = "active";
+  renderWaitBand();
+}
+function tickSOS(){
+  if(!R || !R.timer) return;
+  const t = R.timer, left = (t.dueAt - Date.now())/1000;
+  if(left<=0 && !t.due){ t.due = true; log("Timer due: {0}.", [{t:t.label}], "warn"); beep(880,.25); setTimeout(()=>beep(1100,.25),300); renderWaitBand(); renderRoster(); }
+  const tt = $("#tmT"), bar = $("#tmBar");
+  if(tt && R.cur===t.stepId && R.gid===t.g){ tt.textContent = left>0 ? hms(left) : "00:00 ✓"; if(bar) bar.style.width = Math.min(100, (1-Math.max(0,left)/t.sec)*100)+"%"; }
+  const wb = $("#wbLeft"); if(wb) wb.textContent = left>0 ? hms(left) : T("due now");
+}
+function renderWaitBand(){
+  const el = $("#waitBand"); if(!el) return;
+  const t = R && !R.finished && R.timer;
+  if(!t || (!t.due && R.status!=="waiting")){ el.hidden = true; el.innerHTML = ""; return; }
+  const left = (t.dueAt - Date.now())/1000;
+  el.classList.toggle("due", left<=0);
+  el.innerHTML = `<span>⏱ ${esc(T(PROT[t.g].title))} · ${esc(crewById(R.patient).n)} · ${TE("re-check in")} <span class="mono" id="wbLeft">${left>0?hms(left):TE("due now")}</span></span>
+    <span class="small">${esc(T(t.label))}</span>
+    <button class="btn" type="button" id="wbGo">${TE("Resume")}</button><span class="save-warn" hidden></span>`;
+  el.hidden = false;
+  $("#wbGo").addEventListener("click", ()=>{ location.hash = "#sos"; setTab("sos"); });
+  renderSaveWarn();
+}
+
 const KIND = {do:"Do this", ask:"Answer", timer:"Timed step", cpr:"Rhythm", measure:"Measure", switch:"Switch guide", report:"Report to Earth"};
+function usualText(id){
+  const b = computeFor(id).bl;
+  return `HR ${fmt("hr",b.hr.lo)}–${fmt("hr",b.hr.hi)} · SpO₂ ${fmt("spo2",b.spo2.lo)}–${fmt("spo2",b.spo2.hi)}% · Temp ${fmt("temp",b.temp.lo)}–${fmt("temp",b.temp.hi)} °C`;
+}
 function renderRun(){
   const p = curProt(), e = ENVS[S.env];
   const i = stepIdx(R.cur), s = p.steps[i];
+  const peer = R.patient!==R.responder, pc = crewById(R.patient);
   if(window.B3 && $("#mini3d")) B3.mount($("#canvasHost")); // keep the canvas alive while the panel is rebuilt
   $("#sosRun").innerHTML = `
   <div class="em-band" role="region" aria-label="${TE("Emergency in progress")}">
     <h2>⚠ ${TE(p.title)}</h2>
-    <span class="clk mono" id="emClock">T+${mmss(tNow())}</span>
+    <span class="clk mono" id="emClock">T+${hms(tNow())}</span>
     <span class="lnk">${TE("Earth link")} ${esc(linkText(e))} · ${TE("earliest reply about {0} min", replyMin(e))}</span>
     ${cprT?`<button class="btn" type="button" id="cprStopBand" style="background:#fff;color:#000">■ ${TE("Stop CPR beat")}</button>`:""}
     <button class="btn" type="button" id="sndBtn" aria-pressed="${S.sound}" style="background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.4)">${S.sound?"🔊 "+TE("Sound on"):"🔇 "+TE("Sound off")}</button>
+    <span class="helping">${peer ? TE("Helping: {0} · usual {1}", pc.n, usualText(R.patient)) : TE("Self: {0} · usual {1}", pc.n, usualText(R.patient))}</span>
+    <span class="save-warn" hidden></span>
   </div>
   <div class="run-grid">
     <nav class="card run-steps" aria-label="${TE("Steps")}"><div class="card-h"><h3>${TE("Steps")}</h3><span class="small muted">${TE(SEV[p.sev])}</span></div><div class="card-b">
-      <ol>${p.steps.map((st,j)=>`<li class="${st.id===R.cur&&!R.finished?"cur":R.done.has(st.id)?"done":""}"><span class="n"><span>${j+1}</span></span><span>${TE(st.text)}</span></li>`).join("")}</ol>
+      <ol>${p.steps.map((st,j)=>`<li class="${st.id===R.cur&&!R.finished?"cur":R.done.has(dk(R.gid,st.id))?"done":""}"><span class="n"><span>${j+1}</span></span><span>${esc(T(stText(st)))}</span></li>`).join("")}</ol>
+      ${R.chain.length>1?`<div class="small muted" style="margin-top:8px">${TE("Path:")} ${R.chain.map(g=>TE(PROT[g].title)).join(" → ")}</div>`:""}
       <div class="tags" style="margin-top:10px">${p.hz.map(h=>`<span class="tag">${TE("NASA Hazard")}: ${TE(HAZARDS[h].s)}</span>`).join("")}</div>
     </div></nav>
     <div class="card">${R.finished ? finishedHTML() : stepHTML(s, i, p)}</div>
@@ -1791,30 +2012,33 @@ function renderRun(){
         <p class="small muted" style="margin:8px 0 0">${TE("Example procedure written from public space-agency material. Not a flight checklist and not medical advice.")}</p></div></div>
     </aside>
   </div>`;
-  renderLog(); bindRun(s);
-  mount3D();
+  renderLog(); bindRun(s); renderSaveWarn(); saveSOS();
+  mount3D(); tickSOS();
 }
 function stepHTML(s, i, p){
   let body = "";
+  const tm = R.timer && R.timer.g===R.gid && R.timer.stepId===s.id ? R.timer : null;
   if(s.type==="ask") body = `<div class="acts"><button class="btn big danger" type="button" data-ans="yes">${TE("Yes")}</button><button class="btn big" type="button" data-ans="no">${TE("No")}</button></div>
     ${String(s.yes).startsWith("switch:")?`<div class="small muted" style="margin-top:8px">${TE("\"Yes\" switches to: {0}. Clock and log continue.", T(PROT[s.yes.slice(7)].title))}</div>`:""}`;
-  else if(s.type==="timer") body = `<div class="timer"><div class="t mono" id="tmT">${mmss(s.sec)}</div><div class="bar"><i id="tmBar"></i></div></div>
-    <div class="acts"><button class="btn big danger" type="button" id="tmStart">▶ ${TE("Start timer")}</button><button class="btn big" type="button" data-next>${TE("Done, next step")} →</button></div>`;
+  else if(s.type==="timer") body = `<div class="timer"><div class="t mono" id="tmT">${hms(tm ? (tm.dueAt-Date.now())/1000 : s.sec)}</div><div class="bar"><i id="tmBar"></i></div></div>
+    <div class="acts">${tm?"":`<button class="btn big danger" type="button" id="tmStart">▶ ${TE("Start timer")}</button>`}<button class="btn big" type="button" data-next>${TE("Done, next step")} →</button></div>
+    ${s.sec>LONG_WAIT?`<div class="small muted" style="margin-top:8px">${tm?TE("Waiting. You can leave this screen: a band at the top counts down and turns red when the re-check is due."):TE("Long wait: once started you can leave this screen. A band at the top will remind you.")}</div>`:""}`;
   else if(s.type==="cpr") body = `<div class="cpr"><div class="beat" id="beat">110</div><div><div class="mono" id="cprInfo"></div><div class="small muted">${TE("110 compressions per minute · 2-minute cycles")}</div><div class="small" id="cprSwap"></div></div></div>
     <div class="acts"><button class="btn big danger" type="button" id="cprStart">${cprT?"■ "+TE("Stop beat"):"▶ "+TE("Start beat")}</button><button class="btn big" type="button" data-next>${TE("Next step")} →</button></div>`;
-  else if(s.type==="measure") body = `<div class="fields" style="margin-top:12px">
+  else if(s.type==="measure") body = `<div class="small muted" style="margin-top:6px">${TE("Saved to {0}'s record for today and graded at once.", crewById(R.patient).n)}</div><div class="fields" style="margin-top:12px">
       ${[["hr","Heart rate","bpm"],["sbp","Blood pressure (top)","mmHg"],["spo2","SpO₂","%"],["temp","Temperature","°C"]].map(([k,n,u])=>`<div class="fld"><label for="ms-${k}">${TE(n)} (${u})</label><input id="ms-${k}" inputmode="decimal" autocomplete="off" placeholder="${TE("optional")}"></div>`).join("")}
     </div><div class="acts"><button class="btn big danger" type="button" id="msLog">${TE("Log and continue")} →</button></div>`;
   else if(s.type==="report") body = `<div class="acts"><button class="btn big danger" type="button" id="repSend">✉ ${TE("Send log to Earth")}</button><button class="btn big" type="button" data-next>${TE("Finish procedure")} ✓</button></div>
     <div class="small muted" style="margin-top:8px">${TE("Do not wait for the reply: keep caring for the patient.")}</div>`;
   else body = `<div class="acts"><button class="btn big danger" type="button" data-next>${TE("Done, next step")} →</button></div>`;
+  const sub = subText(s);
   return `<div class="cur-step">
     <div class="kind">${TE("Step {0} of {1}", i+1, p.steps.length)} · ${TE(KIND[s.type])}</div>
-    <div class="txt" id="stepTxt" tabindex="-1">${TE(s.text)}</div>
-    ${s.sub?`<div class="sub">${TE(s.sub)}</div>`:""}
+    <div class="txt" id="stepTxt" tabindex="-1">${esc(T(stText(s)))}</div>
+    ${sub?`<div class="sub">${esc(T(sub))}</div>`:""}
     ${body}
     <div class="acts" style="margin-top:22px;border-top:1px solid var(--line);padding-top:14px">
-      <button class="btn" type="button" id="prevBtn" ${R.hist.length?"":"disabled"}>← ${TE("Previous step")}</button>
+      <button class="btn" type="button" id="prevBtn" ${R.hist.length?"":"disabled"}>← ${TE("Undo last step")}</button>
       <button class="btn" type="button" id="endBtn">${TE("End guide")}</button>
     </div>
     <div id="confirmBox"></div>
@@ -1826,10 +2050,17 @@ function finishedHTML(){
     <div class="sub">${TE("The full log is on the right. Send it to Earth so the flight surgeon sees exactly what was done and when. Practice counts toward the \"Ready for anything\" badge.")}</div>
     <div class="acts"><button class="btn big danger" type="button" id="repSend">✉ ${TE("Send log to Earth")}</button><button class="btn big" type="button" id="backList">${TE("Back to guides")}</button></div></div>`;
 }
+/* FR-SOS-15: measurements go into the PATIENT's record for today, then everything regrades */
+function saveMeasure(vals){
+  const all = S.checkins[R.patient] || (S.checkins[R.patient] = {});
+  all[ciKey()] = Object.assign({}, all[ciKey()]||{}, vals, {measuredBy:R.responder});
+  LS.set("checkins", S.checkins);
+  S.view = S.day; renderAll(false);
+}
 function bindRun(s){
   const on = (id, f) => { const b = $(id); if(b) b.addEventListener("click", f); };
-  $$("#sosRun [data-next]").forEach(b=>b.addEventListener("click", ()=>{ log("Step {0} done: {1}", [stepIdx(R.cur)+1, {t:s.text}]); go("next"); }));
-  $$("#sosRun [data-ans]").forEach(b=>b.addEventListener("click", ()=>{ const yes = b.dataset.ans==="yes"; log("Q: {0} → {1}", [{t:s.text},{t:yes?"Yes":"No"}]); go(yes ? s.yes : s.no); }));
+  $$("#sosRun [data-next]").forEach(b=>b.addEventListener("click", ()=>{ log("Step {0} done: {1}", [stepIdx(R.cur)+1, {t:stText(s)}]); go("next"); }));
+  $$("#sosRun [data-ans]").forEach(b=>b.addEventListener("click", ()=>{ const yes = b.dataset.ans==="yes"; log("Q: {0} → {1}", [{t:stText(s)},{t:yes?"Yes":"No"}]); go(yes ? s.yes : s.no, yes?"Yes":"No"); }));
   on("#prevBtn", back);
   on("#endBtn", ()=>{ $("#confirmBox").innerHTML = `<div class="confirm"><strong>${TE("End this guide?")}</strong> ${TE("Send the log to Earth first so the flight surgeon has the record.")}
     <div class="acts" style="margin-top:10px"><button class="btn danger" type="button" id="cfSend">${TE("Send log and end")}</button><button class="btn" type="button" id="cfEnd">${TE("End without sending")}</button><button class="btn" type="button" id="cfKeep">${TE("Keep going")}</button></div></div>`;
@@ -1844,9 +2075,11 @@ function bindRun(s){
   if(s && !R.finished && s.type==="cpr"){ on("#cprStart", ()=>{ if(cprT){ stopCPR(); } else startCPR(); renderRun(); }); updCPR(); }
   if(s && !R.finished && s.type==="measure") on("#msLog", ()=>{
     const vals = {}; for(const k of ["hr","sbp","spo2","temp"]){ const v = $("#ms-"+k).value.trim().replace(",", "."); if(v!=="" && Number.isFinite(+v)) vals[k] = +v; }
-    log("Measured: HR {0} bpm, BP {1} mmHg, SpO2 {2} %, Temp {3} °C", [vals.hr??"—", vals.sbp??"—", vals.spo2??"—", vals.temp??"—"]);
+    const txt = `HR ${vals.hr??"—"} bpm, BP ${vals.sbp??"—"} mmHg, SpO2 ${vals.spo2??"—"} %, Temp ${vals.temp??"—"} °C`;
+    log("Measured on {0}: {1}", [crewById(R.patient).n, txt]);
     if(vals.spo2!==undefined && vals.spo2<=92) log("Warning: SpO2 92% or lower. Tell the crew and the flight surgeon.", [], "warn");
-    go("next"); });
+    if(Object.keys(vals).length) saveMeasure(vals);
+    go("next", Object.keys(vals).length ? "measured" : "no values", Object.keys(vals).length ? {measured:txt} : null); });
   const st = $("#stepTxt"); if(st) st.focus({preventScroll:true});
 }
 function renderLog(){
@@ -1854,17 +2087,6 @@ function renderLog(){
   el.innerHTML = R.log.map(l=>`<div class="${l.cls||""}"><b>T+${mmss(l.t)}</b><span>${esc(logTX(l))}</span></div>`).join("");
   el.scrollTop = el.scrollHeight;
 }
-function startTimer(s){
-  stopTimer(); const t0 = Date.now(); log("Timer started: {0} ({1})", [mmss(s.sec), {t:s.text}]);
-  const b = $("#tmStart"); if(b){ b.disabled = true; b.textContent = T("Running…"); }
-  timerT = setInterval(()=>{
-    const left = s.sec - (Date.now()-t0)/1000;
-    const tt = $("#tmT"), bar = $("#tmBar");
-    if(tt) tt.textContent = mmss(left); if(bar) bar.style.width = Math.min(100, (1-left/s.sec)*100)+"%";
-    if(left<=0){ stopTimer(); log("Timer finished: {0}.", [mmss(s.sec)]); beep(880,.25); setTimeout(()=>beep(1100,.25),300); if(tt) tt.textContent = "00:00 ✓"; }
-  }, 250);
-}
-function stopTimer(){ if(timerT){ clearInterval(timerT); timerT = null; } }
 let cpr = {n:0, t0:0, cyc:0};
 function startCPR(){
   cpr = {n:0, t0:Date.now(), cyc:0}; log("CPR rhythm started (110/min).");
@@ -1878,21 +2100,26 @@ function startCPR(){
 }
 function updCPR(){ const i = $("#cprInfo"); if(!i) return; if(!cprT){ i.textContent = T("Beat stopped"); return; } const el = (Date.now()-cpr.t0)/1000; i.textContent = T("Cycle {0} · {1} to swap · {2} beats", cpr.cyc+1, mmss(120 - el%120), cpr.n); }
 function stopCPR(){ if(cprT){ clearInterval(cprT); cprT = null; log("CPR rhythm stopped after {0} beats.", [cpr.n]); } }
-function openEmergencyLog(btn){
-  const p = curProt(), e = ENVS[S.env], c = crewObj(); const i = stepIdx(R.cur);
-  log("Event log sent to Earth.");
+function openEmergencyLog(btn, quiet){
+  const p = curProt(), e = ENVS[S.env]; const i = stepIdx(R.cur);
+  const pc = crewById(R.patient), rc = crewById(R.responder);
+  if(!quiet) log("Event log sent to Earth.");
   const L = [];
   L.push(`PRIORITY: MEDICAL EVENT LOG`);
-  L.push(`TO:      Flight Surgeon, Mission Control (Earth), priority`);
-  L.push(`FROM:    ${c.n} (${c.role}), ${e.long}, mission day ${S.day}`);
-  L.push(`EVENT:   ${R.chain.map(g=>PROT[g].title).join(" -> ")}`);
-  L.push(`STARTED: ${R.wall.toISOString().replace("T"," ").slice(0,19)} UTC (T+00:00)`);
-  L.push(`NOW:     T+${mmss(tNow())}; ${R.finished?"procedure finished":"current step "+(i+1)+" of "+p.steps.length+": "+p.steps[i].text}`);
-  L.push(`LINK:    ${e.delay<60 ? e.delay+" s, live" : Math.round(e.delay/60)+" min one way"}; earliest reply ~${replyMin(e)} min`);
+  L.push(`TO:        Flight Surgeon, Mission Control (Earth), priority`);
+  L.push(`PATIENT:   ${pc.n} (${pc.role})`);
+  L.push(`RESPONDER: ${rc.n} (${rc.role})`);
+  L.push(`MODE:      ${R.patient===R.responder ? "Self" : "Crewmate assist"}`);
+  L.push(`LOCATION:  ${e.long} · mission day ${S.day} · ${e.delay<60 ? e.delay+" s, live" : Math.round(e.delay/60)+" min one way"}`);
+  L.push(`PATIENT USUAL RANGE (days 1-14): ${usualText(R.patient)}`);
+  L.push(`EVENT:     ${R.chain.map(g=>PROT[g].title).join(" -> ")}`);
+  L.push(`STARTED:   ${R.wall.toISOString().replace("T"," ").slice(0,19)} UTC (T+00:00)`);
+  L.push(`NOW:       T+${hms(tNow())}; ${R.finished?"procedure finished":"current step "+(i+1)+" of "+p.steps.length+": "+stText(p.steps[i])}${R.timer?"; timer "+(R.timer.due?"DUE":"due at "+new Date(R.timer.dueAt).toISOString().slice(11,16)+" UTC"):""}`);
+  L.push(`LINK:      earliest reply ~${replyMin(e)} min`);
   L.push(""); L.push("TIMELINE:");
   for(const l of R.log) L.push(`  T+${mmss(l.t)}  ${logEN(l)}`);
   L.push("");
-  L.push(`REQUEST: Please review and advise. Crew is continuing the onboard guide and will not wait for the reply.`);
+  L.push(`REQUEST: Ground support. Do not wait for reply; crew is continuing the onboard procedure.`);
   L.push(""); L.push(`-- Orbit Guide hackathon prototype. Example procedure; not a medical device.`);
   openNote("Emergency log for Earth", L.join("\n"), 3, btn);
 }
@@ -1920,6 +2147,9 @@ function renderMethod(){
   <div class="tbl-wrap"><table class="tbl"><tr><th>${TE("Measure")}</th><th><span class="pill l1">${LVT(1)}</span></th><th><span class="pill l2">${LVT(2)}</span></th><th><span class="pill l3">${LVT(3)}</span></th><th>${TE("Source")}</th></tr>
   ${[["hr","41–50, 91–110","111–130","≤ 40, ≥ 131"],["sbp","101–110, 130–139","91–100, 140–180","≤ 90, > 180"],["temp","35.1–36.0, 38.1–39.0","≥ 39.1","≤ 35.0"],["spo2","94–95","92–93","≤ 91"],["glu","100–125","54–69, ≥ 126","< 54"],["sleep","≤ 6.0","≤ 6.0, 3 "+T("days in a row"),"—"],["mood",T("personal baseline only"),T("personal baseline only"),"—"],["co2","> 2.5","> 3.0","> 4.5"],["ex","< 90","< 45","—"],["bone",T("losing 1.0% per month or faster"),T("total −5% or worse"),"—"],["radDay","> 1.6×","> 3×","> 8× "+T("or one storm ≥ 250 mSv")],["radTot","≥ 300","≥ 450","≥ 600"]]
     .map(([k,a1,a2,a3])=>`<tr><td>${TE(METRICS[k].n)} <span class="muted">(${esc(unit(k))})</span></td><td>${esc(a1)}</td><td>${esc(a2)}</td><td>${esc(a3)}</td><td>${TE(SRC_OF[k])}</td></tr>`).join("")}</table></div>
+  <p class="small">${TE("Exercise is graded on the 7-day average, not one day, so one rest day does not raise a flag.")}</p>
+  <h3>${TE("Emergency guides")}</h3>
+  <p class="small">${TE("{0} guides. Each can be run for yourself or for a crewmate (CPR only by a crewmate). Peer wording only changes who is addressed, never the medical content. Measurements are saved to the patient's record. Timers have a due time and long waits run in the background with a reminder band. A guide in progress is saved in the browser and can be resumed after a reload. Undo walks back one step at a time, also across guide switches; the log keeps every entry.", PROTOCOLS.length)}</p>
   <h3>${TE("Data")}</h3>
   <p class="small">${TE("All data is simulated; no real astronaut medical data is used (that requires data-use agreements and ethics approval). Each crew member has fixed baselines plus seeded random noise, so the same settings always give the same numbers. Situations and your check-in entries are applied on top. Ranges are being calibrated against public NASA data (HRP evidence, OSDR Inspiration4 clinical panels). Everything comes from one function, DataSource.build(); to connect real data, replace that function and keep the daily record shape:")}</p>
   <p><code>{day, hr, sbp, spo2, temp, glu, sleep, mood, ex, co2, radDay, radTot, bone, head, vision}</code></p>
@@ -1937,15 +2167,15 @@ function renderMethod(){
   <p class="small">${TE("Orbit Guide is a hackathon prototype. It is not a medical device and does not give medical advice. Absolute thresholds are taken from the references above and personal-baseline rules are our own design; emergency guides are example procedures that support, never replace, the onboard medical checklist and the flight surgeon.")}</p>`;
 }
 
-/* ---------------- guided demo (9 scenes) ---------------- */
+/* ---------------- guided demo (10 scenes) ---------------- */
 let demo = null;
 const sleepMs = ms => new Promise(r=>{ const t = setTimeout(r, ms); demo && demo.timers.push(t); });
 async function runDemo(){
   stopDemo(); if(R) exitGuide();
   demo = {timers:[], alive:true}; const me = demo;
   $("#demoCap").hidden = false;
-  const scene = async (n, text, act, ms=6500) => { if(!me.alive) throw 0; $("#demoN").textContent = `${n}/9`; $("#demoTxt").textContent = T(text); act && act(); await sleepMs(ms); if(!me.alive) throw 0; };
-  const reset = () => { S.scen = {}; };
+  const scene = async (n, text, act, ms=6500) => { if(!me.alive) throw 0; $("#demoN").textContent = `${n}/10`; $("#demoTxt").textContent = T(text); act && act(); await sleepMs(ms); if(!me.alive) throw 0; };
+  const reset = () => { S.scen = {}; if(R) exitGuide(); };
   const B3w = f => { if(window.B3) f(window.B3); };
   try{
     location.hash = "#body"; setTab("body");
@@ -1957,9 +2187,11 @@ async function runDemo(){
     await scene(6, "Stuffy cabin air: CO₂ builds up and a headache follows. The headache guide is offered on the flight-surgeon card.", ()=>{ reset(); toggleScenario("co2"); });
     await scene(7, "Fever: temperature passes 38 °C. The skin warms to orange and the card links straight to the fever guide.", ()=>{ reset(); toggleScenario("fever"); });
     await scene(8, "On the way to Mars a solar storm multiplies the daily dose. Radiation streaks turn red; the solar storm guide is one tap away.", ()=>{ reset(); S.env="transit"; $("#envSel").value="transit"; toggleScenario("solar"); });
-    await scene(9, "Everything goes to Earth as a plain note that respects the 20-minute one-way delay.", ()=>{ reset(); toggleScenario("fever"); openDailyNote($("#demoBtn")); setTimeout(()=>me.alive && sendNote(), 900); }, 9000);
+    await scene(9, "Crewmate collapse: Novak holds the app. Kim's SpO₂ drops to 90%, her card flashes \"Needs help\", and Help Kim opens the guide written for Kim.", ()=>{ reset(); S.env="iss"; $("#envSel").value="iss"; S.me="novak"; renderMeSel(); S.scen.kim=[{id:"collapse", dur:1, end:S.day}]; setCrew("kim");
+      setTimeout(()=>{ if(me.alive){ helpCrew("kim"); setTimeout(()=>{ if(me.alive){ demo = null; startGuide("cpr", "Triage: answered yes", [[qText(PROT.cpr,"kim"),"Yes"]], "kim"); demo = me; } }, 2500); } }, 2500); }, 9000);
+    await scene(10, "Everything goes to Earth as a plain note that respects the 20-minute one-way delay.", ()=>{ reset(); location.hash = "#body"; setTab("body"); toggleScenario("fever"); openDailyNote($("#demoBtn")); setTimeout(()=>me.alive && sendNote(), 900); }, 9000);
   }catch(e){}
-  if(me===demo) stopDemo();
+  if(me===demo){ stopDemo(); S.me = LS.get("me","kim"); renderMeSel(); renderAll(false); renderWho(); }
 }
 function stopDemo(){ if(!demo) return; demo.alive = false; demo.timers.forEach(clearTimeout); demo = null; $("#demoCap").hidden = true; }
 
@@ -1967,8 +2199,10 @@ function stopDemo(){ if(!demo) return; demo.alive = false; demo.timers.forEach(c
 function boot(){
   applyStatic(); initTop(); initStage(); initCheckin(); initNote();
   C = computeFor(S.crew);
-  renderAll(false); renderTriage(); renderGuideList(); renderMethod(); drawLearn();
+  renderAll(false); renderWho(); renderTriage(); renderGuideList(); renderMethod(); drawLearn();
   setTab(location.hash.slice(1) || "home");
+  sosTick = setInterval(tickSOS, 1000);   // timers keep counting on every tab
+  offerResume();                          // an emergency left open by a reload or crash
   // 3D arrives asynchronously from the module script
   window.addEventListener("og3d-ready", ()=>{
     $("#heroLoad").hidden = true;
