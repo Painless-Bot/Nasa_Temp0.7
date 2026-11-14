@@ -11,7 +11,7 @@
   const SAY = {
     "cpr:a":   ["Medical emergency! Call it out loud!", "응급 상황! 크게 외치세요!"],
     "cpr:d":   ["Strap the patient down!", "환자를 고정하세요!"],
-    "cpr:e":   ["Start CPR now! Push hard and fast!", "CPR 실시! 강하고 빠르게 누르세요!"],
+    "cpr:e":   ["Compressions now! Push hard and fast!", "CPR 실시! 강하고 빠르게 누르세요!"],
     "cpr:f":   ["Attach the AED!", "AED 부착!"],
     "cpr:g":   ["Give oxygen!", "산소 공급!"],
     "cpr:i":   ["Recovery position! Stay with them!", "회복 자세! 곁을 지키세요!"],
@@ -19,7 +19,7 @@
     "toxic:b": ["Move to the safe module! Close the hatch!", "안전 모듈로 이동! 해치를 닫으세요!"],
     "toxic:e": ["Rinse with water for fifteen minutes!", "물로 15분간 씻어내세요!"],
     "chest:a": ["Stop and strap in!", "멈추고 몸을 고정하세요!"],
-    "chest:d": ["Start oxygen!", "산소 공급 시작!"],
+    "chest:d": ["Oxygen on now!", "산소를 공급하세요!"],
     "dcs:b":   ["Serious signs! Tell the ground now!", "중증 징후! 지상에 바로 알리세요!"],
     "dcs:c":   ["One hundred percent oxygen!", "100% 산소 공급!"],
     "solar:a": ["Go to the storm shelter now!", "지금 대피소로 이동하세요!"],
@@ -35,8 +35,8 @@
   };
   const EVENT_SAY = {
     swap:  ["Swap rescuers now!", "구조자 교대!"],
-    due:   ["Time is up! Check again now!", "시간 종료! 다시 확인하세요!"],
-    ask:   ["Say yes or no.", "예 또는 아니오로 답하세요."],
+    due:   ["Time is up! Check the patient now!", "시간 종료! 지금 환자를 확인하세요!"],
+    ask:   ["Please answer the question first.", "먼저 질문에 답해 주세요."],
   };
   if(typeof KO!=="undefined") Object.assign(KO, {
     "Voice command: \"{0}\" → {1}": "음성 명령: \"{0}\" → {1}",
@@ -67,7 +67,9 @@
       u.lang = ko() ? "ko-KR" : "en-US";
       const v = voiceFor(ko() ? "ko" : "en"); if(v) u.voice = v;
       u.rate = 1.05; u.volume = 1;
-      u.onend = u.onerror = () => { V.busyUntil = Date.now() + 700; };   // don't hear our own voice as a command
+      // recognition results arrive about a second after the sound: keep ignoring for 2 s after we stop speaking
+      u.onend = u.onerror = () => { V.busyUntil = Date.now() + 2000; V.echoUntil = Date.now() + 6000; };
+      V.lastSaid = norm(text).split(" ");
       V.busyUntil = Date.now() + Math.min(6000, 500 + text.length*80);   // fallback if onend never fires
       // Chrome can silently drop an utterance queued right after cancel(); give it a moment
       clearTimeout(V.sayT); V.sayT = setTimeout(()=>{ try{ speechSynthesis.resume(); speechSynthesis.speak(u); }catch(e){} }, wasBusy ? 150 : 0);
@@ -78,6 +80,12 @@
 
   /* ---------- listening ---------- */
   const norm = s => s.toLowerCase().replace(/[.,!?。！？]/g, " ").replace(/\s+/g, " ").trim();
+  /* true when what the mic heard is mostly the app's own last cue (speaker → mic echo) */
+  function isEcho(t){
+    if(!V.lastSaid || Date.now() > (V.echoUntil||0)) return false;
+    const w = t.split(" ").filter(x=>x.length>1); if(!w.length) return false;
+    return w.filter(x=>V.lastSaid.includes(x)).length / w.length >= 0.5;
+  }
   function matchCmd(t){
     if(/\b(back|undo|previous)\b|이전|뒤로|되돌려/.test(t)) return "undo";
     if(/\b(repeat|again|say again)\b|다시 ?말|반복|다시 ?듣/.test(t)) return "repeat";
@@ -99,7 +107,7 @@
     else if(cmd==="start"){
       btn = q("#tmStart:not([disabled])");
       if(!btn && s && s.type==="cpr" && !cprT) btn = q("#cprStart");      // only starts the beat, never stops it
-      if(!btn){ say(cueNow()); return true; }                            // nothing to start: say the step again
+      if(!btn) return false;                                             // nothing to start (or already running): ignore
     }
     else if(cmd==="yes") btn = q('[data-ans="yes"]');
     else if(cmd==="no") btn = q('[data-ans="no"]');
@@ -123,6 +131,7 @@
         if(!ev.results[i].isFinal) continue;
         const alts = [...ev.results[i]].map(a=>norm(a.transcript));
         V.heard = alts[0]; paint();
+        if(isEcho(alts[0])) continue;                              // our own voice, not the crew
         for(const t of alts){ const c = matchCmd(t); if(c){ V.busyUntil = Date.now()+1200; act(c, alts[0]); return; } }
       }
     };
@@ -164,7 +173,7 @@
   const _log = log;
   log = function(key){
     _log.apply(this, arguments);
-    if(key==="CPR rhythm started (110/min).") say(pick(SAY["cpr:e"]));
+    if(key==="CPR rhythm started (110/min).") say(pick(SAY["cpr:e"]));   // cue contains no command word
     else if(key==="CPR cycle {0} complete (2 min). Swap rescuers now.") say(pick(EVENT_SAY.swap));
     else if(key==="Timer due: {0}.") say(pick(EVENT_SAY.due));
   };
