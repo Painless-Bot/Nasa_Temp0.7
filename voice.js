@@ -121,18 +121,27 @@
   }
   function startListening(){
     if(!SR){ V.note = ko() ? "이 브라우저는 음성 인식을 지원하지 않아요 (Chrome·Edge 사용)" : "Voice commands need Chrome or Edge"; paint(); return; }
-    if(V.rec) try{ V.rec.abort(); }catch(e){}
+    if(V.rec){ const old = V.rec; V.rec = null; try{ old.abort(); }catch(e){} }
     const r = new SR();
     r.lang = ko() ? "ko-KR" : "en-US";
     r.continuous = true; r.interimResults = false; r.maxAlternatives = 3;
     r.onresult = ev => {
-      if(Date.now() < V.busyUntil) return;                       // ignore while a cue is being spoken
+      if(r!==V.rec) return;                                      // a stale recognizer: never act twice
       for(let i=ev.resultIndex; i<ev.results.length; i++){
         if(!ev.results[i].isFinal) continue;
-        const alts = [...ev.results[i]].map(a=>norm(a.transcript));
-        V.heard = alts[0]; paint();
-        if(isEcho(alts[0])) continue;                              // our own voice, not the crew
-        for(const t of alts){ const c = matchCmd(t); if(c){ V.busyUntil = Date.now()+1200; act(c, alts[0]); return; } }
+        const alts = Array.from({length:ev.results[i].length}, (_,j)=>norm(ev.results[i][j].transcript));
+        const now = Date.now();
+        V.heard = alts[0]; V.hist = [alts[0], ...(V.hist||[])].slice(0,3); paint();
+        if(now < V.busyUntil){ console.info("[voice] ignored (speaking):", alts); continue; }   // a cue is playing
+        if(isEcho(alts[0])){ console.info("[voice] ignored (echo):", alts); continue; }         // our own voice
+        if(now < (V.cmdUntil||0)){ console.info("[voice] ignored (cooldown):", alts); continue; } // one command at a time
+        const c = alts.map(matchCmd).find(Boolean) || null;
+        console.info("[voice] heard:", alts, "→", c);
+        if(!c) continue;
+        if(c==="next" && now < (V.startedAt||0) + 4000){ console.info("[voice] ignored next right after start"); continue; }
+        V.cmdUntil = now + 2500;                                 // ignore anything else for 2.5 s
+        if(act(c, alts[0]) && c==="start") V.startedAt = now;
+        return;                                                  // at most one command per event
       }
     };
     r.onerror = e => {
@@ -140,7 +149,8 @@
       else if(e.error==="network"){ V.note = ko() ? "음성 인식에 인터넷 연결이 필요해요" : "Voice recognition needs a network connection in this browser"; }
       paint();
     };
-    r.onend = () => { if(V.listen && R && !R.finished) setTimeout(()=>{ if(V.listen) try{ r.start(); }catch(e){} }, 250); };
+    // restart only the CURRENT recognizer; an aborted one must stay dead (two live ones would act twice)
+    r.onend = () => { if(r===V.rec && V.listen && R && !R.finished) setTimeout(()=>{ if(r===V.rec && V.listen) try{ r.start(); }catch(e){} }, 250); };
     V.rec = r; V.note = "";
     try{ r.start(); }catch(e){}
     paint();
@@ -156,7 +166,7 @@
     const L = (en, k) => ko() ? k : en;
     box.innerHTML = `<button class="btn" type="button" id="vSpeak" aria-pressed="${V.speak}" ${bs}>${V.speak?"🗣 "+L("Voice cues on","음성 안내 켜짐"):"🗣 "+L("Voice cues off","음성 안내 꺼짐")}</button>
       <button class="btn" type="button" id="vListen" aria-pressed="${V.listen}" ${bs} ${SR?"":"disabled"}>${V.listen?"🎙 "+L("Hands-free on","핸즈프리 켜짐"):"🎙 "+L("Hands-free off","핸즈프리 꺼짐")}</button>
-      ${V.listen?`<span class="small v-hint">${L('Say "Start", "Next step", "Yes", "No", "Back" or "Repeat"','"시작", "다음 단계", "예", "아니오", "이전", "다시"라고 말하세요')}${V.heard?` · ${L("heard","인식")}: “${esc(V.heard)}”`:""}</span>`:""}
+      ${V.listen?`<span class="small v-hint">${L('Say "Start", "Next step", "Yes", "No", "Back" or "Repeat"','"시작", "다음 단계", "예", "아니오", "이전", "다시"라고 말하세요')}${V.hist&&V.hist.length?` · ${L("heard","인식")}: ${V.hist.map(h=>`“${esc(h)}”`).join(" ← ")}`:""}</span>`:""}
       ${V.note?`<span class="small v-hint">⚠ ${esc(V.note)}</span>`:""}`;
     box.querySelector("#vSpeak").onclick = () => { V.speak = !V.speak; LS.set("voice.speak", V.speak); if(!V.speak && window.speechSynthesis) speechSynthesis.cancel(); else say(cueNow()); paint(); };
     box.querySelector("#vListen").onclick = () => { if(V.listen) stopListening(); else { V.listen = true; startListening(); } };
