@@ -51,6 +51,7 @@
     listen: false,                             // mic always starts off: it needs the user's permission
     rec: null, lastKey: null, busyUntil: 0, heard: "", note: "",
   };
+  V.version = "voice v4 (11-14 20:15)";
   window.__voice = V;
 
   /* ---------- speaking ---------- */
@@ -92,7 +93,7 @@
     if(/\b(no|nope|negative)\b|^아니|아니요|아니오|아뇨/.test(t)) return "no";
     if(/\b(yes|yeah|yep|affirmative)\b|^(예|네|응)(\s|$)|맞아/.test(t)) return "yes";
     if(/\bstart\b|\bbegin\b|스타트|시작/.test(t)) return "start";
-    if(/\bnext\b|\bcontinue\b|\bdone\b|다음|넥스트|넘겨|완료/.test(t)) return "next";
+    if(/\bnext step\b|\bgo next\b|다음 ?단계|다음으로|넥스트 ?스텝/.test(t)) return "next";
     return null;
   }
   function act(cmd, heard){
@@ -166,8 +167,9 @@
     const L = (en, k) => ko() ? k : en;
     box.innerHTML = `<button class="btn" type="button" id="vSpeak" aria-pressed="${V.speak}" ${bs}>${V.speak?"🗣 "+L("Voice cues on","음성 안내 켜짐"):"🗣 "+L("Voice cues off","음성 안내 꺼짐")}</button>
       <button class="btn" type="button" id="vListen" aria-pressed="${V.listen}" ${bs} ${SR?"":"disabled"}>${V.listen?"🎙 "+L("Hands-free on","핸즈프리 켜짐"):"🎙 "+L("Hands-free off","핸즈프리 꺼짐")}</button>
-      ${V.listen?`<span class="small v-hint">${L('Say "Start", "Next step", "Yes", "No", "Back" or "Repeat"','"시작", "다음 단계", "예", "아니오", "이전", "다시"라고 말하세요')}${V.hist&&V.hist.length?` · ${L("heard","인식")}: ${V.hist.map(h=>`“${esc(h)}”`).join(" ← ")}`:""}</span>`:""}
-      ${V.note?`<span class="small v-hint">⚠ ${esc(V.note)}</span>`:""}`;
+      ${V.listen?`<span class="small v-hint">${L('Say "Start", "Next step", "Yes", "No", "Back" or "Repeat"','"시작", "다음 단계", "예", "아니오", "이전", "다시"라고 말하세요 (다음은 꼭 "다음 단계")')}${V.hist&&V.hist.length?` · ${L("heard","인식")}: ${V.hist.map(h=>`“${esc(h)}”`).join(" ← ")}`:""}</span>`:""}
+      ${V.note?`<span class="small v-hint">⚠ ${esc(V.note)}</span>`:""}
+      <span class="small v-hint" style="opacity:.6">${V.version}</span>`;
     box.querySelector("#vSpeak").onclick = () => { V.speak = !V.speak; LS.set("voice.speak", V.speak); if(!V.speak && window.speechSynthesis) speechSynthesis.cancel(); else say(cueNow()); paint(); };
     box.querySelector("#vListen").onclick = () => { if(V.listen) stopListening(); else { V.listen = true; startListening(); } };
   }
