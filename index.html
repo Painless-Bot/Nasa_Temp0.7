@@ -3528,12 +3528,12 @@ camera.position.set(.9, .35, 5.2);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true; controls.dampingFactor = 0.08; controls.minDistance = 0.45; controls.maxDistance = 4.8;
 controls.target.set(0, 0, 0); controls.autoRotateSpeed = 0.9; controls.enablePan = false;
-let composer = null;
+let composer = null, bloom = null;
 if(EffectComposer){
   try{
     composer = new EffectComposer(renderer);
     composer.addPass(new RenderPass(scene, camera));
-    composer.addPass(new UnrealBloomPass(new THREE.Vector2(512,512), 0.5, 0.5, 0.24));
+    composer.addPass(bloom = new UnrealBloomPass(new THREE.Vector2(512,512), 0.5, 0.5, 0.24));
     composer.addPass(new OutputPass());
   }catch(e){ composer = null; }
 }
@@ -3857,12 +3857,15 @@ function frame(){
   orbit.visible = !sel || sel==="whole";
   ticks.rotation.z = t*.12; earth.material.uniforms.uT.value = t; earth.rotation.y = 1.1 + t*.01;
   /* Mars, the route, the Moon and the Milky Way: only on the home screen, faded in and out */
-  marsA += ((st.hero ? 1 : 0) - marsA)*Math.min(1, dt*2.5);
+  marsA += ((st.hero ? 1 : 0) - marsA)*Math.min(1, dt*2.5);  /* home: darker sky (less bloom haze, darker clear colour) and a slower turn */
+  if(bloom){ bloom.strength = .5 - .22*marsA; bloom.threshold = .24 + .12*marsA; }
+  renderer.setClearColor(tc.setRGB(.0157*(1-.45*marsA), .0353*(1-.45*marsA), .0706*(1-.45*marsA), THREE.SRGBColorSpace), 1);   // #040912 → darker
+  controls.autoRotateSpeed = .9 - .5*marsA;
   mars.visible = routeLine.visible = ship.visible = moon.visible = milky.visible = galaxy.visible = marsA > .01;
-  moon.material.uniforms.uA.value = marsA; milky.material.opacity = .8*marsA; galaxy.material.opacity = .5*marsA;
+  moon.material.uniforms.uA.value = marsA; milky.material.opacity = .18*marsA; galaxy.material.opacity = .3*marsA;
   mars.material.uniforms.uA.value = marsA; mars.rotation.y = .6 + t*.008;
-  routeLine.material.opacity = .22*marsA;
-  route.getPoint(.62 + .3*((t/90)%1), ship.position); ship.material.opacity = .85*marsA;
+  routeLine.material.opacity = .12*marsA;
+  route.getPoint(.62 + .3*((t/90)%1), ship.position); ship.material.opacity = .55*marsA;
   /* scan */
   let sy = -9;
   if(scanT >= 0){ scanT += dt/1.5; if(scanT>1) scanT = -1; else sy = -.95 + scanT*1.85; }
