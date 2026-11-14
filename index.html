@@ -1939,6 +1939,26 @@ const KO = {
 "Swap rescuers now": "지금 구조자를 바꾸세요",
 "Switched guide: {0} → {1} (more dangerous sign).": "가이드 전환: {0} → {1} (더 위험한 징후).",
 "Tap a glowing part. The heart shows today's numbers, a 28-day trend against Kim's personal band, and what to do now.": "빛나는 부위를 눌러 보세요. 심장에 오늘 수치, Kim의 개인 범위와 비교한 28일 추세, 지금 할 일이 나옵니다.",
+"{0}'s log received: {1}, T+{2}.": "{0}의 기록 수신: {1}, T+{2}.",
+"The guide is marked finished. Stay with {0} and keep watching breathing and responsiveness.": "가이드가 완료로 표시됐습니다. {0} 곁에 있으면서 호흡과 반응을 계속 지켜봐 주세요.",
+"You are on step {0} of {1}. Keep following the onboard guide; we are reviewing your timeline now.": "현재 {1}단계 중 {0}단계입니다. 기내 가이드를 계속 따르세요. 지금 타임라인을 검토하고 있습니다.",
+"Please confirm who the patient is in your next update.": "다음 업데이트에 환자가 누구인지 알려 주세요.",
+"Next update: what the AED advises (shock or no shock), and whether normal breathing returns.": "다음 업데이트: AED 판단(충격 필요/불필요)과 정상 호흡이 돌아왔는지.",
+"Next update: the cabin air readings and whether anyone is coughing or short of breath.": "다음 업데이트: 선실 공기 수치, 기침이나 숨찬 사람이 있는지.",
+"Next update: heart rate, blood pressure and SpO₂ every 5 minutes, and whether the pain changes.": "다음 업데이트: 5분마다 심박, 혈압, SpO₂, 그리고 통증 변화.",
+"Next update: where the symptoms are now and whether they ease with the steps in the guide.": "다음 업데이트: 지금 증상이 어디에 있는지, 가이드 단계를 따른 뒤 줄어드는지.",
+"Next update: dosimeter readings and when the crew reached the shelter.": "다음 업데이트: 선량계 수치와 대피소 도착 시각.",
+"Next update: the size of the swelling, and at once if chest pain or shortness of breath starts.": "다음 업데이트: 부은 크기. 가슴 통증이나 숨참이 생기면 즉시.",
+"Next update: vision in that eye and whether pain or redness eases.": "다음 업데이트: 그쪽 눈의 시력, 통증이나 충혈이 줄어드는지.",
+"Next update: temperature every 4 hours and any new rash or symptom.": "다음 업데이트: 4시간마다 체온, 새 발진이나 증상.",
+"Next update: whether the headache or vision change gets worse, plus blood pressure.": "다음 업데이트: 두통이나 시야 변화가 심해지는지, 그리고 혈압.",
+"Next update: whether the nausea eases and whether fluids stay down.": "다음 업데이트: 메스꺼움이 줄어드는지, 물을 마셔도 토하지 않는지.",
+"Next update: how they feel in 30 minutes.": "다음 업데이트: 30분 뒤 상태.",
+"{0}'s day {1} numbers received. Everything is inside the personal range; no changes to the plan.": "{0}의 {1}일차 수치 수신. 모두 개인 범위 안입니다. 계획 변경 없습니다.",
+"{0}'s day {1} numbers received. Flagged: {2}.": "{0}의 {1}일차 수치 수신. 확인 필요: {2}.",
+"Not urgent yet. Keep the actions in your plan and recheck tomorrow.": "아직 급하지 않습니다. 계획의 조치를 계속하고 내일 다시 재 주세요.",
+"Added to today's medical review. Keep the actions in your plan and send tomorrow's numbers, sooner if it gets worse.": "오늘 의료 검토에 넣었습니다. 계획의 조치를 계속하고 내일 수치를 보내 주세요. 나빠지면 더 빨리.",
+"Treat this as urgent: start the matching emergency guide if you have not, and send numbers every 15 minutes.": "급한 상황으로 다루세요. 아직 안 했다면 해당 응급 가이드를 시작하고 15분마다 수치를 보내 주세요.",
 "Thanks, added to today's medical review. Keep the actions in your plan and send tomorrow's numbers.": "감사합니다, 오늘 의료 검토에 넣었습니다. 계획의 조치를 계속하고 내일 수치를 보내 주세요.",
 "Timer cleared (step undone).": "타이머 지움 (단계 되돌림).",
 "Transmitting… {0} of {1}": "전송 중… {0} / {1}",
@@ -2646,8 +2666,8 @@ function drawLearn(){
 
 /* ---------------- Earth note (always written in English for Mission Control) ---------------- */
 let noteCtx = null, noteReturn = null, txTimers = [];
-function openNote(titleKey, text, lv, returnEl){
-  noteCtx = {text, lv}; noteReturn = returnEl || document.activeElement;
+function openNote(titleKey, text, lv, returnEl, reply){
+  noteCtx = {text, lv, reply}; noteReturn = returnEl || document.activeElement;
   $("#noteTitle").textContent = T(titleKey); $("#noteText").textContent = text;
   $("#noteLangHint").textContent = S.lang==="ko" ? T("The note is written in English for Mission Control.") : "";
   const e = ENVS[S.env];
@@ -2670,10 +2690,10 @@ function sendNote(){
       : T("Delivered to Mission Control. Earliest reply in about {0} min.", replyMin(e));
     if(p>=1){ clearInterval(iv);
       const t1 = setTimeout(()=>{ const lv = noteCtx?noteCtx.lv:0;
-        const msg = lv===3 ? "Received. Keep following the onboard guide; we are reviewing your log now. Keep measuring every 5 minutes and send updates." :
+        const plan = (noteCtx && noteCtx.reply) || [[lv===3 ? "Received. Keep following the onboard guide; we are reviewing your log now. Keep measuring every 5 minutes and send updates." :
                     lv===2 ? "Thanks, added to today's medical review. Keep the actions in your plan and send tomorrow's numbers." :
-                    "Received, all noted. No changes to your plan.";
-        $("#txReply").innerHTML = `<div class="reply"><strong>${TE("Flight surgeon (simulated reply, {0} min later):", replyMin(e))}</strong> ${TE(msg)}</div>`; }, (2*e.delay+600)/60*1000);
+                    "Received, all noted. No changes to your plan.", []]];
+        $("#txReply").innerHTML = `<div class="reply"><strong>${TE("Flight surgeon (simulated reply, {0} min later):", replyMin(e))}</strong> ${plan.map(replyLine).join(" ")}</div>`; }, (2*e.delay+600)/60*1000);
       txTimers.push(t1);
     }
   }, 50);
@@ -2693,6 +2713,40 @@ function initNote(){
   });
 }
 const rangeEN = k => rangeText(k, C.bl, ENVS[S.env]);
+/* Simulated surgeon reply: built from what the log actually says, so it reads like someone read it.
+   It only acknowledges and asks for the next piece of information; it never adds new medical orders. */
+const replyLine = ([k, a]) => esc(T(k, ...a.map(x => x && x.t!==undefined ? T(x.t) : x)));
+const NEXT_ASK = {
+  cpr:   "Next update: what the AED advises (shock or no shock), and whether normal breathing returns.",
+  toxic: "Next update: the cabin air readings and whether anyone is coughing or short of breath.",
+  chest: "Next update: heart rate, blood pressure and SpO₂ every 5 minutes, and whether the pain changes.",
+  dcs:   "Next update: where the symptoms are now and whether they ease with the steps in the guide.",
+  solar: "Next update: dosimeter readings and when the crew reached the shelter.",
+  clot:  "Next update: the size of the swelling, and at once if chest pain or shortness of breath starts.",
+  eye:   "Next update: vision in that eye and whether pain or redness eases.",
+  fever: "Next update: temperature every 4 hours and any new rash or symptom.",
+  head:  "Next update: whether the headache or vision change gets worse, plus blood pressure.",
+  sms:   "Next update: whether the nausea eases and whether fluids stay down.",
+  panic: "Next update: how they feel in 30 minutes."
+};
+function sosReply(){
+  const p = curProt(), i = stepIdx(R.cur), pc = crewById(R.patient);
+  const out = [["{0}'s log received: {1}, T+{2}.", [{t:pc.n}, {t:p.title}, hms(tNow())]]];
+  out.push(R.finished ? ["The guide is marked finished. Stay with {0} and keep watching breathing and responsiveness.", [{t:pc.n}]]
+                      : ["You are on step {0} of {1}. Keep following the onboard guide; we are reviewing your timeline now.", [i+1, p.steps.length]]);
+  if(!R.patient) out.push(["Please confirm who the patient is in your next update.", []]);
+  out.push([NEXT_ASK[p.id] || "Keep measuring every 5 minutes and send updates.", []]);
+  return out;
+}
+function dailyReply(a, c, day){
+  const bad = SYSTEMS.filter(s=>a.g.sl[s.id]>0).sort((x,y)=>a.g.sl[y.id]-a.g.sl[x.id]).map(s=>T(s.n)).join(", ");
+  if(a.lv===0) return [["{0}'s day {1} numbers received. Everything is inside the personal range; no changes to the plan.", [{t:c.n}, day]]];
+  const out = [["{0}'s day {1} numbers received. Flagged: {2}.", [{t:c.n}, day, bad]]];
+  out.push([["", "Not urgent yet. Keep the actions in your plan and recheck tomorrow.",
+             "Added to today's medical review. Keep the actions in your plan and send tomorrow's numbers, sooner if it gets worse.",
+             "Treat this as urgent: start the matching emergency guide if you have not, and send numbers every 15 minutes."][a.lv], []]);
+  return out;
+}
 function openDailyNote(btn){
   const i = vi(), a = surgeonAssess(i), e = ENVS[S.env], c = crewObj(), r = C.recs[i];
   const ans = ["Not needed","Not yet: recheck tomorrow","Not urgent: add to today's medical report","URGENT: call now"][a.lv];
@@ -2723,7 +2777,7 @@ function openDailyNote(btn){
   L.push(`REQUEST: ${["None. For the record.","None yet. Will recheck tomorrow.","Please review with the next downlink.","Please advise as soon as possible. Onboard care has started; crew will not wait for the reply."][a.lv]}`);
   L.push("");
   L.push(`-- Orbit Guide hackathon prototype. Simulated data; thresholds illustrative; not a medical device.`);
-  openNote("Note for Earth", L.join("\n"), a.lv, btn);
+  openNote("Note for Earth", L.join("\n"), a.lv, btn, dailyReply(a, c, S.view));
 }
 
 /* ---------------- SOS: who, triage, list, runner ----------------
@@ -3098,7 +3152,7 @@ function openEmergencyLog(btn, quiet){
   L.push("");
   L.push(`REQUEST: Ground support. Do not wait for reply; crew is continuing the onboard procedure.`);
   L.push(""); L.push(`-- Orbit Guide hackathon prototype. Example procedure; not a medical device.`);
-  openNote("Emergency log for Earth", L.join("\n"), 3, btn);
+  openNote("Emergency log for Earth", L.join("\n"), 3, btn, sosReply());
   if(!quiet && R) noteCtx.onSend = () => { if(R) log("Event log sent to Earth."); };   // logged when actually sent, not when opened
 }
 
