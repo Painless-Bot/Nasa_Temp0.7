@@ -3591,7 +3591,7 @@ const earth = new THREE.Mesh(new THREE.SphereGeometry(2.4, 64, 48), new THREE.Sh
   float vn(vec3 p){ vec3 i = floor(p), f = fract(p); f = f*f*(3.0-2.0*f);
     return mix(mix(mix(h(i),h(i+vec3(1,0,0)),f.x), mix(h(i+vec3(0,1,0)),h(i+vec3(1,1,0)),f.x), f.y), mix(mix(h(i+vec3(0,0,1)),h(i+vec3(1,0,1)),f.x), mix(h(i+vec3(0,1,1)),h(i+vec3(1,1,1)),f.x), f.y), f.z); }
   float fbm(vec3 p){ return vn(p)*0.5 + vn(p*2.1)*0.27 + vn(p*4.3)*0.15 + vn(p*8.7)*0.08; }
-  void main(){ vec3 n = normalize(vN); vec3 sun = normalize(vec3(0.75,0.35,0.55));
+  void main(){ vec3 n = normalize(vN); vec3 sun = normalize(vec3(0.75,0.12,0.55));
     float land = smoothstep(0.5, 0.56, fbm(vO*1.25 + 4.0));
     vec3 base = mix(vec3(0.015,0.09,0.3), vec3(0.05,0.22,0.12), land);
     float cl = smoothstep(0.52, 0.75, fbm(vO*2.3 + vec3(uT*0.01, 0.0, 7.0)));
@@ -3602,41 +3602,91 @@ const earth = new THREE.Mesh(new THREE.SphereGeometry(2.4, 64, 48), new THREE.Sh
     gl_FragColor = vec4(col, 1.0); }`}));
 earth.position.set(-9.5, 4.6, -22); earth.rotation.set(.3, 1.1, .2); scene.add(earth);
 
-/* ---------- Mars far away, with the crew's Earth → Mars route (home screen only, fades with st.hero) ---------- */
-const MARS_AT = new THREE.Vector3(2.4, 4.9, -24);
-const mars = new THREE.Mesh(new THREE.SphereGeometry(1.05, 64, 48), new THREE.ShaderMaterial({vertexShader:VS, transparent:true, depthWrite:false, uniforms:{uA:{value:0}}, fragmentShader:`
-  uniform float uA; varying vec3 vN; varying vec3 vV; varying vec3 vO;
-  float h(vec3 p){ return fract(sin(dot(p, vec3(127.1,311.7,74.7)))*43758.5453); }
+/* ---------- home-screen sky: Sun, planets, Moon, Milky Way (fade in and out with st.hero) ----------
+   Spread around the whole sky like a real one: the first view keeps Earth, Moon and Mars; as the camera
+   slowly turns, the Sun, Venus, Jupiter and Saturn come into view one at a time. The Sun sits exactly in
+   the direction every planet shader is lit from, so facing it shows the planets as backlit crescents. */
+const SUN_DIR = new THREE.Vector3(.75, .12, .55).normalize();
+const NOISE_GLSL = `float h(vec3 p){ return fract(sin(dot(p, vec3(127.1,311.7,74.7)))*43758.5453); }
   float vn(vec3 p){ vec3 i = floor(p), f = fract(p); f = f*f*(3.0-2.0*f);
     return mix(mix(mix(h(i),h(i+vec3(1,0,0)),f.x), mix(h(i+vec3(0,1,0)),h(i+vec3(1,1,0)),f.x), f.y), mix(mix(h(i+vec3(0,0,1)),h(i+vec3(1,0,1)),f.x), mix(h(i+vec3(0,1,1)),h(i+vec3(1,1,1)),f.x), f.y), f.z); }
-  float fbm(vec3 p){ return vn(p)*0.5 + vn(p*2.1)*0.27 + vn(p*4.3)*0.15 + vn(p*8.7)*0.08; }
-  void main(){ vec3 n = normalize(vN); vec3 sun = normalize(vec3(0.75,0.35,0.55));
-    vec3 base = mix(vec3(0.40,0.15,0.07), vec3(0.66,0.32,0.15), fbm(vO*1.7 + 11.0));
-    base = mix(base, vec3(0.22,0.09,0.05), smoothstep(0.55, 0.68, fbm(vO*2.6 + 3.0))*0.7);   // dark plains
-    base = mix(base, vec3(0.86,0.83,0.8), smoothstep(0.88, 0.94, abs(normalize(vO).y)));   // polar caps
+  float fbm(vec3 p){ return vn(p)*0.5 + vn(p*2.1)*0.27 + vn(p*4.3)*0.15 + vn(p*8.7)*0.08; }`;
+/* a planet: `surface` sets vec3 base from o (unit position on the sphere); lit from SUN_DIR with a thin rim */
+function planetMat(surface, rimCol = "vec3(0.0)", rimK = 0){
+  return new THREE.ShaderMaterial({vertexShader:VS, transparent:true, depthWrite:false, uniforms:{uA:{value:0}}, fragmentShader:`
+  uniform float uA; varying vec3 vN; varying vec3 vV; varying vec3 vO; ${NOISE_GLSL}
+  void main(){ vec3 n = normalize(vN); vec3 sun = normalize(vec3(0.75,0.12,0.55)); vec3 o = normalize(vO); vec3 base;
+    ${surface}
     float l = smoothstep(-0.1, 0.55, dot(n, sun));
     float rim = pow(1.0 - max(dot(n, normalize(vV)), 0.0), 3.0);
-    vec3 col = base*(0.015 + l*1.0) + vec3(1.0,0.5,0.28)*rim*(0.05 + l*0.45);
-    gl_FragColor = vec4(col, uA); }`}));
-mars.position.copy(MARS_AT); mars.rotation.set(.45, .6, .1); scene.add(mars);
+    gl_FragColor = vec4(base*(0.05 + l) + ${rimCol}*rim*(0.06 + l*${rimK.toFixed(2)}), uA); }`});   // a little light on the night side, never a black hole
+}
+const homeSky = [];   // [object, max opacity]: faded together in the loop
+function addSky(obj, op = 1){ scene.add(obj); homeSky.push([obj, op]); return obj; }
+
+/* Mars, with the crew's Earth → Mars route */
+const MARS_AT = new THREE.Vector3(2.4, 4.9, -24);
+const mars = addSky(new THREE.Mesh(new THREE.SphereGeometry(1.05, 64, 48), planetMat(`
+    base = mix(vec3(0.40,0.15,0.07), vec3(0.66,0.32,0.15), fbm(o*1.8 + 11.0));
+    base = mix(base, vec3(0.22,0.09,0.05), smoothstep(0.55, 0.68, fbm(o*2.7 + 3.0))*0.7);   // dark plains
+    base = mix(base, vec3(0.86,0.83,0.8), smoothstep(0.88, 0.94, abs(o.y)));                // polar caps`,
+  "vec3(1.0,0.5,0.28)", .45)));
+mars.position.copy(MARS_AT); mars.rotation.set(.45, .6, .1);
 const route = new THREE.QuadraticBezierCurve3(earth.position.clone(), earth.position.clone().lerp(MARS_AT, .5).add(new THREE.Vector3(0, 4.2, 0)), MARS_AT.clone());
 const routeLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints(route.getPoints(120)),
   new THREE.LineDashedMaterial({color:0xffa36b, dashSize:.35, gapSize:.3, transparent:true, opacity:0, depthWrite:false, blending:THREE.AdditiveBlending}));
-routeLine.computeLineDistances(); scene.add(routeLine);
-const ship = new THREE.Sprite(new THREE.SpriteMaterial({map:DOT, color:0xffd2a8, transparent:true, opacity:0, blending:THREE.AdditiveBlending, depthWrite:false})); ship.scale.setScalar(.42); scene.add(ship);
+routeLine.computeLineDistances(); addSky(routeLine, .12);
+const ship = addSky(new THREE.Sprite(new THREE.SpriteMaterial({map:DOT, color:0xffd2a8, transparent:true, opacity:0, blending:THREE.AdditiveBlending, depthWrite:false})), .55); ship.scale.setScalar(.42);
 
 /* the Moon beside Earth */
-const moon = new THREE.Mesh(new THREE.SphereGeometry(.5, 48, 32), new THREE.ShaderMaterial({vertexShader:VS, transparent:true, depthWrite:false, uniforms:{uA:{value:0}}, fragmentShader:`
-  uniform float uA; varying vec3 vN; varying vec3 vV; varying vec3 vO;
-  float h(vec3 p){ return fract(sin(dot(p, vec3(127.1,311.7,74.7)))*43758.5453); }
-  float vn(vec3 p){ vec3 i = floor(p), f = fract(p); f = f*f*(3.0-2.0*f);
-    return mix(mix(mix(h(i),h(i+vec3(1,0,0)),f.x), mix(h(i+vec3(0,1,0)),h(i+vec3(1,1,0)),f.x), f.y), mix(mix(h(i+vec3(0,0,1)),h(i+vec3(1,0,1)),f.x), mix(h(i+vec3(0,1,1)),h(i+vec3(1,1,1)),f.x), f.y), f.z); }
-  float fbm(vec3 p){ return vn(p)*0.5 + vn(p*2.1)*0.27 + vn(p*4.3)*0.15 + vn(p*8.7)*0.08; }
-  void main(){ vec3 n = normalize(vN); vec3 sun = normalize(vec3(0.75,0.35,0.55));
-    float g = 0.55 + 0.25*fbm(vO*5.0 + 2.0) - 0.22*smoothstep(0.52, 0.64, fbm(vO*2.4 + 9.0));   // highlands and dark maria
-    float l = smoothstep(-0.08, 0.5, dot(n, sun));
-    gl_FragColor = vec4(vec3(g)*vec3(0.92,0.92,0.96)*(0.012 + l*0.85), uA); }`}));
-moon.position.set(-5.3, 2.9, -19); scene.add(moon);
+const moon = addSky(new THREE.Mesh(new THREE.SphereGeometry(.5, 48, 32), planetMat(`
+    float g = 0.55 + 0.25*fbm(o*2.5 + 2.0) - 0.22*smoothstep(0.52, 0.64, fbm(o*1.2 + 9.0));   // highlands and dark maria
+    base = vec3(g)*vec3(0.92,0.92,0.96)*0.85;`)));
+moon.position.set(-5.3, 2.9, -19);
+
+/* the Sun, far out along the light direction: a white core in a warm glow */
+function glowTex(stops){ const c = document.createElement("canvas"); c.width = c.height = 256; const x = c.getContext("2d"); const g = x.createRadialGradient(128,128,0,128,128,128);
+  for(const [s, col] of stops) g.addColorStop(s, col); x.fillStyle = g; x.fillRect(0,0,256,256); return new THREE.CanvasTexture(c); }
+const SUN_AT = SUN_DIR.clone().multiplyScalar(44);
+const sunGlow = addSky(new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex([[0,"rgba(255,240,215,.9)"],[.12,"rgba(255,214,150,.45)"],[.35,"rgba(255,170,90,.12)"],[1,"rgba(255,150,80,0)"]]),
+  transparent:true, opacity:0, blending:THREE.AdditiveBlending, depthWrite:false})), .9);
+sunGlow.position.copy(SUN_AT); sunGlow.scale.setScalar(20);
+const sunCore = addSky(new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex([[0,"rgba(255,255,255,1)"],[.55,"rgba(255,250,235,1)"],[.7,"rgba(255,230,180,.5)"],[1,"rgba(255,220,160,0)"]]),
+  transparent:true, opacity:0, blending:THREE.AdditiveBlending, depthWrite:false})), 1);
+sunCore.position.copy(SUN_AT); sunCore.scale.setScalar(3.2);
+
+/* Venus, close to the Sun in the sky, so it shows as a thin crescent like the real one */
+const venus = addSky(new THREE.Mesh(new THREE.SphereGeometry(.6, 48, 32), planetMat(`
+    base = mix(vec3(0.95,0.88,0.7), vec3(0.8,0.68,0.48), fbm(o*vec3(1.4,3.0,1.4) + 3.0));`, "vec3(1.0,0.9,0.7)", .5)));
+venus.position.copy(new THREE.Vector3(.5, .1, .86).normalize().multiplyScalar(26));
+
+/* Jupiter and Saturn on the sky opposite the Sun (to the left of the first view), so their lit faces show */
+const jupiter = addSky(new THREE.Mesh(new THREE.SphereGeometry(1.7, 64, 48), planetMat(`
+    float w = fbm(o*vec3(1.2,6.0,1.2) + 5.0);
+    float b = sin(o.y*18.0 + w*3.2);
+    base = mix(vec3(0.80,0.68,0.52), vec3(0.50,0.32,0.20), smoothstep(-0.2, 0.7, b));
+    base = mix(base, vec3(0.9,0.86,0.78), smoothstep(0.8, 1.0, sin(o.y*7.0 + 1.0))*0.3);
+    float spot = 1.0 - smoothstep(0.0, 0.2, length(vec2((atan(o.z, o.x) - 1.9)*0.55, (o.y + 0.36)*1.7)));
+    base = mix(base, vec3(0.7,0.3,0.18), spot*0.8);
+    base *= 0.82;`, "vec3(0.9,0.8,0.6)", .2)));
+jupiter.position.copy(new THREE.Vector3(-.9, .1, .35).normalize().multiplyScalar(30)); jupiter.rotation.set(.05, 0, .05);
+
+const saturn = new THREE.Group(); saturn.position.copy(new THREE.Vector3(-.8, .14, -.55).normalize().multiplyScalar(28));
+saturn.rotation.z = .42;                                   // ring plane tipped toward the middle of the scene
+const saturnTilt = new THREE.Group(); saturnTilt.rotation.x = -Math.PI/2; saturn.add(saturnTilt);   // ring plane horizontal
+const saturnBall = new THREE.Mesh(new THREE.SphereGeometry(1.15, 64, 48), planetMat(`
+    float b = sin(o.y*22.0 + fbm(o*3.0)*2.0);
+    base = mix(vec3(0.88,0.79,0.58), vec3(0.72,0.6,0.4), 0.5 + 0.5*b)*0.85;`, "vec3(1.0,0.9,0.7)", .2));
+saturnBall.rotation.x = Math.PI/2;   // its poles along the ring axis, so the bands run parallel to the rings
+const R_IN = 1.5, R_OUT = 2.7;
+const saturnRing = new THREE.Mesh(new THREE.RingGeometry(R_IN, R_OUT, 160, 1), new THREE.ShaderMaterial({vertexShader:VS, transparent:true, depthWrite:false, side:THREE.DoubleSide, uniforms:{uA:{value:0}}, fragmentShader:`
+  uniform float uA; varying vec3 vO;
+  void main(){ float r = (length(vO.xy) - ${R_IN.toFixed(2)})/${(R_OUT-R_IN).toFixed(2)};
+    float band = 0.6 + 0.4*sin(r*70.0)*sin(r*17.0 + 1.0);
+    float gap = smoothstep(0.012, 0.03, abs(r - 0.66));                  // Cassini division
+    float a = band*gap*smoothstep(0.0, 0.06, r)*smoothstep(1.0, 0.92, r);
+    gl_FragColor = vec4(vec3(0.86,0.77,0.6)*a*0.75, a*0.8*uA); }`}));
+saturnTilt.add(saturnBall, saturnRing); scene.add(saturn); homeSky.push([saturnBall, 1], [saturnRing, .8]);
 
 /* the Milky Way: a faint band of tiny stars across the sky, and one far spiral galaxy */
 const milky = (()=>{
@@ -3654,7 +3704,7 @@ const milky = (()=>{
   const f = x.createLinearGradient(0,0,W,0); f.addColorStop(0,"rgba(0,0,0,0)"); f.addColorStop(.25,"rgba(0,0,0,1)"); f.addColorStop(.75,"rgba(0,0,0,1)"); f.addColorStop(1,"rgba(0,0,0,0)");
   x.fillStyle = f; x.fillRect(0,0,W,H);
   const m = new THREE.Mesh(new THREE.PlaneGeometry(46, 9), new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(cv), transparent:true, opacity:0, depthWrite:false, blending:THREE.AdditiveBlending}));
-  m.position.set(6, 1, -38); m.lookAt(0, 0, 5); m.rotateZ(-.42); scene.add(m); return m;
+  m.position.set(6, 1, -38); m.lookAt(0, 0, 5); m.rotateZ(-.42); return addSky(m, .07);
 })();
 const galaxy = (()=>{
   const cv = document.createElement("canvas"); cv.width = cv.height = 256; const x = cv.getContext("2d");
@@ -3664,7 +3714,7 @@ const galaxy = (()=>{
     const px = 128 + Math.cos(a)*r + (Math.random()-.5)*16*(1-t*.4), py = 128 + Math.sin(a)*r + (Math.random()-.5)*16*(1-t*.4);
     x.fillStyle = `rgba(${170+Math.random()*80|0},${190+Math.random()*50|0},255,${(.55*(1-t)+.1)*Math.random()})`; x.fillRect(px, py, 1.6, 1.6); }
   const s = new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(cv), transparent:true, opacity:0, blending:THREE.AdditiveBlending, depthWrite:false, rotation:.5}));
-  s.scale.set(4.2, 1.9, 1); s.position.set(2.8, -4.2, -28); scene.add(s); return s;
+  s.scale.set(4.2, 1.9, 1); s.position.set(2.8, -4.2, -28); return addSky(s, .15);
 })();
 let marsA = 0;
 
@@ -3856,16 +3906,15 @@ function frame(){
   trailGeo.attributes.position.needsUpdate = true; trailGeo.attributes.color.needsUpdate = true;
   orbit.visible = !sel || sel==="whole";
   ticks.rotation.z = t*.12; earth.material.uniforms.uT.value = t; earth.rotation.y = 1.1 + t*.01;
-  /* Mars, the route, the Moon and the Milky Way: only on the home screen, faded in and out */
-  marsA += ((st.hero ? 1 : 0) - marsA)*Math.min(1, dt*2.5);  /* home: darker sky (less bloom haze, darker clear colour) and a slower turn */
+  /* the home sky (Sun, planets, Moon, Milky Way): only on the home screen, faded in and out */
+  marsA += ((st.hero ? 1 : 0) - marsA)*Math.min(1, dt*2.5);
+  for(const [o, op] of homeSky){ o.visible = marsA > .01; const m = o.material; if(m.uniforms && m.uniforms.uA) m.uniforms.uA.value = op*marsA; else m.opacity = op*marsA; }
+  mars.rotation.y = .6 + t*.008; jupiter.rotation.y = t*.02; saturnBall.rotation.y = t*.015;
+  route.getPoint(.62 + .3*((t/90)%1), ship.position);
+  /* home: darker sky (less bloom haze, darker clear colour) and a slower turn */
   if(bloom){ bloom.strength = .5 - .22*marsA; bloom.threshold = .24 + .12*marsA; }
   renderer.setClearColor(tc.setRGB(.0157*(1-.45*marsA), .0353*(1-.45*marsA), .0706*(1-.45*marsA), THREE.SRGBColorSpace), 1);   // #040912 → darker
   controls.autoRotateSpeed = .9 - .5*marsA;
-  mars.visible = routeLine.visible = ship.visible = moon.visible = milky.visible = galaxy.visible = marsA > .01;
-  moon.material.uniforms.uA.value = marsA; milky.material.opacity = .07*marsA; galaxy.material.opacity = .15*marsA;
-  mars.material.uniforms.uA.value = marsA; mars.rotation.y = .6 + t*.008;
-  routeLine.material.opacity = .12*marsA;
-  route.getPoint(.62 + .3*((t/90)%1), ship.position); ship.material.opacity = .55*marsA;
   /* scan */
   let sy = -9;
   if(scanT >= 0){ scanT += dt/1.5; if(scanT>1) scanT = -1; else sy = -.95 + scanT*1.85; }
