@@ -92,7 +92,12 @@ h1,h2,h3,h4{font-family:var(--f-head);margin:0;letter-spacing:.01em}
 .crew .wait-t{font-size:11px}
 @keyframes needPulse{50%{box-shadow:0 0 0 6px color-mix(in srgb,var(--g3) 10%,transparent)}}
 .help-btn{background:var(--g3);color:#fff;border:0;border-radius:999px;padding:5px 11px;font-weight:700;font-size:12.5px;cursor:pointer}
-.me-sel{font-size:13px}
+.crew-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.crew-list li{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.crew-list .av{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:12px;color:#fff;flex:none}
+.crew-list .nm{margin-right:auto}
+.crew-add{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin-top:14px}
+.crew-add .fld{flex:1;min-width:140px}
 .who{margin-bottom:14px}
 .who .who-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
 .who .who-b{display:flex;flex-direction:column;align-items:flex-start;gap:3px;min-width:120px;border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:10px 14px;cursor:pointer;font-size:15px;font-weight:600}
@@ -451,9 +456,7 @@ dialog::backdrop{background:rgba(3,8,16,.6)}
     <label class="field-inline"><span data-t>Mission day</span>
       <input id="dayIn" type="number" min="21" max="400" value="45" aria-label="Mission day (21 to 400)">
     </label>
-    <label class="field-inline"><span data-t>I am</span>
-      <select id="meSel" class="me-sel" aria-label="Who is using the app"></select>
-    </label>
+    <button class="btn" type="button" id="crewBtn" aria-haspopup="dialog">👥 <span data-t>Manage crew</span></button>
     <div class="roster" id="roster" role="group" aria-label="Crew"></div>
     <div class="badges" id="badges" aria-live="polite"></div>
   </div>
@@ -646,6 +649,23 @@ dialog::backdrop{background:rgba(3,8,16,.6)}
   <p class="disc" data-t>Orbit Guide · Team Temp7 · NASA Space Apps Challenge 2026. Hackathon prototype with simulated data. Not a medical device and not medical advice.</p>
 </footer>
 
+<dialog id="crewDlg" aria-labelledby="crewTitle">
+  <div class="m-h"><h2 id="crewTitle" style="font-size:19px" data-t>Manage crew</h2><button class="btn ghost" type="button" data-close aria-label="Close">✕</button></div>
+  <div class="m-b">
+    <p class="small muted" style="margin:0 0 10px" data-t>"Me" is the person holding this device. In an emergency they are logged as the responder.</p>
+    <ul class="crew-list" id="crewList"></ul>
+    <form id="crewAdd" class="crew-add" autocomplete="off">
+      <div class="fld"><label for="caName" data-t>Name</label><input id="caName" maxlength="20" required></div>
+      <div class="fld"><label for="caRole" data-t>Role</label><input id="caRole" maxlength="30"></div>
+      <button class="btn primary" type="submit" data-t>Add crew member</button>
+    </form>
+    <p class="small" id="crewMsg" role="status" aria-live="polite"></p>
+  </div>
+  <div class="m-f">
+    <button class="btn" type="button" id="crewReset" data-t>Reset to default crew</button>
+    <button class="btn" type="button" data-close data-t>Close</button>
+  </div>
+</dialog>
 <dialog id="noteDlg" aria-labelledby="noteTitle">
   <div class="m-h"><h2 id="noteTitle" style="font-size:19px"></h2><button class="btn ghost" type="button" data-close aria-label="Close">✕</button></div>
   <div class="m-b">
@@ -741,12 +761,14 @@ const ENVS = {
 };
 
 /* ---------- Crew (simulated baselines) ---------- */
-const CREW = [
+const CREW_DEFAULT = [
   {id:"kim",    n:"Kim",    role:"Commander, CMO",          col:"#3b82f6", streak:6, base:{hr:58,sbp:116,spo2:98.0,temp:36.6,glu:88,sleep:6.9,mood:4.0,ex:110}},
   {id:"okafor", n:"Okafor", role:"Pilot",              col:"#a855f7", streak:3, base:{hr:63,sbp:121,spo2:97.6,temp:36.7,glu:92,sleep:7.2,mood:3.9,ex:100}},
   {id:"novak",  n:"Novak",  role:"Flight engineer",    col:"#14b8a6", streak:9, base:{hr:55,sbp:112,spo2:98.2,temp:36.5,glu:85,sleep:6.6,mood:4.2,ex:118}},
   {id:"park",   n:"Park",   role:"Mission specialist", col:"#f59e0b", streak:2, base:{hr:67,sbp:118,spo2:97.8,temp:36.8,glu:95,sleep:7.4,mood:3.8,ex:104}},
 ];
+/* Crew can be added and removed in the app (kept in this browser). Default crew is used for the demo. */
+const CREW = (()=>{ try{ const v = JSON.parse(localStorage.getItem("orbitguide.crew")||"null"); if(Array.isArray(v) && v.length>=2 && v.every(c=>c.id && c.n && c.base)) return v; }catch(e){} return CREW_DEFAULT.map(c=>({...c})); })();
 
 /* ---------- Body systems ---------- */
 const SYSTEMS = [
@@ -997,7 +1019,7 @@ function gauss(r){let u=0,v=0;while(!u)u=r();while(!v)v=r();return Math.sqrt(-2*
    ===================================================================== */
 const DataSource = {
   build({crewId, envId, day, scenarios=[], checkins={}}){
-    const c = CREW.find(x=>x.id===crewId), e = ENVS[envId], b = c.base;
+    const c = CREW.find(x=>x.id===crewId) || CREW_DEFAULT.find(x=>x.id===crewId), e = ENVS[envId], b = c.base;
     const recs = [];
     let bone = 0, radTot = 0;
     for(let d=1; d<=day; d++){
@@ -1160,14 +1182,14 @@ const LS = {
 };
 
 const S = {
-  crew:"kim", env:"iss", day:45, view:45, sys:null, metric:null, tab:"home", lang: LS.get("lang", "en"),
+  crew: CREW.some(c=>c.id==="kim") ? "kim" : CREW[0].id, env:"iss", day:45, view:45, sys:null, metric:null, tab:"home", lang: LS.get("lang", "en"),
   scen: {},                              // crewId -> [{id,dur,end}]
   checkins: LS.get("checkins", {}),      // crewId -> {envId|day -> partial record}
   todos: LS.get("todos", {}),            // crewId|env|day -> {text:true}
   practiced: new Set(LS.get("practiced", [])),
   layers: {skin:true, organs:true, skeleton:true, vessels:true, fluid:true, radiation:true},
   whole:false, sound:false,
-  me: LS.get("me", "kim"),               // who is holding the app (crewmate mode)
+  me: (()=>{ const m = LS.get("me", null); return CREW.some(c=>c.id===m) ? m : CREW[0].id; })(),               // who is holding the app (crewmate mode)
   patient: null,                         // who the emergency tab is for; null = me
 };
 /* patient null = not identified yet (CPR starts at once; who it is can be added later) */
@@ -1859,6 +1881,24 @@ const KO = {
 "{0} for {1}, started {2} UTC. The clock and log continue from where they stopped.": "{1}의 {0}, {2} UTC 시작. 시계와 기록은 멈춘 곳부터 이어집니다.",
 "■ Stop": "■ 중지",
 "Q: {0} → {1}": "질문: {0} → {1}",
+"Manage crew": "크루 관리",
+"\"Me\" is the person holding this device. In an emergency they are logged as the responder.": "\"나\"는 이 기기를 들고 있는 사람입니다. 응급 상황에서는 처치자로 기록됩니다.",
+"Name": "이름",
+"Role": "역할",
+"Add crew member": "크루원 추가",
+"Reset to default crew": "기본 크루로 되돌리기",
+"Me": "나",
+"This is me": "나로 지정",
+"Remove": "삭제",
+"Remove {0}": "{0} 삭제",
+"Tap again to remove": "한 번 더 누르면 삭제",
+"Crew cannot be removed while an emergency guide is running.": "응급 가이드 진행 중에는 크루를 삭제할 수 없습니다.",
+"At least 2 crew members are needed (one to help the other).": "크루는 최소 2명이 필요합니다(한 명이 다른 사람을 도와야 하니까요).",
+"{0} removed.": "{0} 삭제됨.",
+"{0} added.": "{0} 추가됨.",
+"Enter a name.": "이름을 입력하세요.",
+"{0} is already on the crew.": "{0}은(는) 이미 크루에 있습니다.",
+"Crew member": "크루원",
 "Unidentified crewmate": "확인 안 된 크루원",
 "not identified": "미확인",
 "Patient not identified. When you can, tap who it is:": "환자 미확인. 여유가 생기면 누구인지 눌러 주세요:",
@@ -1933,7 +1973,7 @@ function initTop(){
   const di = $("#dayIn");
   di.addEventListener("change", ()=>{ stopDemo(); let v = Math.round(+di.value||45); v = Math.max(21, Math.min(400, v)); di.value = v; S.day = v; S.view = v; renderAll(true); });
   $("#sosBtn").addEventListener("click", ()=>{ location.hash = "#sos"; });
-  renderMeSel(); $("#meSel").addEventListener("change", e=>{ stopDemo(); setMe(e.target.value); });
+  initCrew();
   $("#demoBtn").addEventListener("click", runDemo);
   $("#heroDemo").addEventListener("click", runDemo);
   $("#demoStop").addEventListener("click", stopDemo);
@@ -1948,11 +1988,53 @@ function setCrew(id){
   renderAll(true);
 }
 function todayGrade(id){ const cc = id===S.crew && C ? C : computeFor(id); return gradeDay(cc.recs, cc.recs.length-1, cc.bl, ENVS[S.env]); }
-function renderMeSel(){
-  const sel = $("#meSel"); if(!sel) return;
-  sel.innerHTML = CREW.map(c=>`<option value="${c.id}">${esc(c.n)}</option>`).join(""); sel.value = S.me;
-}
+function renderMeSel(){ if($("#crewDlg") && $("#crewDlg").open) renderCrewDlg(); }
 function setMe(id){ S.me = id; LS.set("me", id); S.patient = null; renderMeSel(); renderAll(false); renderWho(); renderTriage(); }
+/* ----- crew management: add / remove / choose "me" (replaces the "I am" selector) ----- */
+const CREW_COLS = ["#3b82f6","#a855f7","#14b8a6","#f59e0b","#ef4444","#22c55e","#ec4899","#0ea5e9"];
+const saveCrew = () => LS.set("crew", CREW);
+function renderCrewDlg(){
+  const busy = R && !R.finished;
+  $("#crewList").innerHTML = CREW.map(c=>`<li>
+    <span class="av" style="background:${c.col}">${esc(c.n[0])}</span>
+    <span class="nm"><strong>${esc(c.n)}</strong> <span class="muted small">${TE(c.role)}</span></span>
+    ${c.id===S.me ? `<span class="pill l0">${TE("Me")}</span>` : `<button class="btn" type="button" data-setme="${c.id}">${TE("This is me")}</button>`}
+    <button class="btn ghost" type="button" data-del="${c.id}" ${busy||CREW.length<=2?"disabled":""} aria-label="${TE("Remove {0}", c.n)}">✕ ${TE("Remove")}</button></li>`).join("");
+  $$("#crewList [data-setme]").forEach(b=>b.addEventListener("click", ()=>{ setMe(b.dataset.setme); }));
+  $$("#crewList [data-del]").forEach(b=>b.addEventListener("click", ()=>removeCrew(b.dataset.del)));
+  $("#crewMsg").textContent = busy ? T("Crew cannot be removed while an emergency guide is running.") : CREW.length<=2 ? T("At least 2 crew members are needed (one to help the other).") : "";
+}
+function crewChanged(){
+  saveCrew();
+  if(!CREW.some(c=>c.id===S.me)) setMe(CREW[0].id);
+  if(!CREW.some(c=>c.id===S.crew)){ S.crew = CREW[0].id; }
+  for(const k of Object.keys(S.scen)) if(!CREW.some(c=>c.id===k)) delete S.scen[k];
+  setCrew(S.crew); renderWho(); renderTriage(); renderCrewDlg();
+}
+function removeCrew(id){
+  if((R && !R.finished) || CREW.length<=2) return;
+  const i = CREW.findIndex(c=>c.id===id); if(i<0) return;
+  const c = CREW[i];
+  if(!confirmRemove(c)) return;
+  CREW.splice(i,1); crewChanged(); announce(T("{0} removed.", c.n));
+}
+function confirmRemove(c){ const b = $(`#crewList [data-del="${c.id}"]`); if(b && b.dataset.sure) return true; if(b){ b.dataset.sure = "1"; b.textContent = T("Tap again to remove"); b.classList.add("danger"); } return false; }
+function addCrew(name, role){
+  name = name.trim().slice(0,20); role = (role||"").trim().slice(0,30) || "Crew member";
+  if(!name){ $("#crewMsg").textContent = T("Enter a name."); return false; }
+  if(CREW.some(c=>c.n.toLowerCase()===name.toLowerCase())){ $("#crewMsg").textContent = T("{0} is already on the crew.", name); return false; }
+  const used = new Set(CREW.map(c=>c.col));
+  CREW.push({id:"c"+Date.now().toString(36), n:name, role, col:CREW_COLS.find(x=>!used.has(x)) || CREW_COLS[CREW.length%CREW_COLS.length], streak:0,
+    base:{hr:62, sbp:118, spo2:98.0, temp:36.6, glu:90, sleep:7.0, mood:4.0, ex:105}});   // typical healthy adult values (simulated)
+  crewChanged(); announce(T("{0} added.", name)); return true;
+}
+function initCrew(){
+  const d = $("#crewDlg");
+  $("#crewBtn").addEventListener("click", ()=>{ stopDemo(); renderCrewDlg(); d.showModal(); });
+  $$("#crewDlg [data-close]").forEach(b=>b.addEventListener("click", ()=>d.close()));
+  $("#crewAdd").addEventListener("submit", e=>{ e.preventDefault(); if(addCrew($("#caName").value, $("#caRole").value)){ $("#caName").value = ""; $("#caRole").value = ""; $("#caName").focus(); } });
+  $("#crewReset").addEventListener("click", ()=>{ if(R && !R.finished) return; CREW.splice(0, CREW.length, ...CREW_DEFAULT.map(c=>({...c}))); crewChanged(); });
+}
 function renderRoster(){
   $("#roster").innerHTML = CREW.map(c=>{
     const g = todayGrade(c.id);
@@ -2881,7 +2963,8 @@ let demo = null;
 const sleepMs = ms => new Promise(r=>{ const t = setTimeout(r, ms); demo && demo.timers.push(t); });
 async function runDemo(){
   stopDemo(); if(R) exitGuide();
-  demo = {timers:[], alive:true}; const me = demo;
+  demo = {timers:[], alive:true, crew:CREW.map(c=>({...c})), me:S.me}; const me = demo;
+  CREW.splice(0, CREW.length, ...CREW_DEFAULT.map(c=>({...c})));   // the demo always uses the default crew
   $("#demoCap").hidden = false;
   const scene = async (n, text, act, ms=6500) => { if(!me.alive) throw 0; $("#demoN").textContent = `${n}/10`; $("#demoTxt").textContent = T(text); act && act(); await sleepMs(ms); if(!me.alive) throw 0; };
   const reset = () => { S.scen = {}; if(R) exitGuide(); };
@@ -2900,9 +2983,14 @@ async function runDemo(){
       setTimeout(()=>{ if(me.alive){ helpCrew("kim"); setTimeout(()=>{ if(me.alive){ demo = null; startGuide("cpr", "Triage: answered yes", [[qText(PROT.cpr,"kim"),"Yes"]], "kim"); demo = me; } }, 2500); } }, 2500); }, 9000);
     await scene(10, "Everything goes to Earth as a plain note that respects the 20-minute one-way delay.", ()=>{ reset(); location.hash = "#body"; setTab("body"); toggleScenario("fever"); openDailyNote($("#demoBtn")); setTimeout(()=>me.alive && sendNote(), 900); }, 9000);
   }catch(e){}
-  if(me===demo){ stopDemo(); S.me = LS.get("me","kim"); renderMeSel(); renderAll(false); renderWho(); }
+  if(me===demo) stopDemo();
 }
-function stopDemo(){ if(!demo) return; demo.alive = false; demo.timers.forEach(clearTimeout); demo = null; $("#demoCap").hidden = true; }
+function stopDemo(){
+  if(!demo) return; const d = demo; d.alive = false; d.timers.forEach(clearTimeout); demo = null; $("#demoCap").hidden = true;
+  CREW.splice(0, CREW.length, ...d.crew); S.me = CREW.some(c=>c.id===d.me) ? d.me : CREW[0].id;   // put the user's own crew back
+  if(!CREW.some(c=>c.id===S.crew)) S.crew = CREW[0].id;
+  if(!(R && !R.finished)){ S.patient = null; renderAll(false); renderWho(); renderTriage(); }
+}
 
 /* ---------------- boot ---------------- */
 function boot(){
