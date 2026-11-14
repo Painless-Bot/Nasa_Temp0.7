@@ -2,6 +2,7 @@
    1) Spoken cues: on key steps only, a short emphasised phrase is read aloud ("Start CPR now!").
       Not a chatbot: nothing else is spoken, and the crew never has to talk to it.
    2) Hands-free: with the mic on, saying "Next step" moves to the next step, as if the button was pressed.
+      "Start" starts the CPR beat or a timer on the current step (and speaks its cue).
       Also "Yes" / "No" on question steps, "Back" to undo, "Repeat" to hear the cue again.
    Uses the browser's built-in Web Speech API (speechSynthesis, SpeechRecognition). Every voice command is
    written to the event log, so the flight surgeon sees which steps were moved by voice. */
@@ -39,7 +40,7 @@
   };
   if(typeof KO!=="undefined") Object.assign(KO, {
     "Voice command: \"{0}\" → {1}": "음성 명령: \"{0}\" → {1}",
-    "next step": "다음 단계", "yes": "예", "no": "아니오", "undo": "되돌리기", "repeat": "다시 듣기",
+    "next step": "다음 단계", "start": "시작", "yes": "예", "no": "아니오", "undo": "되돌리기", "repeat": "다시 듣기",
   });
 
   const ko = () => S.lang==="ko";
@@ -60,6 +61,7 @@
   function say(text){
     if(!V.speak || !text || !window.speechSynthesis) return;
     try{
+      const wasBusy = speechSynthesis.speaking || speechSynthesis.pending;
       speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(text);
       u.lang = ko() ? "ko-KR" : "en-US";
@@ -67,7 +69,8 @@
       u.rate = 1.05; u.volume = 1;
       u.onend = u.onerror = () => { V.busyUntil = Date.now() + 700; };   // don't hear our own voice as a command
       V.busyUntil = Date.now() + Math.min(6000, 500 + text.length*80);   // fallback if onend never fires
-      speechSynthesis.speak(u);
+      // Chrome can silently drop an utterance queued right after cancel(); give it a moment
+      clearTimeout(V.sayT); V.sayT = setTimeout(()=>{ try{ speechSynthesis.resume(); speechSynthesis.speak(u); }catch(e){} }, wasBusy ? 150 : 0);
     }catch(e){}
   }
   function stepKey(){ return R ? (R.finished ? R.gid+":done" : R.gid+":"+R.cur) : null; }
@@ -80,6 +83,7 @@
     if(/\b(repeat|again|say again)\b|다시 ?말|반복|다시 ?듣/.test(t)) return "repeat";
     if(/\b(no|nope|negative)\b|^아니|아니요|아니오|아뇨/.test(t)) return "no";
     if(/\b(yes|yeah|yep|affirmative)\b|^(예|네|응)(\s|$)|맞아/.test(t)) return "yes";
+    if(/\bstart\b|\bbegin\b|스타트|시작/.test(t)) return "start";
     if(/\bnext\b|\bcontinue\b|\bdone\b|다음|넥스트|넘겨|완료/.test(t)) return "next";
     return null;
   }
@@ -92,12 +96,17 @@
       if(s && s.type==="ask"){ say(pick(EVENT_SAY.ask)); return false; }
       btn = q("[data-next]") || q("#msLog");
     }
+    else if(cmd==="start"){
+      btn = q("#tmStart:not([disabled])");
+      if(!btn && s && s.type==="cpr" && !cprT) btn = q("#cprStart");      // only starts the beat, never stops it
+      if(!btn){ say(cueNow()); return true; }                            // nothing to start: say the step again
+    }
     else if(cmd==="yes") btn = q('[data-ans="yes"]');
     else if(cmd==="no") btn = q('[data-ans="no"]');
     else if(cmd==="undo") btn = q("#prevBtn:not([disabled])");
     else if(cmd==="repeat"){ const st = document.querySelector("#stepTxt"); say(cueNow() || (st ? st.textContent : "")); return true; }
     if(!btn) return false;
-    log("Voice command: \"{0}\" → {1}", [heard, {t: cmd==="next"?"next step":cmd}]);
+    log("Voice command: \"{0}\" → {1}", [heard, {t: cmd==="next"?"next step":cmd==="start"?"start":cmd}]);
     V.lastKey = null;                 // let the new step speak its own cue
     btn.click();
     return true;
@@ -138,7 +147,7 @@
     const L = (en, k) => ko() ? k : en;
     box.innerHTML = `<button class="btn" type="button" id="vSpeak" aria-pressed="${V.speak}" ${bs}>${V.speak?"🗣 "+L("Voice cues on","음성 안내 켜짐"):"🗣 "+L("Voice cues off","음성 안내 꺼짐")}</button>
       <button class="btn" type="button" id="vListen" aria-pressed="${V.listen}" ${bs} ${SR?"":"disabled"}>${V.listen?"🎙 "+L("Hands-free on","핸즈프리 켜짐"):"🎙 "+L("Hands-free off","핸즈프리 꺼짐")}</button>
-      ${V.listen?`<span class="small v-hint">${L('Say "Next step", "Yes", "No", "Back" or "Repeat"','"다음 단계", "예", "아니오", "이전", "다시"라고 말하세요')}${V.heard?` · ${L("heard","인식")}: “${esc(V.heard)}”`:""}</span>`:""}
+      ${V.listen?`<span class="small v-hint">${L('Say "Start", "Next step", "Yes", "No", "Back" or "Repeat"','"시작", "다음 단계", "예", "아니오", "이전", "다시"라고 말하세요')}${V.heard?` · ${L("heard","인식")}: “${esc(V.heard)}”`:""}</span>`:""}
       ${V.note?`<span class="small v-hint">⚠ ${esc(V.note)}</span>`:""}`;
     box.querySelector("#vSpeak").onclick = () => { V.speak = !V.speak; LS.set("voice.speak", V.speak); if(!V.speak && window.speechSynthesis) speechSynthesis.cancel(); else say(cueNow()); paint(); };
     box.querySelector("#vListen").onclick = () => { if(V.listen) stopListening(); else { V.listen = true; startListening(); } };
@@ -155,7 +164,8 @@
   const _log = log;
   log = function(key){
     _log.apply(this, arguments);
-    if(key==="CPR cycle {0} complete (2 min). Swap rescuers now.") say(pick(EVENT_SAY.swap));
+    if(key==="CPR rhythm started (110/min).") say(pick(SAY["cpr:e"]));
+    else if(key==="CPR cycle {0} complete (2 min). Swap rescuers now.") say(pick(EVENT_SAY.swap));
     else if(key==="Timer due: {0}.") say(pick(EVENT_SAY.due));
   };
   const _exit = exitGuide;
