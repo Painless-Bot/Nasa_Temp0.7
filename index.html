@@ -360,6 +360,7 @@ body.on-home footer{margin-top:72px}
 .em-band{position:sticky;top:0;z-index:40;background:var(--g3);color:#fff;border-radius:var(--r);padding:10px 14px;display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;margin-bottom:12px}
 .em-band h2{font-size:20px;margin-right:auto}
 .em-band .clk{font-family:var(--f-mono);font-size:20px;font-weight:600}
+.voice-ctl{display:inline-flex;flex-wrap:wrap;gap:6px 8px;align-items:center}.voice-ctl .v-hint{opacity:.95;font-size:12.5px}
 .em-band .lnk{font-size:12.5px;opacity:.95}
 .run-grid{display:grid;grid-template-columns:240px minmax(0,1fr) 320px;gap:14px;align-items:start}
 @media (max-width:1100px){.run-grid{grid-template-columns:minmax(0,1fr) 300px} .run-steps{grid-column:1/-1}}
@@ -3012,6 +3013,7 @@ function boot(){
 }
 boot();
 </script>
+<script src="voice.js"></script>
 <script type="module">
 /* =====================================================================
    Orbit Guide — 3D hologram body (three.js)
