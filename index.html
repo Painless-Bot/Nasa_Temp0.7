@@ -85,6 +85,33 @@ h1,h2,h3,h4{font-family:var(--f-head);margin:0;letter-spacing:.01em}
 .crew .av{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:11px;color:#fff}
 .crew[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 30%,transparent)}
 .crew .lv{font-size:11px;font-weight:600}
+/* crewmate mode + emergency stability (AI-assisted, Claude, 2026-11-14) */
+.crew-w{display:inline-flex;align-items:center;gap:4px}
+.crew.need{border-color:var(--g3);box-shadow:0 0 0 2px color-mix(in srgb,var(--g3) 35%,transparent);animation:needPulse 1.2s ease-in-out infinite}
+.crew .need-t{font-size:11px;font-weight:700;color:var(--g3)}
+.crew .wait-t{font-size:11px}
+@keyframes needPulse{50%{box-shadow:0 0 0 6px color-mix(in srgb,var(--g3) 10%,transparent)}}
+.help-btn{background:var(--g3);color:#fff;border:0;border-radius:999px;padding:5px 11px;font-weight:700;font-size:12.5px;cursor:pointer}
+.crew-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.crew-list li{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.crew-list .av{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:12px;color:#fff;flex:none}
+.crew-list .nm{margin-right:auto}
+.crew-add{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin-top:14px}
+.crew-add .fld{flex:1;min-width:140px}
+.who{margin-bottom:14px}
+.who .who-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.who .who-b{display:flex;flex-direction:column;align-items:flex-start;gap:3px;min-width:120px;border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:10px 14px;cursor:pointer;font-size:15px;font-weight:600}
+.who .who-b[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 30%,transparent)}
+.who .ask-mate{border:1px solid var(--g3);background:var(--g3bg);border-radius:10px;padding:10px 12px;margin-top:8px}
+.aud{font-size:11px;font-weight:600;border:1px solid var(--line);border-radius:6px;padding:0 6px;color:var(--ink2)}
+.helping{flex-basis:100%;font-size:13px;background:rgba(255,255,255,.15);border-radius:8px;padding:4px 10px}
+.save-warn{flex-basis:100%;background:#fff;color:#000;border-radius:8px;padding:6px 10px;font-size:13px;font-weight:600;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.wait-band{position:sticky;top:0;z-index:60;max-width:1480px;margin:8px auto 0;padding:8px 14px;border-radius:10px;background:var(--g2);color:#000;display:flex;gap:10px 16px;align-items:center;flex-wrap:wrap;font-weight:600}
+.wait-band.due{background:var(--g3);color:#fff}
+.wait-band .mono{font-size:17px}
+.resume{max-width:760px;margin:12px auto;border:2px solid var(--g3);background:var(--panel);border-radius:12px;padding:14px 16px}
+.resume .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.save-warn[hidden],.wait-band[hidden],.resume[hidden]{display:none}
 .badges{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto}
 .btn.lang{gap:5px;font-size:13px;padding:7px 10px}
 .btn.lang .sep{opacity:.4}
@@ -106,6 +133,7 @@ section[hidden]{display:none!important}
 
 /* ---------- home ---------- */
 body.on-home .row2{display:none}
+body.on-home.crew-alert .row2{display:flex}  /* a crewmate needing help is shown on every tab */
 body.on-home .top{color:#e9f1fb;--ink:#e9f1fb;--ink2:#b9c8dc;--ink3:#8fa2ba;--panel:rgba(16,28,48,.72);--line:#27405f;--accent:#5cb8ff;--accent-ink:#04121f;background:rgba(4,9,18,.86);border-bottom-color:#12233a}
 body.on-home main{max-width:none;padding:0}
 .wrap{max-width:1240px;margin:0 auto;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
@@ -332,6 +360,7 @@ body.on-home footer{margin-top:72px}
 .em-band{position:sticky;top:0;z-index:40;background:var(--g3);color:#fff;border-radius:var(--r);padding:10px 14px;display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;margin-bottom:12px}
 .em-band h2{font-size:20px;margin-right:auto}
 .em-band .clk{font-family:var(--f-mono);font-size:20px;font-weight:600}
+.voice-ctl{display:inline-flex;flex-wrap:wrap;gap:6px 8px;align-items:center}.voice-ctl .v-hint{opacity:.95;font-size:12.5px}
 .em-band .lnk{font-size:12.5px;opacity:.95}
 .run-grid{display:grid;grid-template-columns:240px minmax(0,1fr) 320px;gap:14px;align-items:start}
 @media (max-width:1100px){.run-grid{grid-template-columns:minmax(0,1fr) 300px} .run-steps{grid-column:1/-1}}
@@ -394,7 +423,7 @@ dialog::backdrop{background:rgba(3,8,16,.6)}
 .tx .dot{position:absolute;top:8px;left:24px;width:12px;height:12px;border-radius:50%;background:#4fb0ff;box-shadow:0 0 12px #4fb0ff;transform:translateX(-50%)}
 .tx .st{font-family:var(--f-mono);font-size:12.5px}
 .reply{margin-top:10px;border-left:3px solid #4fb0ff;padding:6px 10px;font-size:13.5px;background:rgba(79,176,255,.08);border-radius:0 8px 8px 0}
-@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}.crew.need{animation:none}}
 </style>
 </head>
 <body>
@@ -428,10 +457,13 @@ dialog::backdrop{background:rgba(3,8,16,.6)}
     <label class="field-inline"><span data-t>Mission day</span>
       <input id="dayIn" type="number" min="21" max="400" value="45" aria-label="Mission day (21 to 400)">
     </label>
+    <button class="btn" type="button" id="crewBtn" aria-haspopup="dialog">👥 <span data-t>Manage crew</span></button>
     <div class="roster" id="roster" role="group" aria-label="Crew"></div>
     <div class="badges" id="badges" aria-live="polite"></div>
   </div>
 </header>
+<div id="waitBand" class="wait-band" role="status" aria-live="polite" hidden></div>
+<div id="resumeBox" class="resume" role="alertdialog" aria-labelledby="resumeH" hidden></div>
 
 <main id="main">
   <!-- ============ HOME ============ -->
@@ -594,12 +626,13 @@ dialog::backdrop{background:rgba(3,8,16,.6)}
   <section id="tab-sos" data-tabpanel="sos" aria-label="Emergency guides" hidden>
     <div id="sosHome">
       <div class="sos-notice" data-th><strong>Example procedures, not flight checklists.</strong> These guides support the onboard medical checklist and the flight surgeon; they are not medical advice. Medicine is only ever "as the onboard checklist or flight surgeon says". Hackathon prototype.</div>
+      <div class="card who" id="whoCard"></div>
       <div class="sos-grid">
         <div class="card triage" id="triage"></div>
         <div>
           <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:10px;flex-wrap:wrap">
             <h2 style="font-size:22px" data-t>I know what's happening</h2>
-            <span class="muted small" data-t>10 guides, most dangerous first</span>
+            <span class="muted small" id="gcount"></span>
           </div>
           <div class="glist" id="glist"></div>
         </div>
@@ -617,6 +650,23 @@ dialog::backdrop{background:rgba(3,8,16,.6)}
   <p class="disc" data-t>Orbit Guide · Team Temp7 · NASA Space Apps Challenge 2026. Hackathon prototype with simulated data. Not a medical device and not medical advice.</p>
 </footer>
 
+<dialog id="crewDlg" aria-labelledby="crewTitle">
+  <div class="m-h"><h2 id="crewTitle" style="font-size:19px" data-t>Manage crew</h2><button class="btn ghost" type="button" data-close aria-label="Close">✕</button></div>
+  <div class="m-b">
+    <p class="small muted" style="margin:0 0 10px" data-t>"Me" is the person holding this device. In an emergency they are logged as the responder.</p>
+    <ul class="crew-list" id="crewList"></ul>
+    <form id="crewAdd" class="crew-add" autocomplete="off">
+      <div class="fld"><label for="caName" data-t>Name</label><input id="caName" maxlength="20" required></div>
+      <div class="fld"><label for="caRole" data-t>Role</label><input id="caRole" maxlength="30"></div>
+      <button class="btn primary" type="submit" data-t>Add crew member</button>
+    </form>
+    <p class="small" id="crewMsg" role="status" aria-live="polite"></p>
+  </div>
+  <div class="m-f">
+    <button class="btn" type="button" id="crewReset" data-t>Reset to default crew</button>
+    <button class="btn" type="button" data-close data-t>Close</button>
+  </div>
+</dialog>
 <dialog id="noteDlg" aria-labelledby="noteTitle">
   <div class="m-h"><h2 id="noteTitle" style="font-size:19px"></h2><button class="btn ghost" type="button" data-close aria-label="Close">✕</button></div>
   <div class="m-b">
@@ -684,6 +734,9 @@ const SOURCES = {
   aasm:      {t:"Seven or more hours of sleep per night: a health necessity for adults", org:"American Academy of Sleep Medicine", url:"https://aasm.org/seven-or-more-hours-of-sleep-per-night-a-health-necessity-for-adults/", check:true},
   nhs:       {t:"Pulse oximetry at home: when a blood oxygen level of 92% or less needs urgent help", org:"NHS (UK)", url:"https://www.nhs.uk/", check:true},
   radBrief:  {t:"NASA-STD-3001 Technical Brief: Radiation Protection (solar particle event limit 250 mSv)", org:"NASA OCHMO", url:"https://www.nasa.gov/ochmo/human-spaceflight-and-aviation-standards/", check:true},
+  venous:    {t:"Venous Haemostasis (NASA and ESA study; related risk: venous thromboembolism during spaceflight)", org:"NASA / ESA", url:"https://www.nasa.gov/reference/venous-haemostasis/"},
+  nhsPanic:  {t:"Panic disorder: what to do during a panic attack", org:"NHS (UK)", url:"https://www.nhs.uk/mental-health/conditions/panic-disorder/"},
+  ntrsPHS:   {t:"Health and Fitness Evaluations for Long Duration Microgravity Exposure (crew examine each other monthly)", org:"NASA NTRS", url:"https://ntrs.nasa.gov/api/citations/20060051792/downloads/20060051792.pdf"},
   csaBio:    {t:"Bio-Monitor: wearable health monitoring on the ISS", org:"Canadian Space Agency (partner)", url:"https://www.asc-csa.gc.ca/eng/sciences/bio-monitor.asp"},
   csaRad:    {t:"Monitoring radiation to protect astronaut health (2026-02-26)", org:"Canadian Space Agency (partner)", url:"https://www.asc-csa.gc.ca/eng/news/articles/2026/2026-02-26-monitoring-radiation-astronaut-health.asp"},
   csaWhy:    {t:"Why do we conduct science experiments in space?", org:"Canadian Space Agency (partner)", url:"https://www.asc-csa.gc.ca/eng/iss/science/why-do-we-conduct-science-experiments-in-space.asp"},
@@ -709,12 +762,14 @@ const ENVS = {
 };
 
 /* ---------- Crew (simulated baselines) ---------- */
-const CREW = [
-  {id:"kim",    n:"Kim",    role:"Commander",          col:"#3b82f6", streak:6, base:{hr:58,sbp:116,spo2:98.0,temp:36.6,glu:88,sleep:6.9,mood:4.0,ex:110}},
+const CREW_DEFAULT = [
+  {id:"kim",    n:"Kim",    role:"Commander, CMO",          col:"#3b82f6", streak:6, base:{hr:58,sbp:116,spo2:98.0,temp:36.6,glu:88,sleep:6.9,mood:4.0,ex:110}},
   {id:"okafor", n:"Okafor", role:"Pilot",              col:"#a855f7", streak:3, base:{hr:63,sbp:121,spo2:97.6,temp:36.7,glu:92,sleep:7.2,mood:3.9,ex:100}},
   {id:"novak",  n:"Novak",  role:"Flight engineer",    col:"#14b8a6", streak:9, base:{hr:55,sbp:112,spo2:98.2,temp:36.5,glu:85,sleep:6.6,mood:4.2,ex:118}},
   {id:"park",   n:"Park",   role:"Mission specialist", col:"#f59e0b", streak:2, base:{hr:67,sbp:118,spo2:97.8,temp:36.8,glu:95,sleep:7.4,mood:3.8,ex:104}},
 ];
+/* Crew can be added and removed in the app (kept in this browser). Default crew is used for the demo. */
+const CREW = (()=>{ try{ const v = JSON.parse(localStorage.getItem("orbitguide.crew")||"null"); if(Array.isArray(v) && v.length>=2 && v.every(c=>c.id && c.n && c.base)) return v; }catch(e){} return CREW_DEFAULT.map(c=>({...c})); })();
 
 /* ---------- Body systems ---------- */
 const SYSTEMS = [
@@ -813,21 +868,25 @@ const SCENARIOS = [
   {id:"co2",   n:"Stuffy cabin air", dur:3, sys:"lungs"},
   {id:"fever", n:"Fever", dur:2, sys:"whole"},
   {id:"solar", n:"Solar storm", dur:1, sys:"whole"},
+  {id:"collapse", n:"Crewmate collapse", dur:1, sys:"lungs"},
 ];
 
 const LV = ["Normal","Watch","Act","Urgent"];
 
 /* ---------- Emergency guides (design §7) ----------
    Step types: do, ask (yes/no branch), timer, cpr, measure, switch, report.
-   Branch targets: step id, "next", "end", or "switch:<guideId>". Every guide ends with a report step. */
+   Branch targets: step id, "next", "end", or "switch:<guideId>". Every guide ends with a report step.
+   Crewmate mode (peer-mode guide): aud = "self" | "crewmate" | "both". qp / tp / sp are the same question, step
+   text or sub-text written for a responder helping {name}; they change who is addressed, never the medical
+   content. When a peer text is missing the self text is used. */
 const PROTOCOLS = [
-  {id:"cpr", title:"Unresponsive or not breathing (CPR)", short:"Someone does not respond or is not breathing normally.", sev:3, sys:"heart", hz:["dist","env"],
-   q:"Is someone not responding, or not breathing normally?", src:["ntrsCPR","rCardio","csaBio"],
+  {id:"cpr", title:"Unresponsive or not breathing (CPR)", short:"Someone does not respond or is not breathing normally.", sev:3, sys:"heart", hz:["dist","env"], aud:"crewmate",
+   q:"Is someone not responding, or not breathing normally?", qp:"Is {name} not responding, or not breathing normally?", src:["ntrsCPR","rCardio","csaBio"],
    steps:[
     {id:"a", type:"do", text:"Call a medical emergency out loud.", sub:"Tell every crewmate and the ground. One person leads, one person helps."},
-    {id:"b", type:"ask", text:"Tap the shoulders and shout their name. Do they respond?", yes:"i", no:"next"},
+    {id:"b", type:"ask", text:"Tap the shoulders and shout their name. Do they respond?", tp:"Tap {name}'s shoulders and shout their name. Does {name} respond?", yes:"i", no:"next"},
     {id:"c", type:"ask", text:"Watch the chest for 10 seconds. Are they breathing normally?", yes:"i", no:"next"},
-    {id:"d", type:"do", text:"Strap the person to the medical restraint.", sub:"In weightlessness, brace your feet on the ceiling or a handrail so each push does not float you away."},
+    {id:"d", type:"do", text:"Strap the person to the medical restraint.", tp:"Strap {name} to the medical restraint.", sub:"In weightlessness, brace your feet on the ceiling or a handrail so each push does not float you away."},
     {id:"e", type:"cpr", text:"Push hard and fast in the centre of the chest.", sub:"Follow the beat: 110 per minute. Swap rescuers every 2 minutes."},
     {id:"f", type:"do", text:"Attach the AED (heart shock device) and follow its voice.", sub:"Keep pushing while the pads go on. Stop only when it tells you to."},
     {id:"g", type:"do", text:"Give oxygen from the medical kit, as the onboard checklist describes."},
@@ -835,41 +894,41 @@ const PROTOCOLS = [
     {id:"i", type:"do", text:"Put them in the recovery position and stay with them.", sub:"Keep them restrained. Check breathing every minute."},
     {id:"j", type:"report", text:"Send the event log to Earth.", sub:"Do not wait for the answer. Keep watching the patient."},
    ]},
-  {id:"toxic", title:"Smoke, ammonia or toxic air", short:"Smoke, a chemical smell, or a toxic air alarm.", sev:3, sys:"lungs", hz:["env"],
+  {id:"toxic", title:"Smoke, ammonia or toxic air", short:"Smoke, a chemical smell, or a toxic air alarm.", sev:3, sys:"lungs", hz:["env"], aud:"both",
    q:"Is there smoke, a chemical smell, or a toxic air alarm?", src:["ntrsNH3","rHypoxia"],
    steps:[
     {id:"a", type:"do", text:"Put on your emergency mask first.", sub:"Then help the people near you with theirs."},
     {id:"b", type:"timer", sec:300, text:"Move with the crew to the safe module and close the hatch.", sub:"Aim to be sealed in within about 5 minutes."},
     {id:"c", type:"do", text:"Count the crew. Read the air monitor in the safe module."},
-    {id:"d", type:"ask", text:"Did anything touch your eyes or skin?", yes:"next", no:"f"},
+    {id:"d", type:"ask", text:"Did anything touch your eyes or skin?", tp:"Did anything touch {name}'s eyes or skin?", yes:"next", no:"f"},
     {id:"e", type:"timer", sec:900, text:"Rinse eyes and skin with clean water for 15 minutes."},
     {id:"f", type:"measure", text:"Check each person: heart rate, blood oxygen, breathing."},
     {id:"g", type:"report", text:"Send the event log to Earth.", sub:"Stay in the safe module until the air is confirmed clean."},
    ]},
-  {id:"chest", title:"Chest pain or irregular heartbeat", short:"Chest pain, or a heartbeat that is racing or uneven.", sev:3, sys:"heart", hz:["grav","dist"],
-   q:"Do you have chest pain, or a fast or uneven heartbeat?", src:["csaBio","rCardio"],
+  {id:"chest", title:"Chest pain or irregular heartbeat", short:"Chest pain, or a heartbeat that is racing or uneven.", sev:3, sys:"heart", hz:["grav","dist"], aud:"both",
+   q:"Do you have chest pain, or a fast or uneven heartbeat?", qp:"Does {name} have chest pain, or a fast or uneven heartbeat?", src:["csaBio","rCardio"],
    steps:[
-    {id:"a", type:"do", text:"Stop what you are doing. Hold on or strap in.", sub:"Tell a crewmate to stay with you."},
+    {id:"a", type:"do", text:"Stop what you are doing. Hold on or strap in.", sub:"Tell a crewmate to stay with you.", tp:"Have {name} stop, then hold on or strap in.", sp:"Stay with {name}."},
     {id:"b", type:"measure", text:"Measure heart rate, blood pressure and blood oxygen.", sub:"Record a heart trace (ECG) too if the kit has one."},
     {id:"c", type:"ask", text:"Is blood oxygen below 94%?", yes:"next", no:"e"},
     {id:"d", type:"do", text:"Start oxygen from the medical kit, as the checklist describes."},
     {id:"e", type:"do", text:"Open the onboard cardiac checklist and follow it.", sub:"Take medicine only as that checklist or the flight surgeon says."},
-    {id:"f", type:"timer", sec:300, text:"Wait 5 minutes, resting."},
+    {id:"f", type:"timer", sec:300, text:"Wait 5 minutes, resting.", tp:"Keep {name} resting for 5 minutes."},
     {id:"g", type:"measure", text:"Measure again: heart rate, blood pressure, blood oxygen."},
     {id:"h", type:"report", text:"Send the event log to Earth.", sub:"Keep measuring every 5 minutes while you wait for the reply."},
    ]},
-  {id:"dcs", title:"Pain or tingling after a spacewalk (DCS)", short:"Joint pain, numbness or itching after a spacewalk.", sev:3, sys:"whole", hz:["env"],
-   q:"After a spacewalk, do you have joint pain, numbness or itching?", src:["stdDCS","rDCS","rEVA"],
+  {id:"dcs", title:"Pain or tingling after a spacewalk (DCS)", short:"Joint pain, numbness or itching after a spacewalk.", sev:3, sys:"whole", hz:["env"], aud:"both",
+   q:"After a spacewalk, do you have joint pain, numbness or itching?", qp:"After a spacewalk, does {name} have joint pain, numbness or itching?", src:["stdDCS","rDCS","rEVA"],
    steps:[
     {id:"a", type:"ask", text:"Any serious signs: trouble breathing, chest pain, confusion, weakness or trouble seeing?", yes:"next", no:"c"},
     {id:"b", type:"do", text:"Tell the ground: \"serious decompression signs\".", sub:"Do not wait for the reply. Go on to the next step."},
-    {id:"c", type:"do", text:"Breathe 100% oxygen with the medical kit mask."},
+    {id:"c", type:"do", text:"Breathe 100% oxygen with the medical kit mask.", tp:"Give {name} 100% oxygen with the medical kit mask."},
     {id:"d", type:"do", text:"Raise the pressure only as the ground or the checklist directs.", sub:"For example to 16.4 psia or higher. Do not change pressure on your own."},
-    {id:"e", type:"timer", sec:900, text:"Every 15 minutes, check feeling, strength and speech."},
+    {id:"e", type:"timer", sec:900, text:"Every 15 minutes, check feeling, strength and speech.", tp:"Every 15 minutes, check {name}'s feeling, strength and speech."},
     {id:"f", type:"measure", text:"Log heart rate, blood pressure and blood oxygen."},
     {id:"g", type:"report", text:"Send the event log to Earth."},
    ]},
-  {id:"solar", title:"Solar storm", short:"A radiation or solar storm warning.", sev:2, sys:"whole", hz:["rad"],
+  {id:"solar", title:"Solar storm", short:"A radiation or solar storm warning.", sev:2, sys:"whole", hz:["rad"], aud:"both",
    q:"Is there a radiation alarm or solar storm warning?", src:["lunarRad","rRad","csaRad","hazards"],
    steps:[
     {id:"a", type:"do", text:"Go to the storm shelter now.", sub:"Line it with stowage bags and water containers: they block radiation."},
@@ -878,60 +937,72 @@ const PROTOCOLS = [
     {id:"d", type:"do", text:"When the all-clear comes, add the storm dose to each person's mission total."},
     {id:"e", type:"report", text:"Send the event log to Earth."},
    ]},
-  {id:"clot", title:"One-sided swelling in neck, arm or leg (blood clot)", short:"New swelling or pain on one side of the neck, an arm or a leg.", sev:2, sys:"heart", hz:["grav"],
-   q:"Is one side of your neck, an arm or a leg newly swollen or painful?", src:["nejm2020","rCardio"],
+  {id:"clot", title:"One-sided swelling in neck, arm or leg (blood clot)", short:"New swelling or pain on one side of the neck, an arm or a leg.", sev:2, sys:"heart", hz:["grav"], aud:"both",
+   q:"Is one side of your neck, an arm or a leg newly swollen or painful?", qp:"Is one side of {name}'s neck, an arm or a leg newly swollen or painful?", src:["venous","rCardio"],
    steps:[
-    {id:"a", type:"ask", text:"Are you suddenly short of breath, or do you have chest pain?", yes:"switch:chest", no:"next"},
+    {id:"a", type:"ask", text:"Are you suddenly short of breath, or do you have chest pain?", tp:"Is {name} suddenly short of breath, or does {name} have chest pain?", yes:"switch:chest", no:"next"},
     {id:"b", type:"do", text:"Do not rub or massage the swollen area."},
     {id:"c", type:"do", text:"Compare both sides. Take photos of both for the ground."},
     {id:"d", type:"measure", text:"Log heart rate, blood pressure and blood oxygen."},
     {id:"e", type:"do", text:"Set up the ultrasound. The ground team will guide the scan."},
-    {id:"f", type:"do", text:"Take blood-thinning medicine only if the flight surgeon tells you to."},
+    {id:"f", type:"do", text:"Take blood-thinning medicine only if the flight surgeon tells you to.", tp:"Give blood-thinning medicine only if the flight surgeon says to."},
     {id:"g", type:"report", text:"Send the event log to Earth."},
    ]},
-  {id:"eye", title:"Something in the eye", short:"Something got in the eye, or the eye hurts and is red.", sev:2, sys:"brain", hz:["env","grav"],
-   q:"Did something get in your eye, or is it painful and red?", src:["cornea24","ntrsSANS","rSANS"],
+  {id:"eye", title:"Something in the eye", short:"Something got in the eye, or the eye hurts and is red.", sev:2, sys:"brain", hz:["env","grav"], aud:"both",
+   q:"Did something get in your eye, or is it painful and red?", qp:"Did something get in {name}'s eye, or is it painful and red?", src:["cornea24","ntrsSANS","rSANS"],
    steps:[
-    {id:"a", type:"do", text:"Do not rub your eye."},
+    {id:"a", type:"do", text:"Do not rub your eye.", tp:"Make sure {name} does not rub the eye."},
     {id:"b", type:"timer", sec:300, text:"Rinse the eye with the eyewash for 5 minutes."},
-    {id:"c", type:"ask", text:"Is your vision getting worse, or is something stuck in the eye?", yes:"next", no:"e"},
+    {id:"c", type:"ask", text:"Is your vision getting worse, or is something stuck in the eye?", tp:"Is {name}'s vision getting worse, or is something stuck in the eye?", yes:"next", no:"e"},
     {id:"d", type:"do", text:"Tape an eye shield over it without pressing, and call the flight surgeon.", next:"g"},
     {id:"e", type:"do", text:"Use antibiotic eye drops only as the onboard checklist says."},
-    {id:"f", type:"do", text:"Check your vision with the eye chart every day until it is back to normal."},
+    {id:"f", type:"do", text:"Check your vision with the eye chart every day until it is back to normal.", tp:"Check {name}'s vision with the eye chart every day until it is back to normal."},
     {id:"g", type:"report", text:"Send the event log to Earth."},
    ]},
-  {id:"fever", title:"Fever, infection or rash", short:"Fever above 38 °C, a rash, or feeling unwell.", sev:2, sys:"whole", hz:["env","iso"],
-   q:"Do you have a fever above 38 °C, a rash, or feel unwell?", src:["crucian16","rImmune","rMicrobe"],
+  {id:"fever", title:"Fever, infection or rash", short:"Fever above 38 °C, a rash, or feeling unwell.", sev:2, sys:"whole", hz:["env","iso"], aud:"both",
+   q:"Do you have a fever above 38 °C, a rash, or feel unwell?", qp:"Does {name} have a fever above 38 °C, a rash, or look unwell?", src:["crucian16","rImmune","rMicrobe"],
    steps:[
     {id:"a", type:"measure", text:"Measure temperature, heart rate and blood oxygen."},
-    {id:"b", type:"do", text:"Protect your crewmates.", sub:"Wear a mask, clean shared surfaces, and sleep apart if you can."},
-    {id:"c", type:"do", text:"Rest and drink fluids."},
+    {id:"b", type:"do", text:"Protect your crewmates.", tp:"Protect the rest of the crew.", sub:"Wear a mask, clean shared surfaces, and sleep apart if you can."},
+    {id:"c", type:"do", text:"Rest and drink fluids.", tp:"Make sure {name} rests and drinks fluids."},
     {id:"d", type:"ask", text:"Temperature above 39 °C, trouble breathing, or a stiff neck?", yes:"next", no:"f"},
     {id:"e", type:"do", text:"This is urgent. Call the flight surgeon now.", sub:"Keep resting and measuring while you wait.", next:"g"},
-    {id:"f", type:"timer", sec:14400, text:"Measure your temperature again in 4 hours."},
+    {id:"f", type:"timer", sec:14400, text:"Measure your temperature again in 4 hours.", tp:"Measure {name}'s temperature again in 4 hours."},
     {id:"g", type:"report", text:"Send the event log to Earth."},
    ]},
-  {id:"head", title:"Headache or blurred vision", short:"A headache, or your vision got blurry.", sev:1, sys:"brain", hz:["env","grav"],
-   q:"Do you have a headache, or has your vision become blurry?", src:["stdCO2","ntrsSANS","rSANS"],
+  {id:"head", title:"Headache or blurred vision", short:"A headache, or your vision got blurry.", sev:1, sys:"brain", hz:["env","grav"], aud:"self",
+   q:"Do you have a headache, or has your vision become blurry?", qp:"Does {name} have a headache, or blurry vision?", src:["stdCO2","ntrsSANS","rSANS"],
    steps:[
     {id:"a", type:"ask", text:"Read the cabin CO₂. Is it above 3 mmHg?", yes:"next", no:"c"},
     {id:"b", type:"do", text:"Move to a module with better airflow and tell the crew CO₂ is high."},
-    {id:"c", type:"ask", text:"Has your vision changed: blurry up close or far away?", yes:"next", no:"e"},
+    {id:"c", type:"ask", text:"Has your vision changed: blurry up close or far away?", tp:"Has {name}'s vision changed: blurry up close or far away?", yes:"next", no:"e"},
     {id:"d", type:"do", text:"Do the SANS eye check in the checklist.", sub:"SANS means the back of the eye swells and focus shifts.", next:"f"},
-    {id:"e", type:"do", text:"Rest and drink water."},
+    {id:"e", type:"do", text:"Rest and drink water.", tp:"Have {name} rest and drink water."},
     {id:"f", type:"measure", text:"Measure heart rate, blood pressure and blood oxygen."},
     {id:"g", type:"report", text:"Send the event log to Earth."},
    ]},
-  {id:"sms", title:"Early space motion sickness", short:"Nausea or vomiting in the first days of flight.", sev:1, sys:"brain", hz:["grav"],
-   q:"Is it early in the flight, and do you feel sick or have you vomited?", src:["ntrsSAS","rSensori"],
+  {id:"sms", title:"Early space motion sickness", short:"Nausea or vomiting in the first days of flight.", sev:1, sys:"brain", hz:["grav"], aud:"self",
+   q:"Is it early in the flight, and do you feel sick or have you vomited?", qp:"Is it early in the flight, and does {name} feel sick or has {name} vomited?", src:["ntrsSAS","rSensori"],
    steps:[
-    {id:"a", type:"do", text:"Keep your head still. Fix your eyes on one spot in the cabin."},
+    {id:"a", type:"do", text:"Keep your head still. Fix your eyes on one spot in the cabin.", tp:"Help {name} keep the head still and fix the eyes on one spot."},
     {id:"b", type:"do", text:"Keep a sick bag within reach."},
     {id:"c", type:"do", text:"Sip small amounts of water.", sub:"Take motion-sickness medicine only as the onboard checklist says."},
-    {id:"d", type:"ask", text:"Have you vomited many times, or can you not keep water down?", yes:"next", no:"f"},
+    {id:"d", type:"ask", text:"Have you vomited many times, or can you not keep water down?", tp:"Has {name} vomited many times, or can {name} not keep water down?", yes:"next", no:"f"},
     {id:"e", type:"measure", text:"Check for dehydration: heart rate and blood pressure. Tell the flight surgeon."},
     {id:"f", type:"do", text:"Most people adapt within a few days. Log how you feel tonight."},
     {id:"g", type:"report", text:"Send the event log to Earth."},
+   ]},
+  {id:"panic", title:"Sudden anxiety or panic", short:"Sudden intense fear or anxiety, with a racing heart or shortness of breath.", sev:2, sys:"brain", hz:["iso","dist"], aud:"both",
+   q:"Did sudden, intense fear or anxiety start, with a fast heartbeat or shortness of breath?", qp:"Did {name} suddenly become very anxious or afraid, with a fast heartbeat or shortness of breath?", src:["nhsPanic","rBehave","stdIMM"],
+   steps:[
+    {id:"a", type:"ask", text:"First rule out other causes. Is there chest pain?", tp:"First rule out other causes. Does {name} have chest pain?", sub:"Panic can feel like a heart problem. Chest pain goes to the chest pain guide.", yes:"switch:chest", no:"next"},
+    {id:"b", type:"ask", text:"Is there smoke, a CO₂ alarm, or SpO₂ 92% or lower?", sub:"Bad air causes the same racing heart and breathlessness.", yes:"switch:toxic", no:"next"},
+    {id:"c", type:"measure", text:"Measure heart rate and blood oxygen.", tp:"Measure {name}'s heart rate and blood oxygen."},
+    {id:"d", type:"do", text:"If it is safe, stay where you are. Ask a crewmate to stay with you.", tp:"If it is safe, stay where you are and stay with {name}."},
+    {id:"e", type:"do", text:"Breathe slowly and deeply.", tp:"Help {name} breathe slowly and deeply."},
+    {id:"f", type:"do", text:"Remind yourself that the attack will pass.", tp:"Remind {name} that the attack will pass."},
+    {id:"g", type:"ask", text:"Measure again. Are symptoms getting worse, or is there new chest pain?", tp:"Measure {name} again. Are symptoms getting worse, or is there new chest pain?", yes:"switch:chest", no:"next"},
+    {id:"h", type:"report", text:"When calm, ask for a private medical conference with the flight surgeon and time to contact family.", tp:"When {name} is calm, ask for a private medical conference with the flight surgeon for {name}."},
    ]},
 ];
 const PROT = Object.fromEntries(PROTOCOLS.map(p=>[p.id,p]));
@@ -949,7 +1020,7 @@ function gauss(r){let u=0,v=0;while(!u)u=r();while(!v)v=r();return Math.sqrt(-2*
    ===================================================================== */
 const DataSource = {
   build({crewId, envId, day, scenarios=[], checkins={}}){
-    const c = CREW.find(x=>x.id===crewId), e = ENVS[envId], b = c.base;
+    const c = CREW.find(x=>x.id===crewId) || CREW_DEFAULT.find(x=>x.id===crewId), e = ENVS[envId], b = c.base;
     const recs = [];
     let bone = 0, radTot = 0;
     for(let d=1; d<=day; d++){
@@ -970,6 +1041,7 @@ const DataSource = {
         if(s.id==="co2"){ rec.co2 += [0.5,1.0,1.5][k]||1.5; rec.sleep -= 0.3; if(k>=1) rec.head = true; }
         if(s.id==="fever"){ rec.temp += 0.8 + 0.8*f; rec.hr += 10 + 9*f; }
         if(s.id==="solar"){ rec.radDay += 38; }
+        if(s.id==="collapse"){ rec.spo2 = 90; rec.hr = 128; }
       }
       const ci = checkins[d];
       if(ci) for(const k of Object.keys(ci)) if(ci[k]!==null && ci[k]!==undefined && ci[k]!=="") rec[k] = ci[k];
@@ -1010,7 +1082,7 @@ const CHART_LINES = {
   ex:[[90,1,"<90 min"],[45,2,"<45 min"]],
   bone:[[-5,2,"≤−5%"]],
 };
-const SRC_OF = {hr:"NEWS2", sbp:"NEWS2 / AHA", temp:"NEWS2", spo2:"NEWS2", glu:"CDC / ADA", sleep:"AASM", co2:"NASA-STD-3001", radTot:"NASA-STD-3001", ex:"NASA HRP", bone:"NASA HRP", radDay:"NASA radiation brief", mood:"Personal baseline"};
+const SRC_OF = {hr:"NEWS2", sbp:"NEWS2 / AHA", temp:"NEWS2", spo2:"NEWS2", glu:"CDC / ADA", sleep:"AASM", co2:"NASA-STD-3001", radTot:"NASA-STD-3001", ex:"NASA HRP (7-day average)", bone:"NASA HRP", radDay:"NASA radiation brief", mood:"Personal baseline"};
 const roundTo = (v, d) => { const f = Math.pow(10, d); return Math.round(v*f)/f; };
 function absGrade(key, value){
   const rule = ABS_RULES[key];
@@ -1061,10 +1133,12 @@ function specialGrade(k, recs, i, env){
   }
   return 0;
 }
+/* Exercise is graded on the last 7 days' average, so one rest day does not raise a flag (stability guide §2). */
+function ex7(recs, i){ const d = recs.slice(Math.max(0, i-6), i+1).filter(r=>r.ex!=null); return d.length ? d.reduce((a,r)=>a+r.ex,0)/d.length : null; }
 /* grade = max(personal baseline (capped at Act), absolute, special). Also says which rule decided. */
 function gradeInfo(k, recs, i, bl, env){
   const base = Math.min(baselineGrade(k, recs, i, bl), 2);
-  const abs = absGrade(k, recs[i][k]);
+  const abs = absGrade(k, k==="ex" ? ex7(recs, i) : recs[i][k]);
   const sp = specialGrade(k, recs, i, env);
   let lv = Math.max(base, abs, sp);
   if(["sleep","mood","bone","ex"].includes(k)) lv = Math.min(lv, 2);   // these never become Urgent
@@ -1086,7 +1160,7 @@ function rangeText(k, bl, env){
   const m = METRICS[k];
   if(m.kind==="p") return `Your normal ${fmt(k,bl[k].lo)}–${fmt(k,bl[k].hi)} ${m.u}`;
   if(m.kind==="r") return `Normal here about ${env.dose.toFixed(2)} ${m.u}/day`;
-  if(k==="ex") return `Target 90 min or more`;
+  if(k==="ex") return `Target 90 min or more (7-day average)`;
   if(k==="bone") return `Watch at 1.0% per month`;
   if(k==="co2") return `NASA limit 3.0 mmHg`;
   if(k==="radTot") return `Career limit 600 mSv`;
@@ -1109,21 +1183,750 @@ const LS = {
 };
 
 const S = {
-  crew:"kim", env:"iss", day:45, view:45, sys:null, metric:null, tab:"home", lang: LS.get("lang", "en"),
+  crew: CREW.some(c=>c.id==="kim") ? "kim" : CREW[0].id, env:"iss", day:45, view:45, sys:null, metric:null, tab:"home", lang: LS.get("lang", "en"),
   scen: {},                              // crewId -> [{id,dur,end}]
   checkins: LS.get("checkins", {}),      // crewId -> {envId|day -> partial record}
   todos: LS.get("todos", {}),            // crewId|env|day -> {text:true}
   practiced: new Set(LS.get("practiced", [])),
   layers: {skin:true, organs:true, skeleton:true, vessels:true, fluid:true, radiation:true},
   whole:false, sound:false,
+  me: (()=>{ const m = LS.get("me", null); return CREW.some(c=>c.id===m) ? m : CREW[0].id; })(),               // who is holding the app (crewmate mode)
+  patient: null,                         // who the emergency tab is for; null = me
+};
+/* patient null = not identified yet (CPR starts at once; who it is can be added later) */
+const UNKNOWN = {id:null, n:"Unidentified crewmate", role:"not identified"};
+const crewById = id => CREW.find(c=>c.id===id) || UNKNOWN;
+const isPeer = () => R ? R.patient!==R.responder : (S.patient||S.me)!==S.me;
+const nm = (str, id) => String(str).replace(/\{name\}/g, crewById(id).n);
+/* peer text: same medical content, only the subject changes (crewmate-mode guide §4) */
+function qText(p, pid){ const peer = pid!==S.me; return nm(peer && p.qp ? p.qp : p.q, pid); }
+function stText(st){ const peer = R && R.patient && R.patient!==R.responder; return nm(peer && st.tp ? st.tp : st.text, R?R.patient:S.me); }
+function subText(st){ const peer = R && R.patient && R.patient!==R.responder; return st.sub ? nm(peer && st.sp ? st.sp : st.sub, R?R.patient:S.me) : ""; }
+const AUD = {self:"Self", crewmate:"Crewmate", both:"Self or crewmate"};
+
+/* Korean UI dictionary (AI-assisted translation, Claude, 2026-11-14; reviewed by Team Temp7).
+   Keys are the English source strings. Notes and logs sent to Earth stay in English. */
+const KO = {
+"\"Do I need the flight surgeon?\"": "\"비행 군의관에게 연락해야 할까요?\"",
+"\"Yes\" switches to: {0}. Clock and log continue.": "\"예\"를 누르면 {0}(으)로 넘어갑니다. 시계와 기록은 이어집니다.",
+"% / month": "% / 월",
+"(+{0} more)": "(외 {0}개)",
+"/ day": "/ 일",
+"0.38 g (about 3/8)": "0.38 g (약 3/8)",
+"1 needs attention": "1개 주의 필요",
+"110 compressions per minute · 2-minute cycles": "분당 110회 압박 · 2분마다 교대",
+"126 mg/dL or higher: note it for the flight surgeon.": "126 mg/dL 이상: 비행 군의관에게 알릴 수 있게 기록하세요.",
+"28-day trends vs your normal": "28일 추세를 내 평소 범위와 비교",
+"3D view is not available on this device.": "이 기기에서는 3D 화면을 쓸 수 없습니다.",
+"6 body systems, 12 measures": "신체 계통 6개, 측정 항목 12개",
+"7-day average {0} min · target 90": "7일 평균 {0}분 · 목표 90분",
+"92% or lower: open the toxic air guide and tell the crew.": "92% 이하: 독성 공기 가이드를 열고 크루에게 알리세요.",
+"<strong>Example procedures, not flight checklists.</strong> These guides support the onboard medical checklist and the flight surgeon; they are not medical advice. Medicine is only ever \"as the onboard checklist or flight surgeon says\". Hackathon prototype.": "<strong>비행 체크리스트가 아닌 예시 절차입니다.</strong> 이 가이드는 기내 의료 체크리스트와 비행 군의관을 돕는 것이며 의학적 조언이 아닙니다. 약은 언제나 \"기내 체크리스트나 비행 군의관이 말한 대로\"만 씁니다. 해커톤 프로토타입입니다.",
+"A 3D body you can turn and tap. Each part is colored against your own normal, with plain words for what it means.": "돌려 보고 눌러 볼 수 있는 3D 몸. 부위마다 내 평소 범위와 비교해 색이 바뀌고, 무슨 뜻인지 쉬운 말로 알려 줍니다.",
+"A fever is often the first sign of infection, and germs spread easily in a sealed cabin.": "열은 감염의 첫 신호인 경우가 많고, 밀폐된 선내에서는 병균이 쉽게 퍼집니다.",
+"A five-step routine that says what to measure, when and how. Rewards are for doing it, never for good numbers.": "무엇을 언제 어떻게 잴지 알려 주는 5단계 루틴. 보상은 '했는지'에 주고, 수치가 좋은지에는 주지 않습니다.",
+"A headache, or your vision got blurry.": "두통이 있거나 시야가 흐려졌습니다.",
+"A health guide that stays in orbit around you.": "내 곁을 도는 건강 가이드.",
+"A new fast or slow resting heart rate is an early sign the heart and circulation are working harder.": "평소와 다르게 빠르거나 느린 안정 시 심박은 심장과 순환계가 더 힘들게 일한다는 초기 신호입니다.",
+"A radiation or solar storm warning.": "방사선 경보 또는 태양 폭풍 경고.",
+"About 90 minutes of exercise, resistance first": "운동 약 90분, 근력 운동 먼저",
+"Above 38 °C: open the fever guide.": "38 °C 초과: 발열 가이드를 여세요.",
+"Absolute thresholds come from NASA-STD-3001 and public clinical references (NEWS2, AHA, CDC, ADA, AASM, NHS). Personal-baseline rules are our own design. Not a medical device.": "절대 기준은 NASA-STD-3001과 공개 임상 기준(NEWS2, AHA, CDC, ADA, AASM, NHS)에서 가져왔습니다. 개인 기준선 규칙은 우리 팀이 설계했습니다. 의료기기가 아닙니다.",
+"Act": "조치",
+"Add a short session tomorrow to catch up.": "내일 짧게 한 번 더 해서 따라잡으세요.",
+"After a spacewalk, do you have joint pain, numbness or itching?": "선외활동 후 관절 통증, 저림, 가려움이 있나요?",
+"After a spacewalk, does {name} have joint pain, numbness or itching?": "선외활동 후 {name}에게 관절 통증, 저림, 가려움이 있나요?",
+"Aim to be sealed in within about 5 minutes.": "약 5분 안에 들어가 문을 닫는 것을 목표로 하세요.",
+"All data is simulated; no real astronaut medical data is used (that requires data-use agreements and ethics approval). Each crew member has fixed baselines plus seeded random noise, so the same settings always give the same numbers. Situations and your check-in entries are applied on top. Ranges are being calibrated against public NASA data (HRP evidence, OSDR Inspiration4 clinical panels). Everything comes from one function, DataSource.build(); to connect real data, replace that function and keep the daily record shape:": "모든 데이터는 시뮬레이션입니다. 실제 우주인 의료 데이터는 쓰지 않았습니다(데이터 이용 협약과 윤리 승인이 필요). 크루마다 고정 기준값에 시드가 정해진 무작위 잡음을 더해, 같은 설정이면 언제나 같은 숫자가 나옵니다. 상황과 체크인 입력값은 그 위에 적용됩니다. 범위는 공개 NASA 데이터(HRP 근거, OSDR Inspiration4 임상 패널)에 맞춰 보정 중입니다. 모든 값은 DataSource.build() 함수 하나에서 나옵니다. 실제 데이터를 연결하려면 이 함수만 바꾸고 하루 기록 형태는 유지하세요:",
+"All normal": "모두 정상",
+"All systems in your normal range": "모든 계통이 평소 범위 안",
+"Answer": "답하기",
+"Any serious signs: trouble breathing, chest pain, confusion, weakness or trouble seeing?": "심각한 징후가 있나요: 호흡 곤란, 흉통, 혼란, 힘 빠짐, 잘 안 보임?",
+"Are they breathing on their own now?": "이제 스스로 숨을 쉬나요?",
+"Are you suddenly short of breath, or do you have chest pain?": "갑자기 숨이 차거나 흉통이 있나요?",
+"Ask a crewmate to run this guide for you.": "크루원에게 이 가이드를 대신 진행해 달라고 하세요.",
+"Ask the crew to protect your sleep time.": "크루에게 수면 시간을 지켜 달라고 부탁하세요.",
+"Ask the flight surgeon about your exercise plan.": "운동 계획을 비행 군의관과 상의하세요.",
+"Attach the AED (heart shock device) and follow its voice.": "AED(심장 충격기)를 붙이고 음성 안내를 따르세요.",
+"Automatic T+ event log": "T+ 사건 기록 자동 작성",
+"Back to guides": "가이드 목록으로",
+"Bad air causes the same racing heart and breathlessness.": "나쁜 공기도 똑같이 심장이 뛰고 숨이 찹니다.",
+"Based on": "근거",
+"Based on:": "근거:",
+"Beat stopped": "박자 멈춤",
+"Before breakfast. Clean finger, first drop wiped away, second drop on the strip.": "아침 식사 전. 손가락을 닦고, 첫 방울은 닦아 내고 두 번째 방울을 스트립에 묻히세요.",
+"Before breakfast. Wipe away the first drop, test the second.": "아침 식사 전. 첫 방울은 닦아 내고 두 번째로 재세요.",
+"Blood oxygen (SpO₂)": "혈중 산소(SpO₂)",
+"Blood pressure": "혈압",
+"Blood pressure (top number)": "혈압 (위 숫자)",
+"Blood pressure (top)": "혈압 (위)",
+"Blood sugar": "혈당",
+"Blood vessels": "혈관",
+"Blurred vision": "시야 흐림",
+"Body system": "신체 계통",
+"Body systems": "신체 계통",
+"Body temperature": "체온",
+"Body temperature (fever, infection) and the radiation your whole body has absorbed.": "체온(열, 감염)과 몸 전체가 받은 방사선.",
+"Body today": "오늘 몸 상태",
+"Bone loss": "골손실",
+"Bone loss %/month (no exercise)": "골손실 %/월 (운동 없을 때)",
+"Bone loss is estimated from the environment's monthly loss rate (no exercise), reduced by up to 70% at 120 minutes of exercise a day. Radiation total and bone loss accumulate day by day. Values you type stay in this browser.": "골손실은 환경별 월 손실률(운동 없을 때)에서 추정하고, 하루 120분 운동이면 최대 70%까지 줄어듭니다. 방사선 누적량과 골손실은 날마다 쌓입니다. 입력한 값은 이 브라우저에만 저장됩니다.",
+"Bone mineral lost in weight-bearing bones during spaceflight.": "우주 비행 중 체중을 받는 뼈에서 빠지는 골밀도.",
+"Bone saver": "뼈 지킴이",
+"Bones & muscles": "뼈·근육",
+"Bones and muscles weaken without weight on them. Daily exercise is the main defence.": "뼈와 근육은 무게를 받지 않으면 약해집니다. 매일 운동이 가장 중요한 방어입니다.",
+"Book a 90-minute session today.": "오늘 90분 운동 시간을 잡으세요.",
+"Brain & mind": "뇌·마음",
+"Breathe 100% oxygen with the medical kit mask.": "의료 키트 마스크로 100% 산소를 마시세요.",
+"Breathe slowly and deeply.": "천천히 깊게 숨 쉬세요.",
+"Building the 3D body…": "3D 몸을 만드는 중…",
+"CO₂ builds up in still air; high levels bring headaches, poor focus and bad sleep.": "공기가 흐르지 않으면 CO₂가 쌓입니다. 높으면 두통, 집중력 저하, 수면 불량이 옵니다.",
+"CPR rhythm started (110/min).": "CPR 박자 시작 (분당 110회).",
+"CPR rhythm stopped after {0} beats.": "CPR 박자 정지, 총 {0}회.",
+"Cabin CO₂": "선내 CO₂",
+"Call a medical emergency out loud.": "\"의료 응급!\"이라고 크게 외치세요.",
+"Career limit 600 mSv": "경력 한도 600 mSv",
+"Check": "점검",
+"Check each person: heart rate, blood oxygen, breathing.": "한 명씩 확인하세요: 심박, 혈중 산소, 호흡.",
+"Check for a solar storm warning.": "태양 폭풍 경고가 있는지 확인하세요.",
+"Check for dehydration: heart rate and blood pressure. Tell the flight surgeon.": "탈수인지 확인하세요: 심박과 혈압. 비행 군의관에게 알리세요.",
+"Check my body": "내 몸 확인",
+"Check the cabin air readings (CO₂, oxygen).": "선내 공기 측정값(CO₂, 산소)을 확인하세요.",
+"Check the cabin temperature.": "선내 온도를 확인하세요.",
+"Check your temperature: fever also raises it.": "체온을 확인하세요: 열이 나도 심박이 오릅니다.",
+"Check your vision with the eye chart every day until it is back to normal.": "정상으로 돌아올 때까지 매일 시력표로 시력을 확인하세요.",
+"Check {name}'s vision with the eye chart every day until it is back to normal.": "정상으로 돌아올 때까지 매일 시력표로 {name}의 시력을 확인하세요.",
+"Chest pain or a racing, uneven beat? Open the chest pain guide.": "흉통이나 빠르고 불규칙한 박동? 흉통 가이드를 여세요.",
+"Chest pain or irregular heartbeat": "흉통 또는 불규칙한 심장 박동",
+"Chest pain, or a heartbeat that is racing or uneven.": "흉통, 또는 심장이 빠르거나 불규칙하게 뜀.",
+"Choose fewer sweet snacks and drinks.": "단 간식과 음료를 줄이세요.",
+"Chosen from the guide list": "가이드 목록에서 선택",
+"Clip the sensor on a warm, still finger. Wait for a steady number.": "따뜻하고 움직이지 않는 손가락에 센서를 끼우세요. 숫자가 안정될 때까지 기다리세요.",
+"Close": "닫기",
+"Closed environment": "폐쇄 환경",
+"Commander, CMO": "사령관, 의료 담당(CMO)",
+"Common": "흔함",
+"Compare both sides. Take photos of both for the ground.": "양쪽을 비교하세요. 지상에 보낼 수 있게 양쪽 사진을 찍으세요.",
+"Complete": "완료",
+"Copy text": "텍스트 복사",
+"Count resistance plus treadmill or bike minutes for the day.": "근력 운동과 트레드밀·자전거 시간을 합쳐서 세세요.",
+"Count the crew. Read the air monitor in the safe module.": "인원을 세세요. 안전 모듈에서 공기 측정기를 읽으세요.",
+"Crew": "크루",
+"Crewmate": "동료",
+"Crewmate assist": "동료 지원",
+"Crewmate collapse": "동료 쓰러짐",
+"Cut salty snacks today.": "오늘은 짠 간식을 줄이세요.",
+"Cycle {0} · {1} to swap · {2} beats": "{0}번째 주기 · 교대까지 {1} · {2}회",
+"Daily check-in": "일일 체크인",
+"Dashed lines = named limits from NASA and clinical references.": "점선 = NASA와 임상 기준의 한계선.",
+"Data": "데이터",
+"Day {0}": "{0}일차",
+"Day {0} (today)": "{0}일차 (오늘)",
+"Did anything touch your eyes or skin?": "눈이나 피부에 뭔가 닿았나요?",
+"Did anything touch {name}'s eyes or skin?": "{name}의 눈이나 피부에 뭔가 닿았나요?",
+"Did something get in your eye, or is it painful and red?": "눈에 뭐가 들어갔거나, 눈이 아프고 빨갛나요?",
+"Did something get in {name}'s eye, or is it painful and red?": "{name}의 눈에 뭐가 들어갔거나, 눈이 아프고 빨갛나요?",
+"Did sudden, intense fear or anxiety start, with a fast heartbeat or shortness of breath?": "갑자기 강한 두려움이나 불안이 시작됐고, 심장이 빨리 뛰거나 숨이 차나요?",
+"Did {name} suddenly become very anxious or afraid, with a fast heartbeat or shortness of breath?": "{name}이(가) 갑자기 매우 불안해하거나 두려워하고, 심장이 빨리 뛰거나 숨이 차나요?",
+"Dim lights and screens 1 hour before sleep.": "자기 1시간 전부터 조명과 화면을 어둡게 하세요.",
+"Distance": "거리",
+"Distance from Earth": "지구와의 거리",
+"Do I need the flight surgeon?": "비행 군의관에게 연락해야 할까요?",
+"Do not rub or massage the swollen area.": "부은 곳을 문지르거나 주무르지 마세요.",
+"Do not rub your eye.": "눈을 비비지 마세요.",
+"Do not skip resistance exercise this week.": "이번 주에는 근력 운동을 거르지 마세요.",
+"Do not wait for the answer. Keep watching the patient.": "답을 기다리지 마세요. 환자를 계속 지켜보세요.",
+"Do not wait for the reply. Go on to the next step.": "답을 기다리지 마세요. 다음 단계로 가세요.",
+"Do not wait for the reply: keep caring for the patient.": "답을 기다리지 마세요: 환자를 계속 돌보세요.",
+"Do the SANS eye check in the checklist.": "체크리스트의 SANS 눈 검사를 하세요.",
+"Do the resistance part first: it protects bone most.": "근력 운동부터 하세요: 뼈를 가장 잘 지켜 줍니다.",
+"Do the suggested steps, or follow an emergency guide.": "제안된 단계를 하거나 응급 가이드를 따르세요.",
+"Do this": "이렇게 하세요",
+"Do you have a fever above 38 °C, a rash, or feel unwell?": "38 °C 넘는 열, 발진이 있거나 몸이 안 좋나요?",
+"Do you have a headache, or has your vision become blurry?": "두통이 있거나 시야가 흐려졌나요?",
+"Do you have chest pain, or a fast or uneven heartbeat?": "흉통이 있거나 심장이 빠르거나 불규칙하게 뛰나요?",
+"Do your full exercise session today.": "오늘은 운동을 전부 하세요.",
+"Does {name} have a fever above 38 °C, a rash, or look unwell?": "{name}에게 38 °C 넘는 열이나 발진이 있거나, 안 좋아 보이나요?",
+"Does {name} have a headache, or blurry vision?": "{name}에게 두통이나 시야 흐림이 있나요?",
+"Does {name} have chest pain, or a fast or uneven heartbeat?": "{name}에게 흉통이 있거나 심장이 빠르거나 불규칙하게 뛰나요?",
+"Done, next step": "완료, 다음 단계",
+"Dose": "선량",
+"Dose mSv/day": "선량 mSv/일",
+"Drag to turn · scroll or pinch to zoom · tap a glowing part": "드래그해서 돌리기 · 스크롤이나 핀치로 확대 · 빛나는 부위를 누르세요",
+"Drag to turn · tap a glowing part to open it": "드래그해서 돌리기 · 빛나는 부위를 누르면 열립니다",
+"Drink water and measure again.": "물을 마시고 다시 재세요.",
+"Drink water through the day.": "하루 종일 물을 마시세요.",
+"Drink water: losing fluid raises heart rate.": "물을 마시세요: 수분이 빠지면 심박이 오릅니다.",
+"Early space motion sickness": "초기 우주 멀미",
+"Earth link": "지구 통신",
+"Emergency guides": "응급 가이드",
+"Emergency in progress": "응급 상황 진행 중",
+"Emergency log for Earth": "지구로 보낼 응급 기록",
+"Emergency logs use the same channel": "응급 기록도 같은 채널로 전송",
+"Emergency situations were chosen from the in-flight conditions NASA plans for (NASA-STD-3001 Appendix E, Integrated Medical Model tables), limited to what can happen inside the vehicle. Where no agency source gives a step, the guide only says: move to safety, tell the crew, call the flight surgeon.": "응급 상황은 NASA가 대비하는 비행 중 질환(NASA-STD-3001 부록 E, 통합 의료 모델 표) 가운데 우주선 안에서 일어날 수 있는 것만 골랐습니다. 기관 자료에 단계가 없는 곳은 \"안전한 곳으로 이동, 크루에게 알림, 비행 군의관 호출\"만 안내합니다.",
+"End guide": "가이드 종료",
+"Environments": "환경",
+"Estimated bone loss": "추정 골손실",
+"Estimated from days in space, gravity and your exercise minutes. Confirm with a bone scan after landing.": "우주 체류 일수, 중력, 운동 시간으로 추정합니다. 착륙 후 골밀도 검사로 확인하세요.",
+"Evening check": "저녁 점검",
+"Evening check: mood, headache, vision": "저녁 점검: 기분, 두통, 시야",
+"Event log": "사건 기록",
+"Event log sent to Earth.": "사건 기록을 지구로 보냈습니다.",
+"Every 15 minutes, check feeling, strength and speech.": "15분마다 감각, 힘, 말투를 확인하세요.",
+"Every 15 minutes, check {name}'s feeling, strength and speech.": "15분마다 {name}의 감각, 힘, 말투를 확인하세요.",
+"Every part maps to NASA's five hazards of human spaceflight.": "모든 부위가 NASA의 우주 비행 5대 위험에 연결됩니다.",
+"Everything else still works: use the body systems list on the left.": "나머지 기능은 그대로 됩니다: 왼쪽의 신체 계통 목록을 쓰세요.",
+"Everything is inside your normal range.": "모든 값이 평소 범위 안에 있습니다.",
+"Everything you measured and did becomes a clear note for the flight surgeon, sent with the real signal delay in mind.": "잰 것과 한 일이 모두 비행 군의관에게 보낼 깔끔한 노트가 되고, 실제 신호 지연을 고려해 전송됩니다.",
+"Example procedure for a hackathon prototype. Follow your onboard checklist and flight surgeon first.": "해커톤 프로토타입의 예시 절차입니다. 기내 체크리스트와 비행 군의관을 먼저 따르세요.",
+"Example procedure written from public space-agency material. Not a flight checklist and not medical advice.": "공개된 우주 기관 자료로 쓴 예시 절차입니다. 비행 체크리스트도, 의학적 조언도 아닙니다.",
+"Exercise": "운동",
+"Exercise is graded on the 7-day average, not one day, so one rest day does not raise a flag.": "운동은 하루 값이 아니라 7일 평균으로 판정합니다. 하루 쉬었다고 경고가 뜨지 않습니다.",
+"Exercise is the main defence against bone and muscle loss in space (ISS target about 1.5 hours a day).": "운동은 우주에서 뼈와 근육 손실을 막는 가장 중요한 방법입니다(ISS 목표 하루 약 1.5시간).",
+"Far from Earth, food is stored for a long time and the menu repeats (\"menu fatigue\"). Muscles do less work in weightlessness, and the body can become less good at clearing sugar from the blood.": "지구에서 멀면 음식을 오래 보관하고 메뉴가 반복됩니다(\"메뉴 피로\"). 무중력에서는 근육이 일을 덜 해서, 몸이 혈당을 처리하는 능력이 떨어질 수 있습니다.",
+"Fasting blood sugar": "공복 혈당",
+"Fever": "발열",
+"Fever above 38 °C, a rash, or feeling unwell.": "38 °C 넘는 열, 발진, 또는 몸이 안 좋음.",
+"Fever, infection or rash": "발열, 감염 또는 발진",
+"Fill from a wearable": "웨어러블에서 채우기",
+"Finish procedure": "절차 마치기",
+"First rule out other causes. Does {name} have chest pain?": "먼저 다른 원인을 확인하세요. {name}에게 흉통이 있나요?",
+"First rule out other causes. Is there chest pain?": "먼저 다른 원인을 확인하세요. 흉통이 있나요?",
+"Flight engineer": "비행 엔지니어",
+"Fluid shift": "체액 이동",
+"Fluid shifts change blood pressure; a big change from your normal can mean dehydration or strain on the heart.": "체액 이동은 혈압을 바꿉니다. 평소보다 크게 변하면 탈수나 심장 부담일 수 있습니다.",
+"Follow the actions above and check again tomorrow.": "위의 조치를 하고 내일 다시 확인하세요.",
+"Follow the beat: 110 per minute. Swap rescuers every 2 minutes.": "박자를 따라가세요: 분당 110회. 2분마다 구조자를 바꾸세요.",
+"Follow the daily routine and enter your readings.": "하루 루틴을 따라 측정값을 입력하세요.",
+"Follow the onboard checklist for low blood sugar.": "저혈당 기내 체크리스트를 따르세요.",
+"Followed the plan": "계획 실천",
+"For example to 16.4 psia or higher. Do not change pressure on your own.": "예: 16.4 psia 이상. 혼자서 압력을 바꾸지 마세요.",
+"For yourself or a crewmate": "나 또는 동료에게 사용",
+"For:": "대상:",
+"Forehead or ear thermometer, at rest, not right after exercise.": "이마나 귀 체온계로, 쉬는 상태에서, 운동 직후가 아닐 때 재세요.",
+"Four tools, one body.": "도구 넷, 몸 하나.",
+"From a morning reading to a note for Earth.": "아침 측정부터 지구로 보내는 노트까지.",
+"From the wrist sensor, or write down when you fell asleep and woke up.": "손목 센서로 재거나, 잠든 시각과 깬 시각을 적으세요.",
+"Full routine": "루틴 완주",
+"Gateway": "게이트웨이",
+"Gateway (lunar orbit)": "게이트웨이 (달 궤도)",
+"Get every crewmate inside. Nobody stays in the outer modules.": "크루 전원을 안으로 데려오세요. 바깥 모듈에 아무도 남지 않게 하세요.",
+"Give blood-thinning medicine only if the flight surgeon says to.": "비행 군의관이 말한 경우에만 혈액 응고 억제제를 주세요.",
+"Give oxygen from the medical kit, as the onboard checklist describes.": "기내 체크리스트에 따라 의료 키트로 산소를 주세요.",
+"Give {name} 100% oxygen with the medical kit mask.": "의료 키트 마스크로 {name}에게 100% 산소를 주세요.",
+"Go to the storm shelter now.": "지금 대피소로 가세요.",
+"Grade = the higher of two checks. Personal baseline: your normal is mission days 1–14 average ± 2 SD; 2.2 SD worse (or more than 1.5 SD worse 3 days in a row from day 17) is Watch, 4 SD worse is Act. Absolute: the fixed bands below. Only absolute rules can give Urgent. A body system takes its worst measure; a logged headache or blurred vision makes Brain & mind at least Watch.": "등급 = 두 검사 중 높은 쪽. 개인 기준선: 평소 범위는 임무 1~14일 평균 ± 2 SD입니다. 2.2 SD 나쁘면(또는 17일부터 3일 연속 1.5 SD 넘게 나쁘면) 주의, 4 SD 나쁘면 조치입니다. 절대 기준: 아래 고정 구간. 긴급은 절대 기준으로만 나옵니다. 신체 계통은 가장 나쁜 항목을 따르고, 두통이나 시야 흐림을 기록하면 뇌·마음은 최소 주의가 됩니다.",
+"Gravity": "중력",
+"Gravity fields": "중력 환경",
+"Green band = your normal (days 1–14).": "초록 띠 = 내 평소 범위(1~14일).",
+"Grounded in NASA research": "NASA 연구에 기반",
+"Guide waiting on a timer": "타이머를 기다리는 가이드",
+"Has your vision changed: blurry up close or far away?": "시야가 달라졌나요: 가까운 곳이나 먼 곳이 흐린가요?",
+"Has {name} vomited many times, or can {name} not keep water down?": "{name}이(가) 여러 번 토했거나 물도 못 삼키나요?",
+"Has {name}'s vision changed: blurry up close or far away?": "{name}의 시야가 달라졌나요: 가까운 곳이나 먼 곳이 흐린가요?",
+"Have you vomited many times, or can you not keep water down?": "여러 번 토했거나 물도 못 삼키나요?",
+"Have {name} rest and drink water.": "{name}을(를) 쉬게 하고 물을 마시게 하세요.",
+"Have {name} stop, then hold on or strap in.": "{name}을(를) 멈추게 하고, 손잡이를 잡거나 몸을 고정하게 하세요.",
+"Hazard": "위험",
+"Headache": "두통",
+"Headache or blurred vision": "두통 또는 시야 흐림",
+"Headache or blurred vision logged: check cabin CO₂ and rest.": "두통이나 시야 흐림 기록됨: 선내 CO₂를 확인하고 쉬세요.",
+"Headache or blurred vision? Open the headache guide.": "두통이나 시야 흐림? 두통 가이드를 여세요.",
+"Headache, chest pain or blurred vision with it? Open the matching guide.": "두통, 흉통, 시야 흐림이 같이 있나요? 해당 가이드를 여세요.",
+"Health streak": "건강 연속 기록",
+"Heart & circulation": "심장·순환",
+"Heart rate": "심박",
+"Help {0}": "{0} 돕기",
+"Help {name} breathe slowly and deeply.": "{name}이(가) 천천히 깊게 숨 쉬도록 도와주세요.",
+"Help {name} keep the head still and fix the eyes on one spot.": "{name}이(가) 머리를 움직이지 않고 한 점을 보도록 도와주세요.",
+"Helping {0}. Answer for them, most dangerous first.": "{0}을(를) 돕는 중. 그 사람 기준으로 답하세요. 가장 위험한 것부터 묻습니다.",
+"Helping: {0} · usual {1}": "돕는 중: {0} · 평소 {1}",
+"Home": "홈",
+"Honest check-in": "솔직한 체크인",
+"Hostile and closed environments": "적대적이고 폐쇄된 환경",
+"Hours of sleep last night, from the wrist sensor or your own note.": "지난밤 수면 시간. 손목 센서나 직접 적은 기록으로.",
+"How \"your normal\" is learned": "\"내 평소 범위\"를 배우는 방법",
+"How a day works": "하루는 이렇게 흘러갑니다",
+"How grades work": "등급 판정 방법",
+"How much oxygen your blood carries, and the air you breathe. In a sealed cabin, CO₂ can build up where air does not move.": "혈액이 나르는 산소량과 들이마시는 공기. 밀폐된 선내에서는 공기가 흐르지 않는 곳에 CO₂가 쌓일 수 있습니다.",
+"How space affects this": "우주가 미치는 영향",
+"How to measure:": "재는 방법:",
+"How well you sleep and how you feel. Long isolation, odd light cycles and heavy workloads wear these down first.": "얼마나 잘 자고 기분이 어떤지. 긴 고립, 낯선 빛 주기, 많은 업무가 가장 먼저 이것을 갉아먹습니다.",
+"How your body handles sugar and energy. Less muscle use and a limited menu can slowly push blood sugar up.": "몸이 당과 에너지를 다루는 방식. 근육을 덜 쓰고 메뉴가 한정되면 혈당이 천천히 오를 수 있습니다.",
+"I am": "나는",
+"I know what's happening": "무슨 상황인지 알아요",
+"ISS astronauts who develop swelling at the back of the eye.": "눈 뒤쪽이 붓는 ISS 우주인 비율.",
+"If it is safe, stay where you are and stay with {name}.": "안전하다면 그 자리에 있으면서 {name} 곁을 지키세요.",
+"If it is safe, stay where you are. Ask a crewmate to stay with you.": "안전하다면 그 자리에 있으세요. 크루원에게 곁에 있어 달라고 하세요.",
+"If you feel dizzy or faint, hold on, keep still and tell a crewmate.": "어지럽거나 쓰러질 것 같으면 손잡이를 잡고 가만히 있으면서 크루원에게 알리세요.",
+"In the evening, rate how you feel from 1 (very low) to 5 (great). Be honest: nobody is graded on it.": "저녁에 기분을 1(아주 나쁨)부터 5(아주 좋음)까지 매기세요. 솔직하게 적으세요: 이 점수로 아무도 평가받지 않습니다.",
+"In weightlessness about 2 litres of fluid move toward the head. NASA's cardiovascular risk includes clots, irregular rhythm, low blood pressure on landing (fainting) and the heart becoming rounder. Far from Earth, a heart problem has to be handled on board first.": "무중력에서는 체액 약 2리터가 머리 쪽으로 이동합니다. NASA의 심혈관 위험에는 혈전, 불규칙한 박동, 착륙 시 저혈압(실신), 심장이 둥글어지는 변화가 있습니다. 지구에서 멀면 심장 문제를 먼저 기내에서 해결해야 합니다.",
+"In weightlessness, brace your feet on the ceiling or a handrail so each push does not float you away.": "무중력에서는 발을 천장이나 손잡이에 버티세요. 그래야 누를 때마다 몸이 떠밀려 가지 않습니다.",
+"International Space Station (low Earth orbit)": "국제우주정거장 (지구 저궤도)",
+"Is blood oxygen below 94%?": "혈중 산소가 94% 미만인가요?",
+"Is it early in the flight, and do you feel sick or have you vomited?": "비행 초반이고, 메스껍거나 토했나요?",
+"Is it early in the flight, and does {name} feel sick or has {name} vomited?": "비행 초반이고, {name}이(가) 메스꺼워하거나 토했나요?",
+"Is one side of your neck, an arm or a leg newly swollen or painful?": "목, 팔, 다리 한쪽이 새로 붓거나 아픈가요?",
+"Is one side of {name}'s neck, an arm or a leg newly swollen or painful?": "{name}의 목, 팔, 다리 한쪽이 새로 붓거나 아픈가요?",
+"Is someone not responding, or not breathing normally?": "반응이 없거나 정상적으로 숨을 쉬지 않는 사람이 있나요?",
+"Is there a radiation alarm or solar storm warning?": "방사선 경보나 태양 폭풍 경고가 있나요?",
+"Is there smoke, a CO₂ alarm, or SpO₂ 92% or lower?": "연기, CO₂ 경보가 있거나 SpO₂가 92% 이하인가요?",
+"Is there smoke, a chemical smell, or a toxic air alarm?": "연기, 화학 물질 냄새, 독성 공기 경보가 있나요?",
+"Is your vision getting worse, or is something stuck in the eye?": "시력이 점점 나빠지거나, 눈에 뭔가 박혀 있나요?",
+"Is {name} not responding, or not breathing normally?": "{name}이(가) 반응이 없거나 정상적으로 숨을 쉬지 않나요?",
+"Is {name} suddenly short of breath, or does {name} have chest pain?": "{name}이(가) 갑자기 숨이 차거나 흉통이 있나요?",
+"Is {name}'s vision getting worse, or is something stuck in the eye?": "{name}의 시력이 점점 나빠지거나, 눈에 뭔가 박혀 있나요?",
+"Isolation": "고립",
+"Isolation and confinement": "고립과 감금",
+"Isolation and confinement slowly wear down mood; a falling trend is worth talking about early.": "고립과 감금은 기분을 천천히 깎아 냅니다. 하락 추세라면 일찍 이야기하는 게 좋습니다.",
+"Joint pain, numbness or itching after a spacewalk.": "선외활동 후 관절 통증, 저림, 가려움.",
+"Keep a sick bag within reach.": "멀미 봉투를 손닿는 곳에 두세요.",
+"Keep an eye on how you feel. Check My body for today's numbers and do your evening check-in tonight. If anything changes, come back here.": "몸 상태를 지켜보세요. 내 몸 탭에서 오늘 수치를 보고, 오늘 밤 저녁 체크인을 하세요. 무언가 바뀌면 여기로 다시 오세요.",
+"Keep every dosimeter reading logged.": "선량계 측정값을 빠짐없이 기록하세요.",
+"Keep measuring every 5 minutes while you wait for the reply.": "답을 기다리는 동안 5분마다 계속 재세요.",
+"Keep pushing while the pads go on. Stop only when it tells you to.": "패드를 붙이는 동안에도 계속 누르세요. 기계가 멈추라고 할 때만 멈추세요.",
+"Keep resting and measuring while you wait.": "기다리는 동안 계속 쉬면서 재세요.",
+"Keep the same sleep window tonight.": "오늘 밤에도 같은 시간대에 주무세요.",
+"Keep them restrained. Check breathing every minute.": "몸을 고정한 채로 두세요. 1분마다 호흡을 확인하세요.",
+"Keep up your daily exercise.": "매일 운동을 계속하세요.",
+"Keep your daily routine: it is working.": "하루 루틴을 유지하세요: 잘 되고 있습니다.",
+"Keep your head still. Fix your eyes on one spot in the cabin.": "머리를 움직이지 마세요. 선내의 한 점을 바라보세요.",
+"Keep {name} resting for 5 minutes.": "{name}을(를) 5분 동안 쉬게 하세요.",
+"Less muscle work and a repeating menu can slowly raise blood sugar; catching the trend early is easier to fix.": "근육을 덜 쓰고 같은 메뉴가 반복되면 혈당이 천천히 오를 수 있습니다. 추세를 일찍 잡을수록 고치기 쉽습니다.",
+"Level {0}": "레벨 {0}",
+"Life-threatening": "생명 위협",
+"Line it with stowage bags and water containers: they block radiation.": "보관 가방과 물통으로 벽을 두르세요: 방사선을 막아 줍니다.",
+"Log and continue": "기록하고 계속",
+"Log heart rate, blood pressure and blood oxygen.": "심박, 혈압, 혈중 산소를 기록하세요.",
+"Log resistance plus treadmill or bike minutes. The ISS target is about 90 minutes a day.": "근력 운동과 트레드밀·자전거 시간을 기록하세요. ISS 목표는 하루 약 90분입니다.",
+"Log your check-in tonight so changes are caught early.": "변화를 일찍 잡을 수 있게 오늘 밤 체크인을 기록하세요.",
+"Log your dosimeter every hour.": "선량계 값을 매시간 기록하세요.",
+"Long wait: once started you can leave this screen. A band at the top will remind you.": "긴 대기: 시작하면 이 화면을 떠나도 됩니다. 위쪽 띠가 알려 줍니다.",
+"Lunar base": "달 기지",
+"Lunar rover": "달 탐사차",
+"Lunar surface base": "달 표면 기지",
+"Lungs & cabin air": "폐·선내 공기",
+"Make sure {name} does not rub the eye.": "{name}이(가) 눈을 비비지 않게 하세요.",
+"Make sure {name} rests and drinks fluids.": "{name}이(가) 쉬면서 수분을 섭취하게 하세요.",
+"Mars base": "화성 기지",
+"Mars delay uses NASA's \"up to 20 minutes one way\" (5 Hazards). Mars doses (1.5 mSv/day in transit, 0.5 on the surface) follow the NASA radiation technical brief.": "화성 지연은 NASA의 \"편도 최대 20분\"(5대 위험)을 씁니다. 화성 선량(이동 중 하루 1.5 mSv, 지표 0.5)은 NASA 방사선 기술 브리프를 따릅니다.",
+"Mars surface base": "화성 표면 기지",
+"Mars transit": "화성 이동",
+"Mars transit (deep space)": "화성 이동 (심우주)",
+"Me ({0})": "나 ({0})",
+"Measure": "측정",
+"Measure again in 1 hour, at rest.": "1시간 뒤 쉬는 상태에서 다시 재세요.",
+"Measure again now with a new strip.": "새 스트립으로 지금 다시 재세요.",
+"Measure again on another finger: cold or moving fingers read low.": "다른 손가락으로 다시 재세요: 차갑거나 움직이는 손가락은 낮게 나옵니다.",
+"Measure again sitting up, after a few minutes.": "몇 분 뒤 앉은 자세로 다시 재세요.",
+"Measure again tomorrow before breakfast.": "내일 아침 식사 전에 다시 재세요.",
+"Measure again. Are symptoms getting worse, or is there new chest pain?": "다시 재세요. 증상이 나빠지거나 새로 흉통이 생겼나요?",
+"Measure again: heart rate, blood pressure, blood oxygen.": "다시 재세요: 심박, 혈압, 혈중 산소.",
+"Measure heart rate and blood oxygen.": "심박과 혈중 산소를 재세요.",
+"Measure heart rate, blood pressure and blood oxygen.": "심박, 혈압, 혈중 산소를 재세요.",
+"Measure temperature, heart rate and blood oxygen.": "체온, 심박, 혈중 산소를 재세요.",
+"Measure your temperature again in 4 hours.": "4시간 뒤 체온을 다시 재세요.",
+"Measure {name} again. Are symptoms getting worse, or is there new chest pain?": "{name}을(를) 다시 재세요. 증상이 나빠지거나 새로 흉통이 생겼나요?",
+"Measure {name}'s heart rate and blood oxygen.": "{name}의 심박과 혈중 산소를 재세요.",
+"Measure {name}'s temperature again in 4 hours.": "4시간 뒤 {name}의 체온을 다시 재세요.",
+"Measuring for {0} (by {1})": "{0} 대신 측정 중 (측정자 {1})",
+"Metabolism": "대사",
+"Method, data and sources": "방법, 데이터, 출처",
+"Microgravity": "미세중력",
+"Mission": "임무",
+"Mission day": "임무 일차",
+"Mission radiation total": "임무 방사선 누적",
+"Mission specialist": "임무 전문가",
+"Mission timeline": "임무 타임라인",
+"Mission timeline and what-if": "임무 타임라인과 가정 상황",
+"Mood": "기분",
+"Morning vital signs": "아침 활력 징후",
+"Morning vital signs before breakfast": "아침 식사 전 활력 징후",
+"Morning vitals": "아침 측정",
+"Most people adapt within a few days. Log how you feel tonight.": "대부분 며칠 안에 적응합니다. 오늘 밤 상태를 기록하세요.",
+"Move to a module with better airflow and tell the crew CO₂ is high.": "공기가 잘 도는 모듈로 옮기고 크루에게 CO₂가 높다고 알리세요.",
+"Move to a module with better airflow.": "공기가 잘 도는 모듈로 옮기세요.",
+"Move with the crew to the safe module and close the hatch.": "크루와 함께 안전 모듈로 가서 해치를 닫으세요.",
+"My body": "내 몸",
+"NASA HRP (7-day average)": "NASA HRP (7일 평균)",
+"NASA Hazard": "NASA 위험",
+"NASA limit 3.0 mmHg": "NASA 한도 3.0 mmHg",
+"NASA lists isolation and confinement as one of five spaceflight hazards: sleep loss, a body clock out of step with day and night, and overwork make it worse. On the ISS the crew sees 16 sunrises a day. Fluid moving toward the head can also bring headaches and vision changes.": "NASA는 고립과 감금을 우주 비행 5대 위험 중 하나로 꼽습니다. 수면 부족, 낮과 밤에 어긋난 생체 시계, 과로가 이를 악화시킵니다. ISS에서는 하루에 해가 16번 뜹니다. 체액이 머리 쪽으로 몰리면 두통과 시력 변화도 생길 수 있습니다.",
+"NASA radiation brief": "NASA 방사선 브리프",
+"NASA source": "NASA 출처",
+"NASA's 5 Hazards in Orbit Guide": "Orbit Guide 속 NASA 5대 위험",
+"Nausea or vomiting in the first days of flight.": "비행 첫 며칠 동안의 메스꺼움이나 구토.",
+"Needs help": "도움 필요",
+"New swelling or pain on one side of the neck, an arm or a leg.": "목, 팔, 다리 한쪽이 새로 붓거나 아픔.",
+"Next step": "다음 단계",
+"No": "아니요",
+"No caffeine after midday.": "정오 이후에는 카페인을 피하세요.",
+"No emergency signs from these questions.": "이 질문들로는 응급 징후가 없습니다.",
+"No.": "아니요.",
+"Normal": "정상",
+"Normal here about {0} mSv/day": "이곳 평소 약 {0} mSv/일",
+"Not sure what's happening?": "무슨 상황인지 모르겠나요?",
+"Not sure what's happening? Answer a few questions, most dangerous first.": "무슨 상황인지 모르겠나요? 가장 위험한 것부터 몇 가지 물어볼게요.",
+"Not urgent. Add it to today's medical report.": "급하지 않아요. 오늘 의료 보고에 넣으세요.",
+"Not yet.": "아직은 아니에요.",
+"Note for Earth": "지구로 보내는 노트",
+"Note it for the flight surgeon.": "비행 군의관에게 알릴 수 있게 기록하세요.",
+"Nothing to report beyond your routine private medical conference.": "정기 비공개 의료 상담 외에는 보고할 것이 없습니다.",
+"Nothing to send beyond the routine weekly summary. Onboard guides cover common problems.": "정기 주간 요약 외에는 보낼 것이 없습니다. 흔한 문제는 기내 가이드로 해결됩니다.",
+"Numbers next to your normal": "숫자를 내 평소 범위와 함께 표시",
+"On waking": "깰 때",
+"One step per screen, with timers and a CPR beat. Built to be followed to the end without waiting for Earth.": "한 화면에 한 단계, 타이머와 CPR 박자 포함. 지구의 답을 기다리지 않고 끝까지 따라갈 수 있게 만들었습니다.",
+"One-sided swelling in neck, arm or leg (blood clot)": "목, 팔, 다리 한쪽이 부음 (혈전)",
+"One-way signal delay to Mars at its farthest. A question and its answer are 40 minutes apart.": "가장 멀 때 화성까지의 편도 신호 지연. 질문과 답 사이가 40분입니다.",
+"Open My body": "내 몸 열기",
+"Open check-in": "체크인 열기",
+"Open emergency guides": "응급 가이드 열기",
+"Open guide:": "가이드 열기:",
+"Open the onboard cardiac checklist and follow it.": "기내 심장 체크리스트를 열고 따르세요.",
+"Open-source: three.js (MIT). Fonts: IBM Plex, Saira (SIL Open Font License).": "오픈소스: three.js (MIT). 글꼴: IBM Plex, Saira (SIL Open Font License).",
+"Orbit Guide is a hackathon prototype. It is not a medical device and does not give medical advice. Absolute thresholds are taken from the references above and personal-baseline rules are our own design; emergency guides are example procedures that support, never replace, the onboard medical checklist and the flight surgeon.": "Orbit Guide는 해커톤 프로토타입입니다. 의료기기가 아니며 의학적 조언을 하지 않습니다. 절대 기준은 위 참고 자료에서 가져왔고 개인 기준선 규칙은 우리 팀이 설계했습니다. 응급 가이드는 기내 의료 체크리스트와 비행 군의관을 돕는 예시 절차이며, 결코 대신하지 않습니다.",
+"Orbit Guide · Team Temp7 · NASA Space Apps Challenge 2026. Hackathon prototype with simulated data. Not a medical device and not medical advice.": "Orbit Guide · Team Temp7 · NASA Space Apps Challenge 2026. 시뮬레이션 데이터를 쓴 해커톤 프로토타입입니다. 의료기기도, 의학적 조언도 아닙니다.",
+"Organs": "장기",
+"Overall": "전체",
+"Pain or tingling after a spacewalk (DCS)": "선외활동 후 통증이나 저림 (감압병)",
+"Panic can feel like a heart problem. Chest pain goes to the chest pain guide.": "공황은 심장 문제처럼 느껴질 수 있습니다. 흉통이 있으면 흉통 가이드로 갑니다.",
+"Patient: {0} ({1}). Responder: {2} ({3}). Mode: {4}.": "환자: {0} ({1}). 처치자: {2} ({3}). 방식: {4}.",
+"Personal baseline": "개인 기준선",
+"Pilot": "조종사",
+"Point a fan at your sleep station.": "수면 칸에 선풍기를 향하게 하세요.",
+"Practiced": "연습함",
+"Prepare a note for Earth": "지구로 보낼 노트 준비",
+"Pressurized lunar rover": "가압 달 탐사차",
+"Previous question": "이전 질문",
+"Private to {0}. Only the grade is shown.": "{0}만 볼 수 있습니다. 등급만 표시됩니다.",
+"Procedure finished.": "절차를 마쳤습니다.",
+"Protect the rest of the crew.": "나머지 크루를 보호하세요.",
+"Protect your crewmates.": "동료 크루를 보호하세요.",
+"Push hard and fast in the centre of the chest.": "가슴 한가운데를 세고 빠르게 누르세요.",
+"Put on warm layers and measure again.": "따뜻하게 껴입고 다시 재세요.",
+"Put on your emergency mask first.": "먼저 자기 비상 마스크를 쓰세요.",
+"Put them in the recovery position and stay with them.": "회복 자세로 눕히고 곁에 있으세요.",
+"Question {0} of {1}": "질문 {0} / {1}",
+"Rad today": "오늘 방사선",
+"Radiation": "방사선",
+"Radiation adds up over a career; NASA's career limit is 600 mSv.": "방사선은 경력 전체에 걸쳐 쌓입니다. NASA 경력 한도는 600 mSv입니다.",
+"Radiation today": "오늘 방사선",
+"Radiation total": "방사선 누적",
+"Raise the pressure only as the ground or the checklist directs.": "지상이나 체크리스트가 지시할 때만 압력을 올리세요.",
+"Rate your mood honestly (1 very low, 5 great) and tick any symptoms.": "기분을 솔직하게 매기고(1 아주 나쁨, 5 아주 좋음) 증상이 있으면 체크하세요.",
+"Read the cabin CO₂. Is it above 3 mmHg?": "선내 CO₂를 읽으세요. 3 mmHg를 넘나요?",
+"Read the cabin air monitor in the module where you sleep and work.": "자고 일하는 모듈의 선내 공기 측정기를 읽으세요.",
+"Read your dosimeter and log the dose every hour.": "선량계를 읽고 매시간 선량을 기록하세요.",
+"Read your personal dosimeter at the end of the day.": "하루가 끝날 때 개인 선량계를 읽으세요.",
+"Ready for anything": "언제든 준비 완료",
+"Ready to send.": "보낼 준비가 됐습니다.",
+"Record a heart trace (ECG) too if the kit has one.": "키트에 있으면 심전도(ECG)도 기록하세요.",
+"References": "참고 자료",
+"Remind yourself that the attack will pass.": "이 발작은 지나간다고 스스로 되뇌세요.",
+"Remind {name} that the attack will pass.": "이 발작은 지나간다고 {name}에게 말해 주세요.",
+"Report the reading to the crew.": "측정값을 크루에게 알리세요.",
+"Report to Earth": "지구에 보고",
+"Rescan": "다시 스캔",
+"Rest 5 minutes and measure again on the same arm.": "5분 쉬고 같은 팔로 다시 재세요.",
+"Rest and drink fluids.": "쉬면서 수분을 섭취하세요.",
+"Rest and drink water.": "쉬면서 물을 마시세요.",
+"Rest for 10 minutes and measure again.": "10분 쉬고 다시 재세요.",
+"Rested": "푹 잠",
+"Resting heart rate": "안정 시 심박",
+"Resume": "이어서 하기",
+"Rewards count what you did, never what the numbers were. A bad reading earns the same XP as a good one, so there is no reason to hide it.": "보상은 수치가 아니라 한 일을 셉니다. 나쁜 측정값도 좋은 값과 같은 XP를 받으니 숨길 이유가 없습니다.",
+"Rhythm": "박자",
+"Right after waking, before coffee or exercise. Sit still for 5 minutes first.": "깨자마자, 커피나 운동 전에. 먼저 5분간 가만히 앉아 있으세요.",
+"Rinse eyes and skin with clean water for 15 minutes.": "깨끗한 물로 눈과 피부를 15분간 씻으세요.",
+"Rinse the eye with the eyewash for 5 minutes.": "세안기로 눈을 5분간 씻으세요.",
+"Rising blood sugar": "혈당 상승",
+"Routine": "루틴",
+"SANS means the back of the eye swells and focus shifts.": "SANS는 눈 뒤쪽이 붓고 초점이 바뀌는 것입니다.",
+"Safety notice": "안전 안내",
+"Save today's log": "오늘 기록 저장",
+"Saved for day {0}.": "{0}일차로 저장했습니다.",
+"Saved to {0}'s record for today and graded at once.": "{0}의 오늘 기록에 저장되고 바로 등급이 매겨집니다.",
+"Schedule a call with family or the support team.": "가족이나 지원팀과 통화 일정을 잡으세요.",
+"See": "보기",
+"See My body": "내 몸 보기",
+"Self": "본인",
+"Self or crewmate": "본인 또는 동료",
+"Self: {0} · usual {1}": "본인: {0} · 평소 {1}",
+"Send a note with the next data downlink.": "다음 데이터 전송 때 노트를 보내세요.",
+"Send log to Earth": "지구로 기록 보내기",
+"Send the event log to Earth.": "사건 기록을 지구로 보내세요.",
+"Send the record to the flight surgeon on Earth.": "비행 군의관에게 기록을 보내세요.",
+"Send to Earth": "지구로 보내기",
+"Serious": "심각",
+"Set up the ultrasound. The ground team will guide the scan.": "초음파를 준비하세요. 지상 팀이 검사를 안내합니다.",
+"Several times your normal dose? Open the solar storm guide.": "평소 선량의 몇 배인가요? 태양 폭풍 가이드를 여세요.",
+"Share": "공유",
+"Short sleep affects mood, judgement and health; it is the most common in-flight problem.": "수면 부족은 기분, 판단력, 건강에 영향을 줍니다. 비행 중 가장 흔한 문제입니다.",
+"Shows how much oxygen your blood carries. A low value can come from bad cabin air or a lung problem.": "혈액이 산소를 얼마나 나르는지 보여 줍니다. 낮으면 선내 공기가 나쁘거나 폐에 문제가 있을 수 있습니다.",
+"Sip small amounts of water.": "물을 조금씩 마시세요.",
+"Sit still for 5 minutes, cuff on the upper arm at heart level, do not talk while it measures.": "5분간 가만히 앉아, 커프를 위팔에 심장 높이로 감고, 재는 동안 말하지 마세요.",
+"Sit still for 5 minutes, then read the wrist sensor or count your pulse for 60 seconds.": "5분간 가만히 앉은 뒤 손목 센서를 읽거나 60초 동안 맥박을 세세요.",
+"Skeleton": "뼈대",
+"Skin": "피부",
+"Skip to content": "본문으로 건너뛰기",
+"Skipped workouts": "운동 누락",
+"Sleep": "수면",
+"Sleep debt": "수면 부채",
+"Smoke, a chemical smell, or a toxic air alarm.": "연기, 화학 물질 냄새, 또는 독성 공기 경보.",
+"Smoke, ammonia or toxic air": "연기, 암모니아 또는 독성 공기",
+"Solar storm": "태양 폭풍",
+"Solar storms can multiply the daily dose within hours; the shelter only helps if you go early. NASA limits one storm to 250 mSv.": "태양 폭풍은 몇 시간 만에 하루 선량을 몇 배로 늘릴 수 있습니다. 대피소는 일찍 가야만 효과가 있습니다. NASA는 폭풍 한 번을 250 mSv로 제한합니다.",
+"Someone does not respond or is not breathing normally.": "누군가 반응이 없거나 정상적으로 숨을 쉬지 않음.",
+"Something got in the eye, or the eye hurts and is red.": "눈에 뭐가 들어갔거나, 눈이 아프고 빨감.",
+"Something in the eye": "눈 이물",
+"Sound off": "소리 끔",
+"Source": "출처",
+"Source:": "출처:",
+"Sources: <a href=\"https://www.nasa.gov/hrp/hazards/\" target=\"_blank\" rel=\"noopener\">NASA HRP 5 Hazards</a>, <a href=\"https://www.nasa.gov/hrp/risks/\" target=\"_blank\" rel=\"noopener\">HRP Risks</a>, <a href=\"https://www.nasa.gov/hrp/ongoing-hrp-research/\" target=\"_blank\" rel=\"noopener\">Ongoing HRP Research</a>, and the Canadian Space Agency. Full list under \"Method, data and sources\" below.": "출처: <a href=\"https://www.nasa.gov/hrp/hazards/\" target=\"_blank\" rel=\"noopener\">NASA HRP 5 Hazards</a>, <a href=\"https://www.nasa.gov/hrp/risks/\" target=\"_blank\" rel=\"noopener\">HRP Risks</a>, <a href=\"https://www.nasa.gov/hrp/ongoing-hrp-research/\" target=\"_blank\" rel=\"noopener\">Ongoing HRP Research</a>, 캐나다 우주국. 전체 목록은 아래 \"방법, 데이터, 출처\"에 있습니다.",
+"SpO₂": "SpO₂",
+"Space changes the body (fluids move toward the head, muscles do less work), so textbook ranges miss early changes. Orbit Guide learns your normal from mission days 1–14 (average ± 2 SD) and flags how far today is from it.": "우주는 몸을 바꿉니다(체액이 머리 쪽으로 몰리고 근육이 일을 덜 함). 그래서 교과서 범위로는 초기 변화를 놓칩니다. Orbit Guide는 임무 1~14일(평균 ± 2 SD)로 내 평소 범위를 배우고, 오늘이 거기서 얼마나 벗어났는지 알려 줍니다.",
+"Space radiation": "우주 방사선",
+"Space radiation is invisible and cannot be felt; outside Earth's magnetic field it is one of the biggest hazards (cosmic rays and solar storms). Stress and spaceflight change the immune system, and germs spread more easily in a small sealed cabin.": "우주 방사선은 보이지도 느껴지지도 않습니다. 지구 자기장 밖에서는 가장 큰 위험 중 하나입니다(우주선과 태양 폭풍). 스트레스와 우주 비행은 면역계를 바꾸고, 좁은 밀폐 선내에서는 병균이 더 쉽게 퍼집니다.",
+"Spend free time in the most shielded module.": "쉬는 시간은 차폐가 가장 잘 된 모듈에서 보내세요.",
+"Spend time at a window or with the plants.": "창가나 식물 곁에서 시간을 보내세요.",
+"Stand up or move slowly; hold on to a rail.": "천천히 일어나거나 움직이세요. 손잡이를 잡으세요.",
+"Start again": "다시 시작",
+"Start beat": "박자 시작",
+"Start oxygen from the medical kit, as the checklist describes.": "체크리스트에 따라 의료 키트로 산소를 시작하세요.",
+"Start timer": "타이머 시작",
+"Started: {0}. Reason: {1}.": "시작: {0}. 이유: {1}.",
+"Stay in the most shielded module.": "차폐가 가장 잘 된 모듈에 머무세요.",
+"Stay in the safe module until the air is confirmed clean.": "공기가 깨끗하다고 확인될 때까지 안전 모듈에 머무세요.",
+"Stay with {name}.": "{name} 곁을 지키세요.",
+"Step {0} of {1}": "{0} / {1}단계",
+"Steps": "단계",
+"Stop": "중지",
+"Stop what you are doing. Hold on or strap in.": "하던 일을 멈추세요. 손잡이를 잡거나 몸을 고정하세요.",
+"Strap the person to the medical restraint.": "환자를 의료용 고정대에 묶으세요.",
+"Strap {name} to the medical restraint.": "{name}을(를) 의료용 고정대에 묶으세요.",
+"Streak": "연속 기록",
+"Streak, XP and 9 badges": "연속 기록, XP, 배지 9개",
+"Stuffy cabin air": "답답한 선내 공기",
+"Sudden anxiety or panic": "갑작스러운 불안 또는 공황",
+"Sudden intense fear or anxiety, with a racing heart or shortness of breath.": "갑작스럽고 강한 두려움이나 불안, 빠른 심장 박동이나 숨참이 함께 옴.",
+"Sugar check": "혈당 점검",
+"Sum of all daily dosimeter readings this mission.": "이번 임무의 하루 선량계 값을 모두 더한 값.",
+"Sunrises seen from the ISS. They upset the body clock and sleep.": "ISS에서 보는 하루 일출 횟수. 생체 시계와 수면을 흐트러뜨립니다.",
+"Switch guide": "가이드 전환",
+"Take blood-thinning medicine only if the flight surgeon tells you to.": "비행 군의관이 말한 경우에만 혈액 응고 억제제를 드세요.",
+"Take medicine only as that checklist or the flight surgeon says.": "약은 그 체크리스트나 비행 군의관이 말한 대로만 드세요.",
+"Take motion-sickness medicine only as the onboard checklist says.": "멀미약은 기내 체크리스트대로만 드세요.",
+"Talk with a crewmate today.": "오늘 크루원과 이야기를 나누세요.",
+"Tap a part to read what it means, in plain words.": "부위를 누르면 무슨 뜻인지 쉬운 말로 읽을 수 있습니다.",
+"Tap the shoulders and shout their name. Do they respond?": "어깨를 두드리며 이름을 크게 부르세요. 반응하나요?",
+"Tap {name}'s shoulders and shout their name. Does {name} respond?": "{name}의 어깨를 두드리며 이름을 크게 부르세요. {name}이(가) 반응하나요?",
+"Tape an eye shield over it without pressing, and call the flight surgeon.": "누르지 않게 눈 보호대를 테이프로 붙이고 비행 군의관을 부르세요.",
+"Tell a crewmate and the flight surgeon: low blood sugar is urgent.": "크루원과 비행 군의관에게 알리세요: 저혈당은 긴급합니다.",
+"Tell a crewmate if you feel faint.": "쓰러질 것 같으면 크루원에게 알리세요.",
+"Tell a crewmate to stay with you.": "크루원에게 곁에 있어 달라고 하세요.",
+"Tell every crewmate and the ground. One person leads, one person helps.": "모든 크루와 지상에 알리세요. 한 명이 이끌고, 한 명이 돕습니다.",
+"Tell the ground: \"serious decompression signs\".": "지상에 알리세요: \"심각한 감압 징후\".",
+"Temp": "체온",
+"Temperature": "체온",
+"Temperature above 39 °C, trouble breathing, or a stiff neck?": "체온 39 °C 초과, 호흡 곤란, 또는 목이 뻣뻣한가요?",
+"The 3D body shows your state in color.": "3D 몸이 내 상태를 색으로 보여 줍니다.",
+"The Earth link is live (about 1 second). Call the flight surgeon now and start onboard care.": "지구 통신이 실시간입니다(약 1초). 지금 비행 군의관에게 연락하고 기내 처치를 시작하세요.",
+"The full log is on the right. Send it to Earth so the flight surgeon sees exactly what was done and when. Practice counts toward the \"Ready for anything\" badge.": "전체 기록은 오른쪽에 있습니다. 무엇을 언제 했는지 비행 군의관이 정확히 볼 수 있게 지구로 보내세요. 연습도 \"언제든 준비 완료\" 배지에 반영됩니다.",
+"The note is written in English for Mission Control.": "노트는 관제 센터용으로 영어로 작성됩니다.",
+"The problem is not measuring. It is knowing what the numbers mean, and what to do.": "문제는 측정이 아닙니다. 숫자가 무슨 뜻이고 무엇을 해야 하는지 아는 것입니다.",
+"The same body, six places. Limits and advice change with the mission.": "같은 몸, 여섯 장소. 한계와 조언은 임무에 따라 바뀝니다.",
+"The spacecraft is a closed environment: air, microbes, temperature, pressure, light and noise all affect health. Air does not rise or sink in microgravity, so exhaled CO₂ can pool around your face. Low oxygen can cause confusion, headache, poor vision and bad sleep.": "우주선은 폐쇄 환경입니다: 공기, 미생물, 온도, 압력, 빛, 소음이 모두 건강에 영향을 줍니다. 미세중력에서는 공기가 오르내리지 않아서 내쉰 CO₂가 얼굴 주변에 고일 수 있습니다. 산소가 부족하면 혼란, 두통, 시력 저하, 수면 불량이 올 수 있습니다.",
+"Then help the people near you with theirs.": "그다음 주변 사람의 마스크를 도와주세요.",
+"This is urgent. Call the flight surgeon now.": "긴급합니다. 지금 비행 군의관에게 연락하세요.",
+"Timed step": "시간 단계",
+"Timer due: {0}.": "타이머 마감: {0}.",
+"Timer started: {0} ({1})": "타이머 시작: {0} ({1})",
+"Timers, CPR rhythm, measurements": "타이머, CPR 박자, 측정",
+"To do": "할 일",
+"Today": "오늘",
+"Today's numbers": "오늘 수치",
+"Today's to-do": "오늘 할 일",
+"Transmission and reply simulated": "전송과 답신 시뮬레이션",
+"Typos are caught before saving": "저장 전에 오타를 잡아 줌",
+"Understand": "이해",
+"Undo last step": "마지막 단계 되돌리기",
+"Undone: {0} → {1}": "되돌림: {0} → {1}",
+"Unresponsive or not breathing (CPR)": "반응 없음 또는 호흡 없음 (CPR)",
+"Urgent": "긴급",
+"Use antibiotic eye drops only as the onboard checklist says.": "항생제 안약은 기내 체크리스트대로만 쓰세요.",
+"Usual CO₂ mmHg": "평소 CO₂ mmHg",
+"Vitals, blood sugar, exercise, mood, sleep": "활력 징후, 혈당, 운동, 기분, 수면",
+"Wait 5 minutes, resting.": "쉬면서 5분 기다리세요.",
+"Waiting. You can leave this screen: a band at the top counts down and turns red when the re-check is due.": "대기 중. 이 화면을 떠나도 됩니다: 위쪽 띠가 남은 시간을 세고, 다시 잴 때가 되면 빨갛게 바뀝니다.",
+"Waiting: re-check due at {0} UTC. Other work can continue.": "대기: {0} UTC에 다시 확인. 다른 일을 계속해도 됩니다.",
+"Watch": "주의",
+"Watch at 1.0% per month": "월 1.0%에서 주의",
+"Watch the chest for 10 seconds. Are they breathing normally?": "10초 동안 가슴을 보세요. 정상적으로 숨을 쉬나요?",
+"Wear a mask and keep distance from the crew.": "마스크를 쓰고 크루와 거리를 두세요.",
+"Wear a mask, clean shared surfaces, and sleep apart if you can.": "마스크를 쓰고, 함께 쓰는 곳을 닦고, 가능하면 따로 주무세요.",
+"Week strong": "한 주 꾸준히",
+"Weight-bearing bones lose 1% to 1.5% of mineral density per month in space; losses raise fracture risk.": "체중을 받는 뼈는 우주에서 한 달에 골밀도가 1~1.5% 줄어듭니다. 줄어들면 골절 위험이 커집니다.",
+"Weight-bearing bones lose on average 1% to 1.5% of their mineral density per month in space. ISS crews exercise about 1.5 hours a day, 6 to 7 days a week, to slow this. Bone loss is estimated here from exercise; only a scan after landing can measure it.": "체중을 받는 뼈는 우주에서 한 달에 평균 1~1.5%의 골밀도를 잃습니다. ISS 크루는 이를 늦추려고 하루 약 1.5시간, 주 6~7일 운동합니다. 여기서는 운동량으로 골손실을 추정하며, 실제 값은 착륙 후 검사로만 잴 수 있습니다.",
+"What if… (simulate a situation for this crew member)": "만약에… (이 크루원에게 상황을 시뮬레이션)",
+"What is inside": "들어 있는 것",
+"What to do now": "지금 할 일",
+"When Earth is up to 20 minutes away, Orbit Guide helps a crew member with no medical training see what is changing in their body, and know what to do first.": "지구가 최대 20분 떨어져 있을 때, Orbit Guide는 의료 훈련을 받지 않은 크루원이 몸에서 무엇이 바뀌는지 보고 무엇부터 해야 할지 알도록 돕습니다.",
+"When calm, ask for a private medical conference with the flight surgeon and time to contact family.": "진정되면 비행 군의관과의 비공개 의료 상담과 가족 연락 시간을 요청하세요.",
+"When the all-clear comes, add the storm dose to each person's mission total.": "해제되면 폭풍 선량을 각자의 임무 누적에 더하세요.",
+"When {name} is calm, ask for a private medical conference with the flight surgeon for {name}.": "{name}이(가) 진정되면 {name}을(를) 위한 비행 군의관 비공개 의료 상담을 요청하세요.",
+"Where": "장소",
+"Where are you?": "어디에 있나요?",
+"Who needs help?": "누가 도움이 필요한가요?",
+"Whole body": "전신",
+"Why it matters": "왜 중요한가",
+"Why we measure it:": "왜 재나요:",
+"Write a few lines in a journal.": "일기에 몇 줄 적어 보세요.",
+"Write today's note": "오늘 노트 쓰기",
+"Written automatically": "자동 작성",
+"Yes": "예",
+"Yes: call now.": "예: 지금 연락하세요.",
+"You are {0}. Pick yourself or a crewmate; the questions and steps are written for that person.": "당신은 {0}입니다. 나 또는 크루원을 고르세요. 질문과 단계가 그 사람 기준으로 바뀝니다.",
+"Your heartbeat and blood pressure. Without gravity, blood and fluid shift toward the head and the heart works differently.": "심장 박동과 혈압. 중력이 없으면 혈액과 체액이 머리 쪽으로 몰리고 심장이 다르게 일합니다.",
+"Your normal {0}–{1} {2}": "내 평소 {0}–{1} {2}",
+"day streak": "일 연속",
+"days": "일",
+"days in a row": "일 연속",
+"due now": "지금 확인",
+"earliest reply about {0} min": "가장 빠른 답신 약 {0}분",
+"earned": "획득",
+"learning days 1–14": "배우는 기간 1~14일",
+"HR": "심박",
+"losing 1.0% per month or faster": "월 1.0% 이상 감소",
+"me": "나",
+"min": "분",
+"normal": "정상",
+"not yet": "아직",
+"optional": "선택",
+"or one storm ≥ 250 mSv": "또는 폭풍 1회 ≥ 250 mSv",
+"personal baseline only": "개인 기준선만",
+"re-check in": "다시 확인까지",
+"round trip + about 10 min review": "왕복 + 검토 약 10분",
+"tap one for its trend": "하나를 누르면 추세가 보입니다",
+"total −5% or worse": "누적 −5% 이하",
+"{0} XP to level {1}": "레벨 {1}까지 {0} XP",
+"{0} guides with agency sources": "기관 자료 기반 가이드 {0}개",
+"{0} guides, most dangerous first": "가이드 {0}개, 가장 위험한 것부터",
+"{0} guides. Each can be run for yourself or for a crewmate (CPR only by a crewmate). Peer wording only changes who is addressed, never the medical content. Measurements are saved to the patient's record. Timers have a due time and long waits run in the background with a reminder band. A guide in progress is saved in the browser and can be resumed after a reload. Undo walks back one step at a time, also across guide switches; the log keeps every entry.": "가이드 {0}개. 모두 나 또는 크루원에게 쓸 수 있습니다(CPR은 크루원만). 동료용 문장은 누구에게 말하는지만 바꾸고 의학 내용은 바꾸지 않습니다. 측정값은 환자 기록에 저장됩니다. 타이머에는 마감 시각이 있고, 긴 대기는 알림 띠와 함께 뒤에서 돌아갑니다. 진행 중인 가이드는 브라우저에 저장되어 새로고침 뒤에도 이어 할 수 있습니다. 되돌리기는 가이드 전환을 넘어서도 한 단계씩 되돌리며, 기록은 하나도 지우지 않습니다.",
+"{0} is done by a crewmate. Who is not responding?": "{0}은(는) 크루원이 해야 합니다. 누가 반응이 없나요?",
+"{0} is worth watching": "{0} 주의 필요",
+"{0} min one way": "편도 {0}분",
+"{0} need attention": "{0}개 주의 필요",
+"{0} needs action": "{0} 조치 필요",
+"{0} needs action now": "{0} 지금 조치 필요",
+"{0} s, live": "{0}초, 실시간",
+"{0} steps": "{0}단계",
+"{0} yes/no triage questions": "예/아니요 트리아지 질문 {0}개",
+"{0}/6 normal": "{0}/6 정상",
+"{0}/{1} done": "{0}/{1} 완료",
+"{0}: last 28 days": "{0}: 최근 28일",
+"⌚ Fill from wearable (simulated)": "⌚ 웨어러블에서 채우기 (시뮬레이션)",
+"▶ Guided demo": "▶ 가이드 데모",
+"▶ Replay": "▶ 다시 보기",
+"(shown 60× faster)": "(60배 빠르게 표시)",
+"A reply takes at least about {0} minutes (round trip plus about 10 minutes to review). Start onboard care now; do not wait.": "답신은 최소 약 {0}분 걸립니다(왕복 + 검토 약 10분). 지금 기내 처치를 시작하고 기다리지 마세요.",
+"CPR cycle {0} complete (2 min). Swap rescuers now.": "CPR {0}번째 주기 완료 (2분). 지금 구조자를 바꾸세요.",
+"Check this number: expected {0}–{1}. Probably a typo.": "숫자를 확인하세요: {0}–{1} 사이여야 합니다. 오타일 수 있습니다.",
+"Closed after reload; log copied.": "새로고침 뒤 종료, 기록 복사함.",
+"Copied ✓": "복사됨 ✓",
+"Copy log": "기록 복사",
+"Copy log and close": "기록 복사 후 닫기",
+"Crewmate collapse: Novak holds the app. Kim's SpO₂ drops to 90%, her card flashes \"Needs help\", and Help Kim opens the guide written for Kim.": "동료 쓰러짐: 앱은 Novak이 들고 있습니다. Kim의 SpO₂가 90%로 떨어지면 카드에 \"도움 필요\"가 깜빡이고, Kim 돕기를 누르면 Kim 기준으로 쓰인 가이드가 열립니다.",
+"Day 45 on the ISS. Each body part is colored against Commander Kim's own normal range: blue means normal.": "ISS 45일차. 몸의 각 부위가 Kim 사령관의 평소 범위와 비교해 색칠됩니다: 파란색이 정상입니다.",
+"Delivered to Mission Control. Earliest reply in about {0} min.": "관제 센터에 전달됨. 가장 빠른 답신 약 {0}분 뒤.",
+"End this guide?": "이 가이드를 끝낼까요?",
+"End without sending": "보내지 않고 종료",
+"Everything goes to Earth as a plain note that respects the 20-minute one-way delay.": "모든 것이 편도 20분 지연을 고려한 쉬운 노트로 지구에 갑니다.",
+"Fever: temperature passes 38 °C. The skin warms to orange and the card links straight to the fever guide.": "발열: 체온이 38 °C를 넘습니다. 피부가 주황색으로 달아오르고 카드에서 바로 발열 가이드로 갈 수 있습니다.",
+"Filled heart rate, blood pressure, SpO₂, temperature and sleep from the simulated wearable (like CSA Bio-Monitor). Check them, then save.": "심박, 혈압, SpO₂, 체온, 수면을 시뮬레이션 웨어러블(CSA Bio-Monitor 같은)에서 채웠습니다. 확인하고 저장하세요.",
+"Flight surgeon (simulated reply, {0} min later):": "비행 군의관 (시뮬레이션 답신, {0}분 뒤):",
+"Guide ended by crew.": "크루가 가이드를 종료함.",
+"Keep going": "계속 진행",
+"Log is not being saved — copy it now.": "기록이 저장되지 않고 있습니다 — 지금 복사하세요.",
+"Logged in the evening check: {0}.": "저녁 점검에 기록됨: {0}.",
+"Measured by {0}": "측정자 {0}",
+"Measured on {0}: {1}": "{0} 측정: {1}",
+"Measurements from the undone step are kept in the record: {0}": "되돌린 단계에서 잰 값은 기록에 남아 있습니다: {0}",
+"Needs attention: {0}.": "주의 필요: {0}.",
+"Not saved: please fix the highlighted number.": "저장 안 됨: 표시된 숫자를 고치세요.",
+"On the way to Mars a solar storm multiplies the daily dose. Radiation streaks turn red; the solar storm guide is one tap away.": "화성으로 가는 길에 태양 폭풍이 하루 선량을 몇 배로 늘립니다. 방사선 줄기가 빨갛게 바뀌고, 태양 폭풍 가이드가 한 번에 열립니다.",
+"Received. Keep following the onboard guide; we are reviewing your log now. Keep measuring every 5 minutes and send updates.": "수신했습니다. 기내 가이드를 계속 따르세요. 지금 기록을 검토 중입니다. 5분마다 계속 재고 업데이트를 보내 주세요.",
+"Resume emergency in progress?": "진행 중이던 응급 상황을 이어서 할까요?",
+"Resumed after the app was closed or reloaded.": "앱이 닫혔거나 새로고침된 뒤 이어서 진행.",
+"Rising blood sugar: a slow climb over 10 days is caught against Kim's own normal, long before a textbook limit.": "혈당 상승: 10일에 걸친 느린 상승을 교과서 한계보다 훨씬 전에 Kim의 평소 범위로 잡아냅니다.",
+"Selected: press Ctrl+C": "선택됨: Ctrl+C를 누르세요",
+"Send log and end": "기록 보내고 종료",
+"Send the log to Earth first so the flight surgeon has the record.": "비행 군의관이 기록을 갖도록 먼저 지구로 기록을 보내세요.",
+"Skipped workouts: 30 days of short sessions. Estimated bone loss speeds up; NASA reports 1–1.5% per month in space.": "운동 누락: 30일 동안 짧게만 운동했습니다. 추정 골손실이 빨라집니다. NASA는 우주에서 월 1~1.5%라고 보고합니다.",
+"Sleep debt: six short nights. Brain & mind turns orange and the to-do list fills with simple steps.": "수면 부채: 6일 연속 짧게 잤습니다. 뇌·마음이 주황색이 되고 할 일 목록에 간단한 조치가 채워집니다.",
+"Sound on": "소리 켬",
+"Step {0} done: {1}": "{0}단계 완료: {1}",
+"Stop CPR beat": "CPR 박자 멈춤",
+"Stop beat": "박자 멈춤",
+"Stuffy cabin air: CO₂ builds up and a headache follows. The headache guide is offered on the flight-surgeon card.": "답답한 선내 공기: CO₂가 쌓이고 두통이 따라옵니다. 비행 군의관 카드에 두통 가이드가 나타납니다.",
+"Swap rescuers now": "지금 구조자를 바꾸세요",
+"Switched guide: {0} → {1} (more dangerous sign).": "가이드 전환: {0} → {1} (더 위험한 징후).",
+"Tap a glowing part. The heart shows today's numbers, a 28-day trend against Kim's personal band, and what to do now.": "빛나는 부위를 눌러 보세요. 심장에 오늘 수치, Kim의 개인 범위와 비교한 28일 추세, 지금 할 일이 나옵니다.",
+"Thanks, added to today's medical review. Keep the actions in your plan and send tomorrow's numbers.": "감사합니다, 오늘 의료 검토에 넣었습니다. 계획의 조치를 계속하고 내일 수치를 보내 주세요.",
+"Timer cleared (step undone).": "타이머 지움 (단계 되돌림).",
+"Transmitting… {0} of {1}": "전송 중… {0} / {1}",
+"Triage: \"{0}\" → {1}": "트리아지: \"{0}\" → {1}",
+"Undone: switch to {0}.": "되돌림: {0}(으)로의 전환.",
+"Viewing a past day: emergency guide links appear only for today.": "지난 날을 보는 중: 응급 가이드 링크는 오늘만 표시됩니다.",
+"Warning: SpO2 92% or lower. Tell the crew and the flight surgeon.": "경고: SpO2 92% 이하. 크루와 비행 군의관에게 알리세요.",
+"Your resting heart rate is usually low.": "평소 안정 시 심박이 낮은 편입니다.",
+"{0} for {1}, started {2} UTC. The clock and log continue from where they stopped.": "{1}의 {0}, {2} UTC 시작. 시계와 기록은 멈춘 곳부터 이어집니다.",
+"■ Stop": "■ 중지",
+"Q: {0} → {1}": "질문: {0} → {1}",
+"Manage crew": "크루 관리",
+"\"Me\" is the person holding this device. In an emergency they are logged as the responder.": "\"나\"는 이 기기를 들고 있는 사람입니다. 응급 상황에서는 처치자로 기록됩니다.",
+"Name": "이름",
+"Role": "역할",
+"Add crew member": "크루원 추가",
+"Reset to default crew": "기본 크루로 되돌리기",
+"Me": "나",
+"This is me": "나로 지정",
+"Remove": "삭제",
+"Remove {0}": "{0} 삭제",
+"Tap again to remove": "한 번 더 누르면 삭제",
+"Crew cannot be removed while an emergency guide is running.": "응급 가이드 진행 중에는 크루를 삭제할 수 없습니다.",
+"At least 2 crew members are needed (one to help the other).": "크루는 최소 2명이 필요합니다(한 명이 다른 사람을 도와야 하니까요).",
+"{0} removed.": "{0} 삭제됨.",
+"{0} added.": "{0} 추가됨.",
+"Enter a name.": "이름을 입력하세요.",
+"{0} is already on the crew.": "{0}은(는) 이미 크루에 있습니다.",
+"Crew member": "크루원",
+"Unidentified crewmate": "확인 안 된 크루원",
+"not identified": "미확인",
+"Patient not identified. When you can, tap who it is:": "환자 미확인. 여유가 생기면 누구인지 눌러 주세요:",
+"Patient identified: {0} ({1}).": "환자 확인: {0} ({1}).",
+"Earlier measurements saved to {0}'s record.": "앞서 잰 값을 {0}의 기록에 저장했습니다.",
+"Kept in the log. Saved to the patient's record once you tap who it is.": "기록에 남겨 둡니다. 누구인지 누르면 그 사람 기록에 저장됩니다.",
+"done": "완료",
+"measured": "측정함",
+"no values": "값 없음",
+"Received, all noted. No changes to your plan.": "수신했습니다, 모두 확인했습니다. 계획은 그대로입니다.",
+"Path:": "경로:",
+"{0} d": "{0}일",
+"Opened from My body": "내 몸 탭에서 열림",
+"Triage: answered yes": "트리아지: 예로 답함"
 };
 
 /* ---------------- language ---------------- */
 window.__miss = new Set();
 function T(s, ...a){
   let r = s;
-  if(S.lang==="ko"){ const k = (typeof KO!=="undefined") && KO[s]; if(k) r = k; else if(/[A-Za-z]{2}/.test(s)) window.__miss.add(s); }
+  if(S.lang==="ko"){ const k = (typeof KO!=="undefined") && (KO[s] || koName(s)); if(k) r = k; else if(/[A-Za-z]{2}/.test(s)) window.__miss.add(s); }
   return a.length ? r.replace(/\{(\d)\}/g, (m,i)=>a[i]) : r;
+}
+/* crewmate-mode texts arrive with the name already filled in ("Tap Kim's shoulders…"): look up the {name} template */
+function koName(s){
+  for(const c of CREW){ if(!s.includes(c.n)) continue; const k = KO[s.split(c.n).join("{name}")]; if(k) return k.split("{name}").join(c.n); }
+  return null;
 }
 window.T = T;
 const TE = (s, ...a) => esc(T(s, ...a));
@@ -1137,6 +1940,7 @@ function applyStatic(){
 function setLang(l){
   S.lang = l; LS.set("lang", l);
   applyStatic(); renderEnvSel(); renderStageStatic(); renderAll(false); renderTriage(); renderGuideList(); renderMethod(); drawLearn();
+  renderWho(); renderWaitBand();
   if(R) renderRun();
 }
 
@@ -1158,7 +1962,8 @@ function rangeT(k){
   const m = METRICS[k], bl = C.bl, env = ENVS[S.env];
   if(m.kind==="p") return T("Your normal {0}–{1} {2}", fmt(k,bl[k].lo), fmt(k,bl[k].hi), unit(k));
   if(m.kind==="r") return T("Normal here about {0} mSv/day", env.dose.toFixed(2));
-  return T({ex:"Target 90 min or more", bone:"Watch at 1.0% per month", co2:"NASA limit 3.0 mmHg", radTot:"Career limit 600 mSv"}[k]);
+  if(k==="ex"){ const a = ex7(C.recs, vi()); return T("7-day average {0} min · target 90", a==null?"—":a.toFixed(0)); }
+  return T({bone:"Watch at 1.0% per month", co2:"NASA limit 3.0 mmHg", radTot:"Career limit 600 mSv"}[k]);
 }
 
 /* ---------------- top bar ---------------- */
@@ -1169,29 +1974,89 @@ function initTop(){
   const di = $("#dayIn");
   di.addEventListener("change", ()=>{ stopDemo(); let v = Math.round(+di.value||45); v = Math.max(21, Math.min(400, v)); di.value = v; S.day = v; S.view = v; renderAll(true); });
   $("#sosBtn").addEventListener("click", ()=>{ location.hash = "#sos"; });
+  initCrew();
   $("#demoBtn").addEventListener("click", runDemo);
   $("#heroDemo").addEventListener("click", runDemo);
   $("#demoStop").addEventListener("click", stopDemo);
   $("#langBtn").addEventListener("click", ()=>setLang(S.lang==="en" ? "ko" : "en"));
   $("#heroDown").addEventListener("click", e=>{ e.preventDefault(); $("#homeWhy").scrollIntoView({behavior:"smooth"}); });
 }
-function setEnv(id){ S.env = id; $("#envSel").value = id; renderAll(true); }
+function setEnv(id){ S.env = id; $("#envSel").value = id; renderAll(true); renderWho(); }
 function setCrew(id){
   S.crew = id; S.view = S.day; C = computeFor(id);
   const g = gradeAt(vi()); const worst = SYSTEMS.slice().sort((a,b)=>g.sl[b.id]-g.sl[a.id])[0];
   S.sys = g.worst>0 ? worst.id : (S.sys||"heart"); S.metric = null;
   renderAll(true);
 }
+function todayGrade(id){ const cc = id===S.crew && C ? C : computeFor(id); return gradeDay(cc.recs, cc.recs.length-1, cc.bl, ENVS[S.env]); }
+function renderMeSel(){ if($("#crewDlg") && $("#crewDlg").open) renderCrewDlg(); }
+function setMe(id){ S.me = id; LS.set("me", id); S.patient = null; renderMeSel(); renderAll(false); renderWho(); renderTriage(); }
+/* ----- crew management: add / remove / choose "me" (replaces the "I am" selector) ----- */
+const CREW_COLS = ["#3b82f6","#a855f7","#14b8a6","#f59e0b","#ef4444","#22c55e","#ec4899","#0ea5e9"];
+const saveCrew = () => LS.set("crew", CREW);
+function renderCrewDlg(){
+  const busy = R && !R.finished;
+  $("#crewList").innerHTML = CREW.map(c=>`<li>
+    <span class="av" style="background:${c.col}">${esc(c.n[0])}</span>
+    <span class="nm"><strong>${esc(c.n)}</strong> <span class="muted small">${TE(c.role)}</span></span>
+    ${c.id===S.me ? `<span class="pill l0">${TE("Me")}</span>` : `<button class="btn" type="button" data-setme="${c.id}">${TE("This is me")}</button>`}
+    <button class="btn ghost" type="button" data-del="${c.id}" ${busy||CREW.length<=2?"disabled":""} aria-label="${TE("Remove {0}", c.n)}">✕ ${TE("Remove")}</button></li>`).join("");
+  $$("#crewList [data-setme]").forEach(b=>b.addEventListener("click", ()=>{ setMe(b.dataset.setme); }));
+  $$("#crewList [data-del]").forEach(b=>b.addEventListener("click", ()=>removeCrew(b.dataset.del)));
+  $("#crewMsg").textContent = busy ? T("Crew cannot be removed while an emergency guide is running.") : CREW.length<=2 ? T("At least 2 crew members are needed (one to help the other).") : "";
+}
+function crewChanged(){
+  saveCrew();
+  if(!CREW.some(c=>c.id===S.me)) setMe(CREW[0].id);
+  if(!CREW.some(c=>c.id===S.crew)){ S.crew = CREW[0].id; }
+  for(const k of Object.keys(S.scen)) if(!CREW.some(c=>c.id===k)) delete S.scen[k];
+  setCrew(S.crew); renderWho(); renderTriage(); renderCrewDlg();
+}
+function removeCrew(id){
+  if((R && !R.finished) || CREW.length<=2) return;
+  const i = CREW.findIndex(c=>c.id===id); if(i<0) return;
+  const c = CREW[i];
+  if(!confirmRemove(c)) return;
+  CREW.splice(i,1); crewChanged(); announce(T("{0} removed.", c.n));
+}
+function confirmRemove(c){ const b = $(`#crewList [data-del="${c.id}"]`); if(b && b.dataset.sure) return true; if(b){ b.dataset.sure = "1"; b.textContent = T("Tap again to remove"); b.classList.add("danger"); } return false; }
+function addCrew(name, role){
+  name = name.trim().slice(0,20); role = (role||"").trim().slice(0,30) || "Crew member";
+  if(!name){ $("#crewMsg").textContent = T("Enter a name."); return false; }
+  if(CREW.some(c=>c.n.toLowerCase()===name.toLowerCase())){ $("#crewMsg").textContent = T("{0} is already on the crew.", name); return false; }
+  const used = new Set(CREW.map(c=>c.col));
+  CREW.push({id:"c"+Date.now().toString(36), n:name, role, col:CREW_COLS.find(x=>!used.has(x)) || CREW_COLS[CREW.length%CREW_COLS.length], streak:0,
+    base:{hr:62, sbp:118, spo2:98.0, temp:36.6, glu:90, sleep:7.0, mood:4.0, ex:105}});   // typical healthy adult values (simulated)
+  crewChanged(); announce(T("{0} added.", name)); return true;
+}
+function initCrew(){
+  const d = $("#crewDlg");
+  $("#crewBtn").addEventListener("click", ()=>{ stopDemo(); renderCrewDlg(); d.showModal(); });
+  $$("#crewDlg [data-close]").forEach(b=>b.addEventListener("click", ()=>d.close()));
+  $("#crewAdd").addEventListener("submit", e=>{ e.preventDefault(); if(addCrew($("#caName").value, $("#caRole").value)){ $("#caName").value = ""; $("#caRole").value = ""; $("#caName").focus(); } });
+  $("#crewReset").addEventListener("click", ()=>{ if(R && !R.finished) return; CREW.splice(0, CREW.length, ...CREW_DEFAULT.map(c=>({...c}))); crewChanged(); });
+}
 function renderRoster(){
   $("#roster").innerHTML = CREW.map(c=>{
-    const cc = c.id===S.crew ? C : computeFor(c.id);
-    const g = gradeDay(cc.recs, cc.recs.length-1, cc.bl, ENVS[S.env]);
-    return `<button type="button" class="crew" aria-pressed="${c.id===S.crew}" data-crew="${c.id}">
+    const g = todayGrade(c.id);
+    const need = g.worst===3 && c.id!==S.me;           // FR-TOP-07: a crewmate needs help
+    const waiting = R && !R.finished && R.patient===c.id && R.status==="waiting";
+    return `<span class="crew-w"><button type="button" class="crew ${need?"need":""}" aria-pressed="${c.id===S.crew}" data-crew="${c.id}">
       <span class="av" style="background:${c.col}">${c.n[0]}</span>
-      <span><strong>${esc(c.n)}</strong> <span class="muted small">${TE(c.role)}</span></span>
-      <span class="pill l${g.worst} lv">${LVT(g.worst)}</span></button>`;
+      <span><strong>${esc(c.n)}</strong>${c.id===S.me?` <span class="muted small">(${TE("me")})</span>`:""} <span class="muted small">${TE(c.role)}</span></span>
+      <span class="pill l${g.worst} lv">${LVT(g.worst)}</span>${need?`<span class="need-t">${TE("Needs help")}</span>`:""}${waiting?`<span class="wait-t" title="${TE("Guide waiting on a timer")}">⏱</span>`:""}</button>
+      ${need && !(R && !R.finished && R.patient===c.id)?`<button type="button" class="help-btn" data-help="${c.id}">${TE("Help {0}", c.n)}</button>`:""}</span>`;
   }).join("");
+  document.body.classList.toggle("crew-alert", !!$("#roster .crew.need"));
   $$("#roster .crew").forEach(b=>b.addEventListener("click", ()=>{ stopDemo(); setCrew(b.dataset.crew); }));
+  $$("#roster [data-help]").forEach(b=>b.addEventListener("click", ()=>{ stopDemo(); helpCrew(b.dataset.help); }));
+}
+/* Help {name}: patient already known, so skip "Who needs help?" and ask the triage about that crewmate */
+function helpCrew(id){
+  if(R && !R.finished){ location.hash = "#sos"; return; }
+  S.patient = id; tri = {i:0, ans:[]}; pendingGuide = null;
+  setCrew(id); location.hash = "#sos"; setTab("sos");
+  renderWho(); renderTriage(); const q = $("#triQ"); if(q) q.focus();
 }
 function routineDone(){
   const ci = todayCheckin()||{};
@@ -1245,7 +2110,7 @@ function renderHome(){
      li:["Vitals, blood sugar, exercise, mood, sleep","Fill from a wearable","Typos are caught before saving","Streak, XP and 9 badges"], go:"Open check-in"},
     {id:"sos", href:"#sos", red:true, ic:ICON.sos, h:"Emergency guides", p:"One step per screen, with timers and a CPR beat. Built to be followed to the end without waiting for Earth.",
      live:`<span class="pill l3">${sev(3)} ${TE("Life-threatening")}</span><span class="pill l2">${sev(2)} ${TE("Serious")}</span><span class="pill l1">${sev(1)} ${TE("Common")}</span>`,
-     li:["10 yes/no triage questions","10 guides with agency sources","Timers, CPR rhythm, measurements","Automatic T+ event log"], go:"Open emergency guides"},
+     li:[T("{0} yes/no triage questions", PROTOCOLS.length),T("{0} guides with agency sources", PROTOCOLS.length),"For yourself or a crewmate","Timers, CPR rhythm, measurements","Automatic T+ event log"], go:"Open emergency guides"},
     {id:"note", href:"#body", ic:ICON.note, h:"Note for Earth", p:"Everything you measured and did becomes a clear note for the flight surgeon, sent with the real signal delay in mind.",
      live:`<span class="mono">${TE("Earth link")} ${esc(linkText(e))}</span><span class="muted">· ${TE("earliest reply about {0} min", replyMin(e))}</span>`,
      li:["Written automatically","Numbers next to your normal","Transmission and reply simulated","Emergency logs use the same channel"], go:"Write today's note"}];
@@ -1344,11 +2209,13 @@ function selectSystem(id, fly=true){
 }
 
 /* ---------------- detail ---------------- */
+/* NFR-12: a crewmate's mood score is private; only the Brain & mind grade shows. Shown during an emergency guide. */
+const moodHidden = () => S.crew!==S.me && !(R && !R.finished);
 function streakDays(k, i, lv){ let n=0; for(let j=i; j>=0; j--){ if(gradeMetric(k, C.recs, j, C.bl, ENVS[S.env]) >= lv) n++; else break; } return n; }
 function renderDetail(){
   const s = SYS[S.sys||"heart"]; const i = vi(); const g = gradeAt(i); const rec = C.recs[i];
   const ks = s.metrics;
-  if(!S.metric || !ks.includes(S.metric)) S.metric = ks.slice().sort((a,b)=>g.ml[b]-g.ml[a])[0];
+  if(!S.metric || !ks.includes(S.metric) || (S.metric==="mood" && moodHidden())) S.metric = ks.filter(k=>!(k==="mood"&&moodHidden())).sort((a,b)=>g.ml[b]-g.ml[a])[0];
   const worstK = ks.slice().sort((a,b)=>g.ml[b]-g.ml[a])[0];
   const acts = g.sl[s.id]>0 ? actionsFor(worstK, rec, C.bl).slice(0,4) : ["Keep your daily routine: it is working.", "Log your check-in tonight so changes are caught early."];
   const m = METRICS[S.metric];
@@ -1362,7 +2229,7 @@ function renderDetail(){
     <div class="tags">${s.risks.map(r=>`<a class="tag" href="${SOURCES[r].url}" target="_blank" rel="noopener">HRP Risk: ${esc(SOURCES[r].t.replace(/^Risk (of|from) /,""))} ↗</a>`).join("")}</div>
   </div></div>
   <div class="card"><div class="card-h"><h3>${TE("Today's numbers")}</h3><span class="small muted">${TE("tap one for its trend")}</span></div><div class="card-b">
-    <div class="mrows">${ks.map(k=>`<button type="button" class="mrow" data-m="${k}" aria-pressed="${k===S.metric}">
+    <div class="mrows">${ks.map(k=>k==="mood" && moodHidden() ? `<div class="mrow" aria-disabled="true"><span><span style="font-weight:600">${TE(METRICS[k].n)}</span><br><span class="rng">${TE("Private to {0}. Only the grade is shown.", crewObj().n)}</span></span><span class="v">—</span><span class="gr"><span class="pill l${g.ml[k]}">${LVT(g.ml[k])}</span></span></div>` : `<button type="button" class="mrow" data-m="${k}" aria-pressed="${k===S.metric}">
       <span><span style="font-weight:600">${TE(METRICS[k].n)}</span><br><span class="rng">${esc(rangeT(k))}</span></span>
       <span class="v">${fmt(k, rec[k])} <span class="muted small">${esc(unit(k))}</span></span>
       <span class="gr"><span class="pill l${g.ml[k]}">${LVT(g.ml[k])}</span>${g.ml[k]>0?`<span class="srcTag">${TE(g.info[k].src)}</span>`:""}</span></button>`).join("")}</div>
@@ -1379,10 +2246,10 @@ function renderDetail(){
     <p class="small muted" style="margin:6px 0 0">${TE("Source:")} <a href="${SOURCES.hazards.url}" target="_blank" rel="noopener">NASA HRP, 5 Hazards of Human Spaceflight</a> · HRP Risks</p></div></div>
   <div class="card"><div class="card-h"><h3>${TE("What to do now")}</h3></div><div class="card-b"><ol class="do-list">${acts.map(a=>`<li>${TE(a)}</li>`).join("")}</ol></div></div>
   ${surgeonCard()}`;
-  $$("#detail .mrow").forEach(b=>b.addEventListener("click", ()=>{ S.metric = b.dataset.m; renderDetail(); }));
+  $$("#detail button.mrow").forEach(b=>b.addEventListener("click", ()=>{ S.metric = b.dataset.m; renderDetail(); }));
   drawTrend($("#trend"), S.metric);
   const nb = $("#detail [data-note]"); if(nb) nb.addEventListener("click", e=>openDailyNote(e.currentTarget));
-  $$("#detail [data-guide]").forEach(b=>b.addEventListener("click", ()=>{ location.hash="#sos"; startGuide(b.dataset.guide, "Opened from My body"); }));
+  $$("#detail [data-guide]").forEach(b=>b.addEventListener("click", ()=>{ location.hash="#sos"; startGuide(b.dataset.guide, "Opened from My body", null, S.crew); }));
 }
 function surgeonAssess(i){
   const g = gradeDay(C.recs, i, C.bl, ENVS[S.env]);
@@ -1401,6 +2268,7 @@ function guideLinks(i){
   if(roundTo(rec.temp,1) > 38.0) out.push("fever");
   if(g.ml.radDay>=2) out.push("solar");
   if(roundTo(rec.co2,1) > 2.5 || rec.head || rec.vision) out.push("head");
+  if(g.ml.mood>=2) out.push("panic");                 // button only: never opened automatically
   return out;
 }
 function surgeonCard(){
@@ -1518,7 +2386,7 @@ const CHK_STEPS = [
 const VALID = {hr:[30,200], sbp:[70,220], spo2:[50,100], temp:[34,42], glu:[40,400], ex:[0,300], mood:[1,5], sleep:[0,16]};
 function renderCheckin(){
   const ci = todayCheckin()||{}; const b = crewObj().base; const done = routineDone();
-  $("#chkWho").textContent = `${crewObj().n} · ${T(ENVS[S.env].n)} · ${T("Mission day")} ${S.day}`;
+  $("#chkWho").textContent = (S.crew!==S.me ? T("Measuring for {0} (by {1})", crewObj().n, crewById(S.me).n) + " · " : crewObj().n + " · ") + `${T(ENVS[S.env].n)} · ${T("Mission day")} ${S.day}` + (ci.measuredBy && ci.measuredBy!==S.crew ? " · " + T("Measured by {0}", crewById(ci.measuredBy).n) : "");
   $("#steps").innerHTML = CHK_STEPS.map((s,j)=>`<div class="step">
     <div><div class="tm">${TE(s.t)}</div><div class="st ${done[j]?"done":"todo"}">${done[j]?"✓ "+TE("Done"):TE("To do")}</div></div>
     <div><h3>${TE(s.n)}</h3><p class="how">${TE(s.how)}</p>
@@ -1551,6 +2419,7 @@ function saveCheckin(){
   }
   if(firstBad){ firstBad.focus(); $("#chkMsg").textContent = T("Not saved: please fix the highlighted number."); return; }
   out.head = form.elements.head.checked; out.vision = form.elements.vision.checked;
+  out.measuredBy = S.me;
   const all = S.checkins[S.crew] || (S.checkins[S.crew] = {});
   all[ciKey()] = Object.assign({}, all[ciKey()]||{}, out);
   LS.set("checkins", S.checkins);
@@ -1646,6 +2515,7 @@ function openDailyNote(btn){
   const L = [];
   L.push(`TO:    Flight Surgeon, Mission Control (Earth)`);
   L.push(`FROM:  ${c.n} (${c.role}), ${e.long}`);
+  L.push(`PATIENT: ${c.n} (${c.role}) · PREPARED BY: ${crewById(S.me).n} (${crewById(S.me).role})`);
   L.push(`DATE:  Mission day ${S.view}${isToday()?"":" (past day review)"}`);
   L.push(`LINK:  ${e.delay<60?"live, about "+e.delay+" s one way":"about "+Math.round(e.delay/60)+" min one way; earliest reply ~"+replyMin(e)+" min"}`);
   L.push("");
@@ -1657,12 +2527,13 @@ function openDailyNote(btn){
   for(const s of SYSTEMS){
     L.push(`- ${s.n}: ${LV[a.g.sl[s.id]].toUpperCase()}`);
     for(const k of s.metrics){ const lv = a.g.ml[k]; const m = METRICS[k];
+      if(k==="mood" && moodHidden()){ L.push(`    ${m.n}: private to patient  ${LV[lv]}`); continue; }
       L.push(`    ${m.n}: ${fmt(k,r[k])} ${m.u}  [${rangeEN(k)}]  ${LV[lv]}${lv>0?", "+streakDays(k,i,lv)+" day(s)":""}`); }
   }
   const st = S.todos[S.crew+"|"+S.env+"|"+S.view]||{}; const started = Object.keys(st).filter(k=>st[k]);
   L.push("");
   L.push(`ACTIONS STARTED: ${started.length? started.join("; ") : "none ticked yet"}`);
-  L.push(`SYMPTOMS: headache ${r.head?"YES":"no"}; blurred vision ${r.vision?"YES":"no"}; mood ${fmt("mood",r.mood)}/5`);
+  L.push(`SYMPTOMS: headache ${r.head?"YES":"no"}; blurred vision ${r.vision?"YES":"no"}; mood ${moodHidden()?"(private to patient; grade "+LV[a.g.ml.mood]+")":fmt("mood",r.mood)+"/5"}`);
   L.push(`TODAY'S VITALS: HR ${fmt("hr",r.hr)} bpm, BP ${fmt("sbp",r.sbp)} mmHg (systolic), SpO2 ${fmt("spo2",r.spo2)} %, Temp ${fmt("temp",r.temp)} C, fasting glucose ${fmt("glu",r.glu)} mg/dL, sleep ${fmt("sleep",r.sleep)} h, exercise ${fmt("ex",r.ex)} min`);
   L.push(`ENVIRONMENT: cabin CO2 ${fmt("co2",r.co2)} mmHg; radiation today ${fmt("radDay",r.radDay)} mSv, mission total ${fmt("radTot",r.radTot)} mSv; est. bone loss ${fmt("bone",r.bone)} %`);
   L.push(`REQUEST: ${["None. For the record.","None yet. Will recheck tomorrow.","Please review with the next downlink.","Please advise as soon as possible. Onboard care has started; crew will not wait for the reply."][a.lv]}`);
@@ -1671,10 +2542,33 @@ function openDailyNote(btn){
   openNote("Note for Earth", L.join("\n"), a.lv, btn);
 }
 
-/* ---------------- SOS: triage, list, runner ---------------- */
+/* ---------------- SOS: who, triage, list, runner ----------------
+   Crewmate mode + emergency stability (peer-mode guide, stability guide). AI-assisted code (Claude), written 2026-11-14. */
 let tri = {i:0, ans:[]};
+let pendingGuide = null;          // a crewmate-only guide (CPR) chosen with patient = me
+const patientId = () => S.patient || S.me;
+function renderWho(){
+  const el = $("#whoCard"); if(!el) return;
+  const order = CREW.slice().sort((a,b)=>(a.id===S.me?-1:b.id===S.me?1:0) || (todayGrade(b.id).worst===3) - (todayGrade(a.id).worst===3));
+  const urgentFirst = [...order.filter(c=>c.id===S.me), ...order.filter(c=>c.id!==S.me && todayGrade(c.id).worst===3), ...order.filter(c=>c.id!==S.me && todayGrade(c.id).worst!==3)];
+  el.innerHTML = `<div class="card-b">
+    <h2 style="font-size:20px">${TE("Who needs help?")}</h2>
+    <div class="small muted">${TE("You are {0}. Pick yourself or a crewmate; the questions and steps are written for that person.", crewById(S.me).n)}</div>
+    ${pendingGuide?`<div class="ask-mate"><strong>${TE("Ask a crewmate to run this guide for you.")}</strong> ${TE("{0} is done by a crewmate. Who is not responding?", T(PROT[pendingGuide].title))}</div>`:""}
+    <div class="who-row" role="group" aria-label="${TE("Who needs help?")}">${urgentFirst.map(c=>{ const g = todayGrade(c.id);
+      if(pendingGuide && c.id===S.me) return "";
+      return `<button type="button" class="who-b" data-who="${c.id}" aria-pressed="${!pendingGuide && patientId()===c.id}">
+        <span>${c.id===S.me ? TE("Me ({0})", c.n) : esc(c.n)}</span><span class="pill l${g.worst}">${LVT(g.worst)}</span></button>`; }).join("")}</div>
+  </div>`;
+  $$("#whoCard [data-who]").forEach(b=>b.addEventListener("click", ()=>{
+    const id = b.dataset.who; S.patient = id===S.me ? null : id;
+    if(pendingGuide){ const g = pendingGuide; pendingGuide = null; startGuide(g, "Chosen from the guide list", tri.ans.slice(), id); return; }
+    tri = {i:0, ans:[]}; if(S.crew!==id) setCrew(id); renderWho(); renderTriage();
+  }));
+}
 function renderTriage(){
-  const el = $("#triage");
+  const el = $("#triage"); const pid = patientId();
+  const gc = $("#gcount"); if(gc) gc.textContent = T("{0} guides, most dangerous first", PROTOCOLS.length);
   if(tri.i >= PROTOCOLS.length){
     el.innerHTML = `<div class="card-b"><div class="small muted">${TE("Not sure what's happening?")}</div>
       <div class="q">${TE("No emergency signs from these questions.")}</div>
@@ -1683,32 +2577,32 @@ function renderTriage(){
     $("#triAgain").addEventListener("click", ()=>{ tri = {i:0, ans:[]}; renderTriage(); });
     return;
   }
-  const p = PROTOCOLS[tri.i];
+  const p = PROTOCOLS[tri.i]; const q = qText(p, pid);
   el.innerHTML = `<div class="card-b">
-    <div class="small muted">${TE("Not sure what's happening? Answer a few questions, most dangerous first.")}</div>
+    <div class="small muted">${pid!==S.me ? TE("Helping {0}. Answer for them, most dangerous first.", crewById(pid).n) : TE("Not sure what's happening? Answer a few questions, most dangerous first.")}</div>
     <div class="prog" style="margin-top:10px" aria-hidden="true">${PROTOCOLS.map((_,j)=>`<i class="${j<=tri.i?"on":""}"></i>`).join("")}</div>
     <div class="small mono">${TE("Question {0} of {1}", tri.i+1, PROTOCOLS.length)}</div>
-    <div class="q" id="triQ" tabindex="-1">${TE(p.q)}</div>
+    <div class="q" id="triQ" tabindex="-1">${esc(T(q))}</div>
     <div class="yn"><button class="btn big danger" type="button" id="triYes">${TE("Yes")}</button><button class="btn big" type="button" id="triNo">${TE("No")}</button></div>
     ${tri.i>0?`<button class="btn ghost small" type="button" id="triBack" style="margin-top:10px">← ${TE("Previous question")}</button>`:""}
   </div>`;
-  $("#triYes").addEventListener("click", ()=>{ tri.ans.push([p.q,"Yes"]); const ans = tri.ans.slice(); tri = {i:0, ans:[]}; startGuide(p.id, "Triage: answered yes", ans); });
-  $("#triNo").addEventListener("click", ()=>{ tri.ans.push([p.q,"No"]); tri.i++; renderTriage(); const q=$("#triQ"); if(q) q.focus(); });
+  $("#triYes").addEventListener("click", ()=>{ tri.ans.push([q,"Yes"]); const ans = tri.ans.slice(); tri = {i:0, ans:[]}; startGuide(p.id, "Triage: answered yes", ans, pid); });
+  $("#triNo").addEventListener("click", ()=>{ tri.ans.push([q,"No"]); tri.i++; renderTriage(); const qq=$("#triQ"); if(qq) qq.focus(); });
   const bk = $("#triBack"); if(bk) bk.addEventListener("click", ()=>{ tri.i--; tri.ans.pop(); renderTriage(); });
 }
 function renderGuideList(){
   $("#glist").innerHTML = PROTOCOLS.map(p=>`<button type="button" class="gcard" data-g="${p.id}">
     <span class="sev s${p.sev}">${TE(SEV[p.sev])} · ${TE("{0} steps", p.steps.length)}</span>
     <h4>${TE(p.title)}</h4><p>${TE(p.short)}</p>
-    <span class="gmeta">${p.hz.map(h=>`<span class="tag">${TE("NASA Hazard")}: ${TE(HAZARDS[h].s)}</span>`).join("")}</span>
+    <span class="gmeta"><span class="aud">${TE("For:")} ${TE(AUD[p.aud||"both"])}</span>${p.hz.map(h=>`<span class="tag">${TE("NASA Hazard")}: ${TE(HAZARDS[h].s)}</span>`).join("")}</span>
     <span class="small muted">${TE("Based on:")} ${esc([...new Set(p.src.map(s=>SOURCES[s].org.replace(/ \(.*\)/,"")))].join(", "))}</span>
     ${S.practiced.has(p.id)?`<span class="small" style="color:var(--g0)">✓ ${TE("Practiced")}</span>`:""}
   </button>`).join("");
-  $$("#glist .gcard").forEach(b=>b.addEventListener("click", ()=>startGuide(b.dataset.g, "Chosen from the guide list")));
+  $$("#glist .gcard").forEach(b=>b.addEventListener("click", ()=>startGuide(b.dataset.g, "Chosen from the guide list", null, patientId())));
 }
 
 /* The event log stores English text (it is sent to Mission Control) and is shown translated on screen. */
-let R = null, clockT = null, cprT = null, timerT = null, audioCtx = null;
+let R = null, clockT = null, cprT = null, audioCtx = null, sosTick = null;
 function beep(freq=880, dur=0.12, vol=0.15){
   if(!S.sound) return;
   try{ audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)(); const o = audioCtx.createOscillator(), g = audioCtx.createGain();
@@ -1716,70 +2610,188 @@ function beep(freq=880, dur=0.12, vol=0.15){
 }
 function tNow(){ return R ? (Date.now()-R.t0)/1000 : 0; }
 /* log(key, args, cls): args that are themselves translatable are passed as {t:"..."} */
-function log(key, args=[], cls){ if(!R) return; R.log.push({t:tNow(), key, args, cls}); renderLog(); }
+function log(key, args=[], cls){ if(!R) return; R.log.push({t:tNow(), key, args, cls}); saveSOS(); renderLog(); }
 const logEN = l => l.key.replace(/\{(\d)\}/g, (m,i)=>{ const a = l.args[i]; return a && a.t!==undefined ? a.t : a; });
 const logTX = l => T(l.key, ...l.args.map(a => a && a.t!==undefined ? T(a.t) : a));
-function startGuide(id, reason, triAns){
-  stopDemo();
-  if(location.hash!=="#sos") location.hash = "#sos";
-  const p = PROT[id];
-  R = {gid:id, t0:Date.now(), wall:new Date(), cur:p.steps[0].id, done:new Set(), hist:[], log:[], finished:false, chain:[id]};
-  for(const [q,a] of (triAns||[])) R.log.push({t:0, key:"Triage: \"{0}\" → {1}", args:[{t:q},{t:a}]});
-  R.log.push({t:0, key:"Started: {0}. Reason: {1}.", args:[{t:p.title},{t:reason}]});
+const dk = (g, id) => g+":"+id;      // done-set key, unique across switched guides
+const hms = s => { s = Math.max(0, Math.round(s)); const h = Math.floor(s/3600); return (h? String(h).padStart(2,"0")+":" : "") + mmss(s%3600); };
+
+/* ----- persistence (stability guide §5): survives reload / crash ----- */
+const SOS_KEY = "orbitguide.sos.v1";
+function saveSOS(){
+  if(!R) return;
+  const o = Object.assign({}, R, {done:[...R.done], wall:R.wall.toISOString(), env:S.env, day:S.day, v:1});
+  try{ localStorage.setItem(SOS_KEY, JSON.stringify(o)); if(R.saveFail){ R.saveFail = false; renderSaveWarn(); } }
+  catch(e){ if(!R.saveFail){ R.saveFail = true; renderSaveWarn(); } }
+}
+function loadSOS(){ try{ const o = JSON.parse(localStorage.getItem(SOS_KEY)||"null"); if(!o || o.v!==1 || !PROT[o.gid]) return null; o.done = new Set(o.done); o.wall = new Date(o.wall); return o; }catch(e){ return null; } }
+function clearSOS(){ try{ localStorage.removeItem(SOS_KEY); }catch(e){} }
+function renderSaveWarn(){
+  const html = R && R.saveFail ? `<span>⚠ ${TE("Log is not being saved — copy it now.")}</span><button class="btn" type="button" data-copylog>${TE("Copy log")}</button>` : "";
+  $$(".save-warn").forEach(el=>{ el.innerHTML = html; el.hidden = !html; });
+  $$("[data-copylog]").forEach(b=>b.addEventListener("click", e=>openEmergencyLog(e.currentTarget, true)));
+}
+function offerResume(){
+  const o = loadSOS(); if(!o) return;
+  if(o.finished){ clearSOS(); return; }
+  const box = $("#resumeBox");
+  box.innerHTML = `<h2 id="resumeH" style="font-size:20px">⚠ ${TE("Resume emergency in progress?")}</h2>
+    <p class="small" style="margin:6px 0 0">${TE("{0} for {1}, started {2} UTC. The clock and log continue from where they stopped.", T(PROT[o.gid].title), crewById(o.patient).n, o.wall.toISOString().slice(11,16))}</p>
+    <div class="acts"><button class="btn big danger" type="button" id="rsGo">${TE("Resume")}</button><button class="btn big" type="button" id="rsCopy">${TE("Copy log and close")}</button></div>`;
+  box.hidden = false;
+  const restore = () => { box.hidden = true; R = o; if(ENVS[o.env]) { S.env = o.env; $("#envSel").value = o.env; } if(o.day){ S.day = o.day; S.view = o.day; $("#dayIn").value = o.day; } delete R.env; delete R.day; delete R.v; };
+  $("#rsGo").addEventListener("click", ()=>{ restore(); log("Resumed after the app was closed or reloaded.", [], "warn"); enterRun(); if(R.patient) setCrew(R.patient); renderRun(); });
+  $("#rsCopy").addEventListener("click", e=>{ restore(); log("Closed after reload; log copied.", [], "warn"); openEmergencyLog(e.currentTarget, true); $("#noteDlg").addEventListener("close", exitGuide, {once:true}); });
+  $("#rsGo").focus();
+}
+
+function enterRun(){
   document.body.classList.add("emergency");
   $("#sosHome").hidden = true; $("#sosRun").hidden = false;
   clearInterval(clockT); clockT = setInterval(updClock, 1000);
-  S.tab = "sos"; renderRun();
+  if(location.hash!=="#sos") location.hash = "#sos";
+  S.tab = "sos"; setTab("sos");
+}
+function startGuide(id, reason, triAns, patient){
+  stopDemo();
+  if(R && !R.finished){ location.hash = "#sos"; return; }   // one emergency at a time
+  const p = PROT[id];
+  patient = patient || patientId();
+  // FR-SOS-17 (revised): CPR is never done on yourself, but it must not wait for a "who?" screen.
+  // Start at once with the patient not identified; the responder can tap a name later in the band.
+  if(p.aud==="crewmate" && patient===S.me) patient = null;
+  pendingGuide = null;
+  const pc = crewById(patient), rc = crewById(S.me);
+  R = {gid:id, t0:Date.now(), wall:new Date(), cur:p.steps[0].id, done:new Set(), hist:[], log:[], finished:false, chain:[id],
+       patient, responder:S.me, status:"active", timer:null, saveFail:false};
+  R.log.push({t:0, key:"Patient: {0} ({1}). Responder: {2} ({3}). Mode: {4}.", args:[{t:pc.n}, {t:pc.role}, rc.n, rc.role, {t:patient===S.me?"Self":"Crewmate assist"}]});
+  for(const [q,a] of (triAns||[])) R.log.push({t:0, key:"Triage: \"{0}\" → {1}", args:[{t:q},{t:a}]});
+  R.log.push({t:0, key:"Started: {0}. Reason: {1}.", args:[{t:p.title},{t:reason}]});
+  saveSOS();
+  enterRun(); if(patient) setCrew(patient); renderRun();   // 3D, banner and roster follow the patient
   window.scrollTo({top:0});
+}
+function identifyPatient(id){
+  if(!R || R.patient) return;
+  R.patient = id; const c = crewById(id);
+  log("Patient identified: {0} ({1}).", [c.n, c.role]);
+  if(R.pendingVals){ saveMeasure(R.pendingVals); log("Earlier measurements saved to {0}'s record.", [c.n]); delete R.pendingVals; }
+  setCrew(id); renderRun();
 }
 function switchGuide(id){
   const from = PROT[R.gid]; const p = PROT[id];
   R.log.push({t:tNow(), key:"Switched guide: {0} → {1} (more dangerous sign).", args:[{t:from.title},{t:p.title}], cls:"warn"});
-  R.gid = id; R.cur = p.steps[0].id; R.done = new Set(); R.hist = []; R.chain.push(id);
+  R.gid = id; R.cur = p.steps[0].id; R.chain.push(id);
   renderRun();
 }
 function curProt(){ return PROT[R.gid]; }
-function stepIdx(id){ return curProt().steps.findIndex(s=>s.id===id); }
-function go(target){
+function stepIdx(id, g){ return PROT[g||R.gid].steps.findIndex(s=>s.id===id); }
+function stepOf(g, id){ return PROT[g].steps.find(s=>s.id===id); }
+/* go(target, ans, extra): every move forward pushes one history entry, also across guide switches (stability §6) */
+function go(target, ans, extra){
   const p = curProt(); const i = stepIdx(R.cur); const s = p.steps[i];
-  stopTimer();
-  if(typeof target==="string" && target.startsWith("switch:")){ R.done.add(R.cur); switchGuide(target.slice(7)); return; }
-  R.done.add(R.cur); R.hist.push(R.cur);
+  clearTimerFor(R.gid, R.cur, false);
+  R.done.add(dk(R.gid, R.cur));
+  R.hist.push(Object.assign({g:R.gid, id:R.cur, ans:ans||null, type:s.type}, extra||{}));
+  if(typeof target==="string" && target.startsWith("switch:")){ R.hist[R.hist.length-1].sw = true; switchGuide(target.slice(7)); return; }
   const nid = target==="next" || !target ? (s.next || (p.steps[i+1]||{}).id) : target;
   if(!nid || target==="end"){ finishGuide(); return; }
   R.cur = nid; renderRun();
 }
-function back(){ if(!R.hist.length) return; stopTimer(); const prev = R.hist.pop(); R.done.delete(prev); R.cur = prev; log("Went back to step {0}.", [stepIdx(prev)+1]); renderRun(); }
+function back(){
+  if(!R.hist.length) return;
+  const e = R.hist.pop();
+  clearTimerFor(R.gid, R.cur, true); clearTimerFor(e.g, e.id, true);
+  if(e.g!==R.gid){                                       // undo a guide switch
+    R.log.push({t:tNow(), key:"Undone: switch to {0}.", args:[{t:PROT[R.gid].title}], cls:"warn"});
+    R.chain.pop(); R.gid = e.g;
+  }
+  R.cur = e.id;
+  R.done = new Set(R.hist.map(h=>dk(h.g, h.id)));         // recompute branches from the remaining path
+  const st = stepOf(e.g, e.id);
+  log("Undone: {0} → {1}", [{t:stText(st)}, {t:e.ans || "done"}], "warn");
+  if(e.measured) log("Measurements from the undone step are kept in the record: {0}", [e.measured]);
+  renderRun();
+}
 function finishGuide(){
-  R.finished = true; stopTimer(); stopCPR();
+  R.finished = true; R.status = "finished"; R.timer = null; stopCPR();
   R.log.push({t:tNow(), key:"Procedure finished.", args:[]});
   R.chain.forEach(g=>S.practiced.add(g)); LS.set("practiced", [...S.practiced]);
-  renderRun(); renderStreak();
+  clearSOS();
+  renderRun(); renderStreak(); renderWaitBand(); renderRoster();
 }
 function exitGuide(){
-  stopTimer(); stopCPR(); clearInterval(clockT);
-  R = null; document.body.classList.remove("emergency");
+  stopCPR(); clearInterval(clockT);
+  R = null; clearSOS(); pendingGuide = null; S.patient = null; tri = {i:0, ans:[]};
+  document.body.classList.remove("emergency");
   $("#sosRun").hidden = true; $("#sosHome").hidden = false; $("#sosRun").innerHTML = "";
   if(window.B3){ B3.emergency(null); mount3D(); }
-  renderGuideList(); renderTriage();
+  renderWaitBand(); renderAll(false); renderWho(); renderGuideList(); renderTriage();
 }
-function updClock(){ const c = $("#emClock"); if(c && R) c.textContent = "T+"+mmss(tNow()); }
+function updClock(){ const c = $("#emClock"); if(c && R) c.textContent = "T+"+hms(tNow()); }
+
+/* ----- timers with a due time (stability §4): long waits run in the background ----- */
+const LONG_WAIT = 600;
+function startTimer(s){
+  R.timer = {g:R.gid, stepId:s.id, sec:s.sec, dueAt:Date.now()+s.sec*1000, label:stText(s), due:false};
+  R.status = s.sec > LONG_WAIT ? "waiting" : "active";
+  log("Timer started: {0} ({1})", [hms(s.sec), {t:stText(s)}]);
+  if(R.status==="waiting") log("Waiting: re-check due at {0} UTC. Other work can continue.", [new Date(R.timer.dueAt).toISOString().slice(11,16)]);
+  renderRun(); renderWaitBand(); renderRoster();
+}
+function clearTimerFor(g, id, undo){
+  if(!R || !R.timer || R.timer.g!==g || R.timer.stepId!==id) return;
+  if(undo) R.log.push({t:tNow(), key:"Timer cleared (step undone).", args:[]});
+  R.timer = null; if(R.status==="waiting") R.status = "active";
+  renderWaitBand();
+}
+function tickSOS(){
+  if(!R || !R.timer) return;
+  const t = R.timer, left = (t.dueAt - Date.now())/1000;
+  if(left<=0 && !t.due){ t.due = true; log("Timer due: {0}.", [{t:t.label}], "warn"); beep(880,.25); setTimeout(()=>beep(1100,.25),300); renderWaitBand(); renderRoster(); }
+  const tt = $("#tmT"), bar = $("#tmBar");
+  if(tt && R.cur===t.stepId && R.gid===t.g){ tt.textContent = left>0 ? hms(left) : "00:00 ✓"; if(bar) bar.style.width = Math.min(100, (1-Math.max(0,left)/t.sec)*100)+"%"; }
+  const wb = $("#wbLeft"); if(wb) wb.textContent = left>0 ? hms(left) : T("due now");
+}
+function renderWaitBand(){
+  const el = $("#waitBand"); if(!el) return;
+  const t = R && !R.finished && R.timer;
+  if(!t || (!t.due && R.status!=="waiting")){ el.hidden = true; el.innerHTML = ""; return; }
+  const left = (t.dueAt - Date.now())/1000;
+  el.classList.toggle("due", left<=0);
+  el.innerHTML = `<span>⏱ ${esc(T(PROT[t.g].title))} · ${esc(crewById(R.patient).n)} · ${TE("re-check in")} <span class="mono" id="wbLeft">${left>0?hms(left):TE("due now")}</span></span>
+    <span class="small">${esc(T(t.label))}</span>
+    <button class="btn" type="button" id="wbGo">${TE("Resume")}</button><span class="save-warn" hidden></span>`;
+  el.hidden = false;
+  $("#wbGo").addEventListener("click", ()=>{ location.hash = "#sos"; setTab("sos"); });
+  renderSaveWarn();
+}
+
 const KIND = {do:"Do this", ask:"Answer", timer:"Timed step", cpr:"Rhythm", measure:"Measure", switch:"Switch guide", report:"Report to Earth"};
+function usualText(id){
+  if(!id) return "—";
+  const b = computeFor(id).bl;
+  return `HR ${fmt("hr",b.hr.lo)}–${fmt("hr",b.hr.hi)} · SpO₂ ${fmt("spo2",b.spo2.lo)}–${fmt("spo2",b.spo2.hi)}% · Temp ${fmt("temp",b.temp.lo)}–${fmt("temp",b.temp.hi)} °C`;
+}
 function renderRun(){
   const p = curProt(), e = ENVS[S.env];
   const i = stepIdx(R.cur), s = p.steps[i];
+  const peer = R.patient!==R.responder, pc = crewById(R.patient);
   if(window.B3 && $("#mini3d")) B3.mount($("#canvasHost")); // keep the canvas alive while the panel is rebuilt
   $("#sosRun").innerHTML = `
   <div class="em-band" role="region" aria-label="${TE("Emergency in progress")}">
     <h2>⚠ ${TE(p.title)}</h2>
-    <span class="clk mono" id="emClock">T+${mmss(tNow())}</span>
+    <span class="clk mono" id="emClock">T+${hms(tNow())}</span>
     <span class="lnk">${TE("Earth link")} ${esc(linkText(e))} · ${TE("earliest reply about {0} min", replyMin(e))}</span>
     ${cprT?`<button class="btn" type="button" id="cprStopBand" style="background:#fff;color:#000">■ ${TE("Stop CPR beat")}</button>`:""}
     <button class="btn" type="button" id="sndBtn" aria-pressed="${S.sound}" style="background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.4)">${S.sound?"🔊 "+TE("Sound on"):"🔇 "+TE("Sound off")}</button>
+    <span class="helping">${!R.patient ? `${TE("Patient not identified. When you can, tap who it is:")} ${CREW.filter(c=>c.id!==R.responder).map(c=>`<button class="btn" type="button" data-ident="${c.id}" style="padding:2px 10px;background:#fff;color:#000;margin-left:4px">${esc(c.n)}</button>`).join("")}` : peer ? TE("Helping: {0} · usual {1}", pc.n, usualText(R.patient)) : TE("Self: {0} · usual {1}", pc.n, usualText(R.patient))}</span>
+    <span class="save-warn" hidden></span>
   </div>
   <div class="run-grid">
     <nav class="card run-steps" aria-label="${TE("Steps")}"><div class="card-h"><h3>${TE("Steps")}</h3><span class="small muted">${TE(SEV[p.sev])}</span></div><div class="card-b">
-      <ol>${p.steps.map((st,j)=>`<li class="${st.id===R.cur&&!R.finished?"cur":R.done.has(st.id)?"done":""}"><span class="n"><span>${j+1}</span></span><span>${TE(st.text)}</span></li>`).join("")}</ol>
+      <ol>${p.steps.map((st,j)=>`<li class="${st.id===R.cur&&!R.finished?"cur":R.done.has(dk(R.gid,st.id))?"done":""}"><span class="n"><span>${j+1}</span></span><span>${esc(T(stText(st)))}</span></li>`).join("")}</ol>
+      ${R.chain.length>1?`<div class="small muted" style="margin-top:8px">${TE("Path:")} ${R.chain.map(g=>TE(PROT[g].title)).join(" → ")}</div>`:""}
       <div class="tags" style="margin-top:10px">${p.hz.map(h=>`<span class="tag">${TE("NASA Hazard")}: ${TE(HAZARDS[h].s)}</span>`).join("")}</div>
     </div></nav>
     <div class="card">${R.finished ? finishedHTML() : stepHTML(s, i, p)}</div>
@@ -1791,30 +2803,33 @@ function renderRun(){
         <p class="small muted" style="margin:8px 0 0">${TE("Example procedure written from public space-agency material. Not a flight checklist and not medical advice.")}</p></div></div>
     </aside>
   </div>`;
-  renderLog(); bindRun(s);
-  mount3D();
+  renderLog(); bindRun(s); renderSaveWarn(); saveSOS();
+  mount3D(); tickSOS();
 }
 function stepHTML(s, i, p){
   let body = "";
+  const tm = R.timer && R.timer.g===R.gid && R.timer.stepId===s.id ? R.timer : null;
   if(s.type==="ask") body = `<div class="acts"><button class="btn big danger" type="button" data-ans="yes">${TE("Yes")}</button><button class="btn big" type="button" data-ans="no">${TE("No")}</button></div>
     ${String(s.yes).startsWith("switch:")?`<div class="small muted" style="margin-top:8px">${TE("\"Yes\" switches to: {0}. Clock and log continue.", T(PROT[s.yes.slice(7)].title))}</div>`:""}`;
-  else if(s.type==="timer") body = `<div class="timer"><div class="t mono" id="tmT">${mmss(s.sec)}</div><div class="bar"><i id="tmBar"></i></div></div>
-    <div class="acts"><button class="btn big danger" type="button" id="tmStart">▶ ${TE("Start timer")}</button><button class="btn big" type="button" data-next>${TE("Done, next step")} →</button></div>`;
+  else if(s.type==="timer") body = `<div class="timer"><div class="t mono" id="tmT">${hms(tm ? (tm.dueAt-Date.now())/1000 : s.sec)}</div><div class="bar"><i id="tmBar"></i></div></div>
+    <div class="acts">${tm?"":`<button class="btn big danger" type="button" id="tmStart">▶ ${TE("Start timer")}</button>`}<button class="btn big" type="button" data-next>${TE("Done, next step")} →</button></div>
+    ${s.sec>LONG_WAIT?`<div class="small muted" style="margin-top:8px">${tm?TE("Waiting. You can leave this screen: a band at the top counts down and turns red when the re-check is due."):TE("Long wait: once started you can leave this screen. A band at the top will remind you.")}</div>`:""}`;
   else if(s.type==="cpr") body = `<div class="cpr"><div class="beat" id="beat">110</div><div><div class="mono" id="cprInfo"></div><div class="small muted">${TE("110 compressions per minute · 2-minute cycles")}</div><div class="small" id="cprSwap"></div></div></div>
     <div class="acts"><button class="btn big danger" type="button" id="cprStart">${cprT?"■ "+TE("Stop beat"):"▶ "+TE("Start beat")}</button><button class="btn big" type="button" data-next>${TE("Next step")} →</button></div>`;
-  else if(s.type==="measure") body = `<div class="fields" style="margin-top:12px">
+  else if(s.type==="measure") body = `<div class="small muted" style="margin-top:6px">${R.patient ? TE("Saved to {0}'s record for today and graded at once.", crewById(R.patient).n) : TE("Kept in the log. Saved to the patient's record once you tap who it is.")}</div><div class="fields" style="margin-top:12px">
       ${[["hr","Heart rate","bpm"],["sbp","Blood pressure (top)","mmHg"],["spo2","SpO₂","%"],["temp","Temperature","°C"]].map(([k,n,u])=>`<div class="fld"><label for="ms-${k}">${TE(n)} (${u})</label><input id="ms-${k}" inputmode="decimal" autocomplete="off" placeholder="${TE("optional")}"></div>`).join("")}
     </div><div class="acts"><button class="btn big danger" type="button" id="msLog">${TE("Log and continue")} →</button></div>`;
   else if(s.type==="report") body = `<div class="acts"><button class="btn big danger" type="button" id="repSend">✉ ${TE("Send log to Earth")}</button><button class="btn big" type="button" data-next>${TE("Finish procedure")} ✓</button></div>
     <div class="small muted" style="margin-top:8px">${TE("Do not wait for the reply: keep caring for the patient.")}</div>`;
   else body = `<div class="acts"><button class="btn big danger" type="button" data-next>${TE("Done, next step")} →</button></div>`;
+  const sub = subText(s);
   return `<div class="cur-step">
     <div class="kind">${TE("Step {0} of {1}", i+1, p.steps.length)} · ${TE(KIND[s.type])}</div>
-    <div class="txt" id="stepTxt" tabindex="-1">${TE(s.text)}</div>
-    ${s.sub?`<div class="sub">${TE(s.sub)}</div>`:""}
+    <div class="txt" id="stepTxt" tabindex="-1">${esc(T(stText(s)))}</div>
+    ${sub?`<div class="sub">${esc(T(sub))}</div>`:""}
     ${body}
     <div class="acts" style="margin-top:22px;border-top:1px solid var(--line);padding-top:14px">
-      <button class="btn" type="button" id="prevBtn" ${R.hist.length?"":"disabled"}>← ${TE("Previous step")}</button>
+      <button class="btn" type="button" id="prevBtn" ${R.hist.length?"":"disabled"}>← ${TE("Undo last step")}</button>
       <button class="btn" type="button" id="endBtn">${TE("End guide")}</button>
     </div>
     <div id="confirmBox"></div>
@@ -1826,10 +2841,17 @@ function finishedHTML(){
     <div class="sub">${TE("The full log is on the right. Send it to Earth so the flight surgeon sees exactly what was done and when. Practice counts toward the \"Ready for anything\" badge.")}</div>
     <div class="acts"><button class="btn big danger" type="button" id="repSend">✉ ${TE("Send log to Earth")}</button><button class="btn big" type="button" id="backList">${TE("Back to guides")}</button></div></div>`;
 }
+/* FR-SOS-15: measurements go into the PATIENT's record for today, then everything regrades */
+function saveMeasure(vals){
+  const all = S.checkins[R.patient] || (S.checkins[R.patient] = {});
+  all[ciKey()] = Object.assign({}, all[ciKey()]||{}, vals, {measuredBy:R.responder});
+  LS.set("checkins", S.checkins);
+  S.view = S.day; renderAll(false);
+}
 function bindRun(s){
   const on = (id, f) => { const b = $(id); if(b) b.addEventListener("click", f); };
-  $$("#sosRun [data-next]").forEach(b=>b.addEventListener("click", ()=>{ log("Step {0} done: {1}", [stepIdx(R.cur)+1, {t:s.text}]); go("next"); }));
-  $$("#sosRun [data-ans]").forEach(b=>b.addEventListener("click", ()=>{ const yes = b.dataset.ans==="yes"; log("Q: {0} → {1}", [{t:s.text},{t:yes?"Yes":"No"}]); go(yes ? s.yes : s.no); }));
+  $$("#sosRun [data-next]").forEach(b=>b.addEventListener("click", ()=>{ log("Step {0} done: {1}", [stepIdx(R.cur)+1, {t:stText(s)}]); go("next"); }));
+  $$("#sosRun [data-ans]").forEach(b=>b.addEventListener("click", ()=>{ const yes = b.dataset.ans==="yes"; log("Q: {0} → {1}", [{t:stText(s)},{t:yes?"Yes":"No"}]); go(yes ? s.yes : s.no, yes?"Yes":"No"); }));
   on("#prevBtn", back);
   on("#endBtn", ()=>{ $("#confirmBox").innerHTML = `<div class="confirm"><strong>${TE("End this guide?")}</strong> ${TE("Send the log to Earth first so the flight surgeon has the record.")}
     <div class="acts" style="margin-top:10px"><button class="btn danger" type="button" id="cfSend">${TE("Send log and end")}</button><button class="btn" type="button" id="cfEnd">${TE("End without sending")}</button><button class="btn" type="button" id="cfKeep">${TE("Keep going")}</button></div></div>`;
@@ -1838,15 +2860,18 @@ function bindRun(s){
   on("#sendLog", e=>openEmergencyLog(e.currentTarget));
   on("#repSend", e=>openEmergencyLog(e.currentTarget));
   on("#backList", exitGuide);
+  $$("#sosRun [data-ident]").forEach(b=>b.addEventListener("click", ()=>identifyPatient(b.dataset.ident)));
   on("#sndBtn", ()=>{ S.sound = !S.sound; renderRun(); if(S.sound) beep(660); });
   on("#cprStopBand", ()=>{ stopCPR(); renderRun(); });
   if(s && !R.finished && s.type==="timer") on("#tmStart", ()=>startTimer(s));
   if(s && !R.finished && s.type==="cpr"){ on("#cprStart", ()=>{ if(cprT){ stopCPR(); } else startCPR(); renderRun(); }); updCPR(); }
   if(s && !R.finished && s.type==="measure") on("#msLog", ()=>{
     const vals = {}; for(const k of ["hr","sbp","spo2","temp"]){ const v = $("#ms-"+k).value.trim().replace(",", "."); if(v!=="" && Number.isFinite(+v)) vals[k] = +v; }
-    log("Measured: HR {0} bpm, BP {1} mmHg, SpO2 {2} %, Temp {3} °C", [vals.hr??"—", vals.sbp??"—", vals.spo2??"—", vals.temp??"—"]);
+    const txt = `HR ${vals.hr??"—"} bpm, BP ${vals.sbp??"—"} mmHg, SpO2 ${vals.spo2??"—"} %, Temp ${vals.temp??"—"} °C`;
+    log("Measured on {0}: {1}", [{t:crewById(R.patient).n}, txt]);
     if(vals.spo2!==undefined && vals.spo2<=92) log("Warning: SpO2 92% or lower. Tell the crew and the flight surgeon.", [], "warn");
-    go("next"); });
+    if(Object.keys(vals).length){ if(R.patient) saveMeasure(vals); else R.pendingVals = Object.assign(R.pendingVals||{}, vals); }
+    go("next", Object.keys(vals).length ? "measured" : "no values", Object.keys(vals).length ? {measured:txt} : null); });
   const st = $("#stepTxt"); if(st) st.focus({preventScroll:true});
 }
 function renderLog(){
@@ -1854,17 +2879,6 @@ function renderLog(){
   el.innerHTML = R.log.map(l=>`<div class="${l.cls||""}"><b>T+${mmss(l.t)}</b><span>${esc(logTX(l))}</span></div>`).join("");
   el.scrollTop = el.scrollHeight;
 }
-function startTimer(s){
-  stopTimer(); const t0 = Date.now(); log("Timer started: {0} ({1})", [mmss(s.sec), {t:s.text}]);
-  const b = $("#tmStart"); if(b){ b.disabled = true; b.textContent = T("Running…"); }
-  timerT = setInterval(()=>{
-    const left = s.sec - (Date.now()-t0)/1000;
-    const tt = $("#tmT"), bar = $("#tmBar");
-    if(tt) tt.textContent = mmss(left); if(bar) bar.style.width = Math.min(100, (1-left/s.sec)*100)+"%";
-    if(left<=0){ stopTimer(); log("Timer finished: {0}.", [mmss(s.sec)]); beep(880,.25); setTimeout(()=>beep(1100,.25),300); if(tt) tt.textContent = "00:00 ✓"; }
-  }, 250);
-}
-function stopTimer(){ if(timerT){ clearInterval(timerT); timerT = null; } }
 let cpr = {n:0, t0:0, cyc:0};
 function startCPR(){
   cpr = {n:0, t0:Date.now(), cyc:0}; log("CPR rhythm started (110/min).");
@@ -1878,21 +2892,26 @@ function startCPR(){
 }
 function updCPR(){ const i = $("#cprInfo"); if(!i) return; if(!cprT){ i.textContent = T("Beat stopped"); return; } const el = (Date.now()-cpr.t0)/1000; i.textContent = T("Cycle {0} · {1} to swap · {2} beats", cpr.cyc+1, mmss(120 - el%120), cpr.n); }
 function stopCPR(){ if(cprT){ clearInterval(cprT); cprT = null; log("CPR rhythm stopped after {0} beats.", [cpr.n]); } }
-function openEmergencyLog(btn){
-  const p = curProt(), e = ENVS[S.env], c = crewObj(); const i = stepIdx(R.cur);
-  log("Event log sent to Earth.");
+function openEmergencyLog(btn, quiet){
+  const p = curProt(), e = ENVS[S.env]; const i = stepIdx(R.cur);
+  const pc = crewById(R.patient), rc = crewById(R.responder);
+  if(!quiet) log("Event log sent to Earth.");
   const L = [];
   L.push(`PRIORITY: MEDICAL EVENT LOG`);
-  L.push(`TO:      Flight Surgeon, Mission Control (Earth), priority`);
-  L.push(`FROM:    ${c.n} (${c.role}), ${e.long}, mission day ${S.day}`);
-  L.push(`EVENT:   ${R.chain.map(g=>PROT[g].title).join(" -> ")}`);
-  L.push(`STARTED: ${R.wall.toISOString().replace("T"," ").slice(0,19)} UTC (T+00:00)`);
-  L.push(`NOW:     T+${mmss(tNow())}; ${R.finished?"procedure finished":"current step "+(i+1)+" of "+p.steps.length+": "+p.steps[i].text}`);
-  L.push(`LINK:    ${e.delay<60 ? e.delay+" s, live" : Math.round(e.delay/60)+" min one way"}; earliest reply ~${replyMin(e)} min`);
+  L.push(`TO:        Flight Surgeon, Mission Control (Earth), priority`);
+  L.push(`PATIENT:   ${pc.n} (${pc.role})`);
+  L.push(`RESPONDER: ${rc.n} (${rc.role})`);
+  L.push(`MODE:      ${R.patient===R.responder ? "Self" : "Crewmate assist"}`);
+  L.push(`LOCATION:  ${e.long} · mission day ${S.day} · ${e.delay<60 ? e.delay+" s, live" : Math.round(e.delay/60)+" min one way"}`);
+  L.push(`PATIENT USUAL RANGE (days 1-14): ${R.patient ? usualText(R.patient) : "unknown (patient not identified)"}`);
+  L.push(`EVENT:     ${R.chain.map(g=>PROT[g].title).join(" -> ")}`);
+  L.push(`STARTED:   ${R.wall.toISOString().replace("T"," ").slice(0,19)} UTC (T+00:00)`);
+  L.push(`NOW:       T+${hms(tNow())}; ${R.finished?"procedure finished":"current step "+(i+1)+" of "+p.steps.length+": "+stText(p.steps[i])}${R.timer?"; timer "+(R.timer.due?"DUE":"due at "+new Date(R.timer.dueAt).toISOString().slice(11,16)+" UTC"):""}`);
+  L.push(`LINK:      earliest reply ~${replyMin(e)} min`);
   L.push(""); L.push("TIMELINE:");
   for(const l of R.log) L.push(`  T+${mmss(l.t)}  ${logEN(l)}`);
   L.push("");
-  L.push(`REQUEST: Please review and advise. Crew is continuing the onboard guide and will not wait for the reply.`);
+  L.push(`REQUEST: Ground support. Do not wait for reply; crew is continuing the onboard procedure.`);
   L.push(""); L.push(`-- Orbit Guide hackathon prototype. Example procedure; not a medical device.`);
   openNote("Emergency log for Earth", L.join("\n"), 3, btn);
 }
@@ -1920,6 +2939,9 @@ function renderMethod(){
   <div class="tbl-wrap"><table class="tbl"><tr><th>${TE("Measure")}</th><th><span class="pill l1">${LVT(1)}</span></th><th><span class="pill l2">${LVT(2)}</span></th><th><span class="pill l3">${LVT(3)}</span></th><th>${TE("Source")}</th></tr>
   ${[["hr","41–50, 91–110","111–130","≤ 40, ≥ 131"],["sbp","101–110, 130–139","91–100, 140–180","≤ 90, > 180"],["temp","35.1–36.0, 38.1–39.0","≥ 39.1","≤ 35.0"],["spo2","94–95","92–93","≤ 91"],["glu","100–125","54–69, ≥ 126","< 54"],["sleep","≤ 6.0","≤ 6.0, 3 "+T("days in a row"),"—"],["mood",T("personal baseline only"),T("personal baseline only"),"—"],["co2","> 2.5","> 3.0","> 4.5"],["ex","< 90","< 45","—"],["bone",T("losing 1.0% per month or faster"),T("total −5% or worse"),"—"],["radDay","> 1.6×","> 3×","> 8× "+T("or one storm ≥ 250 mSv")],["radTot","≥ 300","≥ 450","≥ 600"]]
     .map(([k,a1,a2,a3])=>`<tr><td>${TE(METRICS[k].n)} <span class="muted">(${esc(unit(k))})</span></td><td>${esc(a1)}</td><td>${esc(a2)}</td><td>${esc(a3)}</td><td>${TE(SRC_OF[k])}</td></tr>`).join("")}</table></div>
+  <p class="small">${TE("Exercise is graded on the 7-day average, not one day, so one rest day does not raise a flag.")}</p>
+  <h3>${TE("Emergency guides")}</h3>
+  <p class="small">${TE("{0} guides. Each can be run for yourself or for a crewmate (CPR only by a crewmate). Peer wording only changes who is addressed, never the medical content. Measurements are saved to the patient's record. Timers have a due time and long waits run in the background with a reminder band. A guide in progress is saved in the browser and can be resumed after a reload. Undo walks back one step at a time, also across guide switches; the log keeps every entry.", PROTOCOLS.length)}</p>
   <h3>${TE("Data")}</h3>
   <p class="small">${TE("All data is simulated; no real astronaut medical data is used (that requires data-use agreements and ethics approval). Each crew member has fixed baselines plus seeded random noise, so the same settings always give the same numbers. Situations and your check-in entries are applied on top. Ranges are being calibrated against public NASA data (HRP evidence, OSDR Inspiration4 clinical panels). Everything comes from one function, DataSource.build(); to connect real data, replace that function and keep the daily record shape:")}</p>
   <p><code>{day, hr, sbp, spo2, temp, glu, sleep, mood, ex, co2, radDay, radTot, bone, head, vision}</code></p>
@@ -1937,15 +2959,16 @@ function renderMethod(){
   <p class="small">${TE("Orbit Guide is a hackathon prototype. It is not a medical device and does not give medical advice. Absolute thresholds are taken from the references above and personal-baseline rules are our own design; emergency guides are example procedures that support, never replace, the onboard medical checklist and the flight surgeon.")}</p>`;
 }
 
-/* ---------------- guided demo (9 scenes) ---------------- */
+/* ---------------- guided demo (10 scenes) ---------------- */
 let demo = null;
 const sleepMs = ms => new Promise(r=>{ const t = setTimeout(r, ms); demo && demo.timers.push(t); });
 async function runDemo(){
   stopDemo(); if(R) exitGuide();
-  demo = {timers:[], alive:true}; const me = demo;
+  demo = {timers:[], alive:true, crew:CREW.map(c=>({...c})), me:S.me}; const me = demo;
+  CREW.splice(0, CREW.length, ...CREW_DEFAULT.map(c=>({...c})));   // the demo always uses the default crew
   $("#demoCap").hidden = false;
-  const scene = async (n, text, act, ms=6500) => { if(!me.alive) throw 0; $("#demoN").textContent = `${n}/9`; $("#demoTxt").textContent = T(text); act && act(); await sleepMs(ms); if(!me.alive) throw 0; };
-  const reset = () => { S.scen = {}; };
+  const scene = async (n, text, act, ms=6500) => { if(!me.alive) throw 0; $("#demoN").textContent = `${n}/10`; $("#demoTxt").textContent = T(text); act && act(); await sleepMs(ms); if(!me.alive) throw 0; };
+  const reset = () => { S.scen = {}; if(R) exitGuide(); };
   const B3w = f => { if(window.B3) f(window.B3); };
   try{
     location.hash = "#body"; setTab("body");
@@ -1957,18 +2980,27 @@ async function runDemo(){
     await scene(6, "Stuffy cabin air: CO₂ builds up and a headache follows. The headache guide is offered on the flight-surgeon card.", ()=>{ reset(); toggleScenario("co2"); });
     await scene(7, "Fever: temperature passes 38 °C. The skin warms to orange and the card links straight to the fever guide.", ()=>{ reset(); toggleScenario("fever"); });
     await scene(8, "On the way to Mars a solar storm multiplies the daily dose. Radiation streaks turn red; the solar storm guide is one tap away.", ()=>{ reset(); S.env="transit"; $("#envSel").value="transit"; toggleScenario("solar"); });
-    await scene(9, "Everything goes to Earth as a plain note that respects the 20-minute one-way delay.", ()=>{ reset(); toggleScenario("fever"); openDailyNote($("#demoBtn")); setTimeout(()=>me.alive && sendNote(), 900); }, 9000);
+    await scene(9, "Crewmate collapse: Novak holds the app. Kim's SpO₂ drops to 90%, her card flashes \"Needs help\", and Help Kim opens the guide written for Kim.", ()=>{ reset(); S.env="iss"; $("#envSel").value="iss"; S.me="novak"; renderMeSel(); S.scen.kim=[{id:"collapse", dur:1, end:S.day}]; setCrew("kim");
+      setTimeout(()=>{ if(me.alive){ helpCrew("kim"); setTimeout(()=>{ if(me.alive){ demo = null; startGuide("cpr", "Triage: answered yes", [[qText(PROT.cpr,"kim"),"Yes"]], "kim"); demo = me; } }, 2500); } }, 2500); }, 9000);
+    await scene(10, "Everything goes to Earth as a plain note that respects the 20-minute one-way delay.", ()=>{ reset(); location.hash = "#body"; setTab("body"); toggleScenario("fever"); openDailyNote($("#demoBtn")); setTimeout(()=>me.alive && sendNote(), 900); }, 9000);
   }catch(e){}
   if(me===demo) stopDemo();
 }
-function stopDemo(){ if(!demo) return; demo.alive = false; demo.timers.forEach(clearTimeout); demo = null; $("#demoCap").hidden = true; }
+function stopDemo(){
+  if(!demo) return; const d = demo; d.alive = false; d.timers.forEach(clearTimeout); demo = null; $("#demoCap").hidden = true;
+  CREW.splice(0, CREW.length, ...d.crew); S.me = CREW.some(c=>c.id===d.me) ? d.me : CREW[0].id;   // put the user's own crew back
+  if(!CREW.some(c=>c.id===S.crew)) S.crew = CREW[0].id;
+  if(!(R && !R.finished)){ S.patient = null; renderAll(false); renderWho(); renderTriage(); }
+}
 
 /* ---------------- boot ---------------- */
 function boot(){
   applyStatic(); initTop(); initStage(); initCheckin(); initNote();
   C = computeFor(S.crew);
-  renderAll(false); renderTriage(); renderGuideList(); renderMethod(); drawLearn();
+  renderAll(false); renderWho(); renderTriage(); renderGuideList(); renderMethod(); drawLearn();
   setTab(location.hash.slice(1) || "home");
+  sosTick = setInterval(tickSOS, 1000);   // timers keep counting on every tab
+  offerResume();                          // an emergency left open by a reload or crash
   // 3D arrives asynchronously from the module script
   window.addEventListener("og3d-ready", ()=>{
     $("#heroLoad").hidden = true;
@@ -1981,6 +3013,7 @@ function boot(){
 }
 boot();
 </script>
+<script src="voice.js"></script>
 <script type="module">
 /* =====================================================================
    Orbit Guide — 3D hologram body (three.js)
