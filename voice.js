@@ -5,7 +5,9 @@
       (it also stops a running CPR beat). "Start" starts the CPR beat or a timer on the current step
       (and speaks its cue); "Stop" stops the CPR beat.
       Also "Yes" / "No" on question steps, "Back" to undo, "Repeat" to hear the cue again.
-   Uses the browser's built-in Web Speech API (speechSynthesis, SpeechRecognition). Every voice command is
+   Recognition runs offline with Vosk (vendor/vosk, English command words only); if that cannot load
+   (e.g. opened as file://) it falls back to the browser's Web Speech API, which needs a network.
+   Cues use the browser's speechSynthesis. Every voice command is
    written to the event log, so the flight surgeon sees which steps were moved by voice. */
 (function(){
   /* Emphasis cues per guide step: [English, Korean]. Steps without a cue stay silent. */
@@ -52,7 +54,7 @@
     listen: false,                             // mic always starts off: it needs the user's permission
     rec: null, lastKey: null, busyUntil: 0, heard: "", note: "",
   };
-  V.version = "voice v5 (11-14)";
+  V.version = "voice v6 (11-14)";
   window.__voice = V;
 
   /* ---------- speaking ---------- */
@@ -134,9 +136,71 @@
     btn.click();
     return true;
   }
-  function startListening(){
+  /* one recognised utterance (alternatives, best first) → at most one command. Returns true if it acted. */
+  function onHeard(alts){
+    const now = Date.now();
+    V.heard = alts[0];
+    if(now < V.busyUntil){ console.info("[voice] ignored (speaking):", alts); return false; }   // a cue is playing
+    if(isEcho(alts[0])){ console.info("[voice] ignored (echo):", alts); return false; }         // our own voice
+    if(now < (V.cmdUntil||0)){ console.info("[voice] ignored (cooldown):", alts); return false; } // one command at a time
+    const c = alts.map(matchCmd).find(Boolean) || null;
+    console.info("[voice] heard:", alts, "→", c);
+    if(!c) return false;
+    V.lastCmd = alts.find(a=>matchCmd(a)===c) || alts[0]; paint();   // show only the latest command
+    if(c==="next" && now < (V.startedAt||0) + 4000){ console.info("[voice] ignored next right after start"); return false; }
+    V.cmdUntil = now + 2500;                                 // ignore anything else for 2.5 s
+    if(act(c, alts[0]) && c==="start") V.startedAt = now;
+    return true;
+  }
+
+  /* ---------- engine 1 (preferred): Vosk, offline, English command words only ----------
+     Kaldi compiled to WASM, running in a worker. The grammar limits it to the command words, so a
+     small model is accurate and nothing leaves the device. Needs http(s)/localhost, not file://. */
+  const VOSK_JS = "vendor/vosk/vosk.js";
+  const VOSK_MODEL = "vendor/vosk/vosk-model-small-en-us-0.15.tar.gz";
+  const GRAMMAR = JSON.stringify(["start", "stop", "next", "next step", "yes", "no", "back", "repeat", "[unk]"]);
+  let voskModel = null, voskLoading = null;
+  function loadScript(src){ return new Promise((ok, bad)=>{ const s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = bad; document.head.appendChild(s); }); }
+  function loadVosk(){
+    if(voskModel) return Promise.resolve(voskModel);
+    if(!voskLoading) voskLoading = (async()=>{
+      if(location.protocol==="file:") throw new Error("offline recognition needs http(s), not file://");
+      if(!window.Vosk) await loadScript(VOSK_JS);
+      voskModel = await Vosk.createModel(new URL(VOSK_MODEL, location.href).href);   // the worker needs an absolute URL
+      return voskModel;
+    })().catch(e=>{ voskLoading = null; throw e || new Error("model failed to load"); });
+    return voskLoading;
+  }
+  async function startVosk(tok){
+    if(!voskModel){ V.note = ko() ? "오프라인 음성 인식 준비 중…" : "Loading offline voice recognition…"; paint(); }
+    const model = await loadVosk();
+    const stream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true, noiseSuppression:true, channelCount:1}});
+    if(tok!==V.tok || !V.listen){ stream.getTracks().forEach(t=>t.stop()); return; }   // switched off while loading
+    const ctx = new (window.AudioContext||window.webkitAudioContext)();
+    const rec = new model.KaldiRecognizer(ctx.sampleRate, GRAMMAR);
+    const src = ctx.createMediaStreamSource(stream);
+    const proc = ctx.createScriptProcessor(4096, 1, 1);
+    const mic = {stream, ctx, rec, src, proc};
+    rec.on("result", m => {
+      if(V.mic!==mic) return;                                    // a stale recognizer: never act twice
+      const t = norm((m && m.result && m.result.text) || "").replace(/\[unk\]/g, "").trim();
+      if(t) onHeard([t]);
+    });
+    proc.onaudioprocess = e => { if(V.mic===mic) try{ rec.acceptWaveform(e.inputBuffer); }catch(err){} };
+    src.connect(proc); proc.connect(ctx.destination);
+    V.mic = mic; V.engine = "vosk"; V.note = ""; paint();
+  }
+  function stopVosk(){
+    const m = V.mic; V.mic = null; if(!m) return;
+    try{ m.proc.disconnect(); m.src.disconnect(); }catch(e){}
+    m.stream.getTracks().forEach(t=>t.stop());
+    try{ m.rec.remove(); }catch(e){}
+    try{ m.ctx.close(); }catch(e){}
+  }
+
+  /* ---------- engine 2 (fallback): the browser's Web Speech API (Chrome/Edge, needs a network) ---------- */
+  function startWebSpeech(){
     if(!SR){ V.note = ko() ? "이 브라우저는 음성 인식을 지원하지 않아요 (Chrome·Edge 사용)" : "Voice commands need Chrome or Edge"; paint(); return; }
-    if(V.rec){ const old = V.rec; V.rec = null; try{ old.abort(); }catch(e){} }
     const r = new SR();
     r.lang = ko() ? "ko-KR" : "en-US";
     r.continuous = true; r.interimResults = false; r.maxAlternatives = 3;
@@ -145,19 +209,7 @@
       for(let i=ev.resultIndex; i<ev.results.length; i++){
         if(!ev.results[i].isFinal) continue;
         const alts = Array.from({length:ev.results[i].length}, (_,j)=>norm(ev.results[i][j].transcript));
-        const now = Date.now();
-        V.heard = alts[0];
-        if(now < V.busyUntil){ console.info("[voice] ignored (speaking):", alts); continue; }   // a cue is playing
-        if(isEcho(alts[0])){ console.info("[voice] ignored (echo):", alts); continue; }         // our own voice
-        if(now < (V.cmdUntil||0)){ console.info("[voice] ignored (cooldown):", alts); continue; } // one command at a time
-        const c = alts.map(matchCmd).find(Boolean) || null;
-        console.info("[voice] heard:", alts, "→", c);
-        if(!c) continue;
-        V.lastCmd = alts.find(a=>matchCmd(a)===c) || alts[0]; paint();   // show only the latest command
-        if(c==="next" && now < (V.startedAt||0) + 4000){ console.info("[voice] ignored next right after start"); continue; }
-        V.cmdUntil = now + 2500;                                 // ignore anything else for 2.5 s
-        if(act(c, alts[0]) && c==="start") V.startedAt = now;
-        return;                                                  // at most one command per event
+        if(onHeard(alts)) return;                                // at most one command per event
       }
     };
     r.onerror = e => {
@@ -167,11 +219,23 @@
     };
     // restart only the CURRENT recognizer; an aborted one must stay dead (two live ones would act twice)
     r.onend = () => { if(r===V.rec && V.listen && R && !R.finished) setTimeout(()=>{ if(r===V.rec && V.listen) try{ r.start(); }catch(e){} }, 250); };
-    V.rec = r; V.note = "";
+    V.rec = r; V.engine = "web"; V.note = "";
     try{ r.start(); }catch(e){}
     paint();
   }
-  function stopListening(){ V.listen = false; if(V.rec){ try{ V.rec.abort(); }catch(e){} V.rec = null; } paint(); }
+  function stopWebSpeech(){ if(V.rec){ const old = V.rec; V.rec = null; try{ old.abort(); }catch(e){} } }
+
+  function startListening(){
+    stopVosk(); stopWebSpeech();
+    const tok = V.tok = (V.tok||0) + 1;
+    startVosk(tok).catch(err=>{
+      if(tok!==V.tok || !V.listen) return;
+      if(err && err.name==="NotAllowedError"){ V.listen = false; V.note = ko() ? "마이크 권한이 없어요" : "Microphone permission denied"; paint(); return; }
+      console.warn("[voice] offline engine unavailable, falling back to browser recognition:", err);
+      startWebSpeech();
+    });
+  }
+  function stopListening(){ V.listen = false; V.tok = (V.tok||0) + 1; stopVosk(); stopWebSpeech(); V.engine = null; paint(); }
 
   /* ---------- controls in the red emergency band ---------- */
   const bs = 'style="background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.4)"';
@@ -182,9 +246,11 @@
     const L = (en, k) => ko() ? k : en;
     box.innerHTML = `<button class="btn" type="button" id="vSpeak" aria-pressed="${V.speak}" ${bs}>${V.speak?"🗣 "+L("Voice cues on","음성 안내 켜짐"):"🗣 "+L("Voice cues off","음성 안내 꺼짐")}</button>
       <button class="btn" type="button" id="vListen" aria-pressed="${V.listen}" ${bs} ${SR?"":"disabled"}>${V.listen?"🎙 "+L("Hands-free on","핸즈프리 켜짐"):"🎙 "+L("Hands-free off","핸즈프리 꺼짐")}</button>
-      ${V.listen?`<span class="small v-hint">${L('Say "Start", "Stop", "Next", "Yes", "No", "Back" or "Repeat"','"시작", "멈춰", "다음", "예", "아니오", "이전", "다시"라고 말하세요')}${V.lastCmd?` · ${L("heard","인식")}: “${esc(V.lastCmd)}”`:""}</span>`:""}
+      ${V.listen?`<span class="small v-hint">${V.engine==="vosk"
+        ? L('Say "start", "stop", "next", "yes", "no", "back" or "repeat"','영어로 "start", "stop", "next", "yes", "no", "back", "repeat"라고 말하세요')
+        : L('Say "Start", "Stop", "Next", "Yes", "No", "Back" or "Repeat"','"시작", "멈춰", "다음", "예", "아니오", "이전", "다시"라고 말하세요')}${V.lastCmd?` · ${L("heard","인식")}: “${esc(V.lastCmd)}”`:""}</span>`:""}
       ${V.note?`<span class="small v-hint">⚠ ${esc(V.note)}</span>`:""}
-      <span class="small v-hint" style="opacity:.6">${V.version}</span>`;
+      <span class="small v-hint" style="opacity:.6">${V.version}${V.engine==="vosk"?" · offline":V.engine==="web"?" · online":""}</span>`;
     box.querySelector("#vSpeak").onclick = () => { V.speak = !V.speak; LS.set("voice.speak", V.speak); if(!V.speak && window.speechSynthesis) speechSynthesis.cancel(); else say(cueNow()); paint(); };
     box.querySelector("#vListen").onclick = () => { if(V.listen) stopListening(); else { V.listen = true; startListening(); } };
   }
@@ -207,6 +273,6 @@
   const _exit = exitGuide;
   exitGuide = function(){ stopListening(); V.lastKey = null; V.heard = ""; if(window.speechSynthesis) speechSynthesis.cancel(); return _exit.apply(this, arguments); };
   const _setLang = setLang;
-  setLang = function(){ const r = _setLang.apply(this, arguments); if(V.listen) startListening(); return r; };   // recognise in the new language
+  setLang = function(){ const r = _setLang.apply(this, arguments); if(V.listen && V.engine!=="vosk") startListening(); return r; };   // recognise in the new language (offline engine is English-only)
   if(window.speechSynthesis) speechSynthesis.onvoiceschanged = () => {};   // warms up the voice list in Chrome
 })();
