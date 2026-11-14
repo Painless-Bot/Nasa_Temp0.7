@@ -3597,6 +3597,30 @@ const earth = new THREE.Mesh(new THREE.SphereGeometry(2.4, 64, 48), new THREE.Sh
     gl_FragColor = vec4(col, 1.0); }`}));
 earth.position.set(-9.5, 4.6, -22); earth.rotation.set(.3, 1.1, .2); scene.add(earth);
 
+/* ---------- Mars far away, with the crew's Earth → Mars route (home screen only, fades with st.hero) ---------- */
+const MARS_AT = new THREE.Vector3(2.4, 4.9, -24);
+const mars = new THREE.Mesh(new THREE.SphereGeometry(1.05, 64, 48), new THREE.ShaderMaterial({vertexShader:VS, transparent:true, depthWrite:false, uniforms:{uA:{value:0}}, fragmentShader:`
+  uniform float uA; varying vec3 vN; varying vec3 vV; varying vec3 vO;
+  float h(vec3 p){ return fract(sin(dot(p, vec3(127.1,311.7,74.7)))*43758.5453); }
+  float vn(vec3 p){ vec3 i = floor(p), f = fract(p); f = f*f*(3.0-2.0*f);
+    return mix(mix(mix(h(i),h(i+vec3(1,0,0)),f.x), mix(h(i+vec3(0,1,0)),h(i+vec3(1,1,0)),f.x), f.y), mix(mix(h(i+vec3(0,0,1)),h(i+vec3(1,0,1)),f.x), mix(h(i+vec3(0,1,1)),h(i+vec3(1,1,1)),f.x), f.y), f.z); }
+  float fbm(vec3 p){ return vn(p)*0.5 + vn(p*2.1)*0.27 + vn(p*4.3)*0.15 + vn(p*8.7)*0.08; }
+  void main(){ vec3 n = normalize(vN); vec3 sun = normalize(vec3(0.75,0.35,0.55));
+    vec3 base = mix(vec3(0.40,0.15,0.07), vec3(0.66,0.32,0.15), fbm(vO*1.7 + 11.0));
+    base = mix(base, vec3(0.22,0.09,0.05), smoothstep(0.55, 0.68, fbm(vO*2.6 + 3.0))*0.7);   // dark plains
+    base = mix(base, vec3(0.86,0.83,0.8), smoothstep(0.88, 0.94, abs(normalize(vO).y)));   // polar caps
+    float l = smoothstep(-0.1, 0.55, dot(n, sun));
+    float rim = pow(1.0 - max(dot(n, normalize(vV)), 0.0), 3.0);
+    vec3 col = base*(0.015 + l*1.0) + vec3(1.0,0.5,0.28)*rim*(0.05 + l*0.45);
+    gl_FragColor = vec4(col, uA); }`}));
+mars.position.copy(MARS_AT); mars.rotation.set(.45, .6, .1); scene.add(mars);
+const route = new THREE.QuadraticBezierCurve3(earth.position.clone(), earth.position.clone().lerp(MARS_AT, .5).add(new THREE.Vector3(0, 4.2, 0)), MARS_AT.clone());
+const routeLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints(route.getPoints(120)),
+  new THREE.LineDashedMaterial({color:0xffa36b, dashSize:.35, gapSize:.3, transparent:true, opacity:0, depthWrite:false, blending:THREE.AdditiveBlending}));
+routeLine.computeLineDistances(); scene.add(routeLine);
+const ship = new THREE.Sprite(new THREE.SpriteMaterial({map:DOT, color:0xffd2a8, transparent:true, opacity:0, blending:THREE.AdditiveBlending, depthWrite:false})); ship.scale.setScalar(.42); scene.add(ship);
+let marsA = 0;
+
 const orbit = new THREE.Group(); orbit.position.set(0, .12, 0); orbit.rotation.set(1.18, 0, .32); scene.add(orbit);
 {
   const pts = []; for(let i=0;i<=160;i++){ const a = i/160*Math.PI*2; pts.push(new THREE.Vector3(Math.cos(a)*.78, Math.sin(a)*.78, 0)); }
@@ -3785,6 +3809,12 @@ function frame(){
   trailGeo.attributes.position.needsUpdate = true; trailGeo.attributes.color.needsUpdate = true;
   orbit.visible = !sel || sel==="whole";
   ticks.rotation.z = t*.12; earth.material.uniforms.uT.value = t; earth.rotation.y = 1.1 + t*.01;
+  /* Mars and the route: only on the home screen, faded in and out */
+  marsA += ((st.hero ? 1 : 0) - marsA)*Math.min(1, dt*2.5);
+  mars.visible = routeLine.visible = ship.visible = marsA > .01;
+  mars.material.uniforms.uA.value = marsA; mars.rotation.y = .6 + t*.008;
+  routeLine.material.opacity = .22*marsA;
+  route.getPoint(.62 + .3*((t/90)%1), ship.position); ship.material.opacity = .85*marsA;
   /* scan */
   let sy = -9;
   if(scanT >= 0){ scanT += dt/1.5; if(scanT>1) scanT = -1; else sy = -.95 + scanT*1.85; }
