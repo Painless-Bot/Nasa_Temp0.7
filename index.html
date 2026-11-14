@@ -3402,6 +3402,7 @@ function bodyF(x,y,z){
   if(ax > .34 || y > .88 || y < -.93) return .05;
   let d = sdEll(x, y-.765, z+.005, .076,.098,.09);                         // cranium
   d = smin(d, sdEll(x, y-.705, z-.018, .058,.062,.062), .035);            // face and jaw
+  d = smin(d, sdEll(x, y-.722, z-.074, .013,.024,.017), .012);            // nose: the face points forward (+z)
   d = smin(d, sdRC(x,y,z, 0,.585,-.008, 0,.69,-.002, .047,.04), .03);     // neck
   d = smin(d, sdRC(ax,y,z, 0,.6,-.02, .15,.515,-.01, .038,.045), .05);    // trapezius
   d = smin(d, sdEll(x, y-.405, z+.002, .158,.135,.098), .05);             // rib cage
@@ -3543,7 +3544,7 @@ const GRADE = [new THREE.Color("#4fc3ff"), new THREE.Color("#f2c230"), new THREE
 const C_SKIN = new THREE.Color("#58b6ff"), C_BONE = new THREE.Color("#d5e6ff"), C_VES = new THREE.Color("#ff5d7a");
 const VS = `varying vec3 vN; varying vec3 vW; varying vec3 vV; varying vec2 vUv; varying vec3 vO;
 void main(){ vUv = uv; vO = position; vec4 w = modelMatrix*vec4(position,1.); vW = w.xyz; vN = normalize(mat3(modelMatrix)*normal); vV = normalize(cameraPosition - w.xyz); gl_Position = projectionMatrix*viewMatrix*w; }`;
-const FS = `uniform vec3 uCol; uniform float uInt; uniform float uOp; uniform float uRim; uniform float uBase; uniform float uScan; uniform float uPor; uniform float uWarm; uniform float uT; uniform float uLines; uniform float uSolid;
+const FS = `uniform vec3 uCol; uniform float uInt; uniform float uOp; uniform float uRim; uniform float uBase; uniform float uScan; uniform float uPor; uniform float uWarm; uniform float uT; uniform float uLines; uniform float uSolid; uniform float uBack;
 uniform vec4 uHot[5]; uniform vec3 uHotC[5];
 varying vec3 vN; varying vec3 vW; varying vec3 vV;
 float h3(vec3 p){ return fract(sin(dot(p, vec3(127.1,311.7,74.7)))*43758.5453); }
@@ -3561,12 +3562,16 @@ void main(){
   for(int i=0;i<5;i++){ float d = distance(vW, uHot[i].xyz); float h = exp(-d*d/(uHot[i].w*uHot[i].w)); col += uHotC[i]*h*(0.35 + fr); a += h*length(uHotC[i])*0.25; }
   float sc = exp(-pow((vW.y - uScan)*26.0, 2.0));
   col += vec3(0.55,0.9,1.0)*sc*1.7;
-  gl_FragColor = vec4(col, clamp(a + sc*0.5, 0.0, 1.0));
+  float side = gl_FrontFacing ? 1.0 : uBack;                    // the far wall of the shell is dimmer, so the near side reads first
+  // depth cue: what is nearer the camera than the body's centre line glows a little more, what is behind it less
+  float rel = distance(cameraPosition, vW) - distance(cameraPosition, vec3(0.0, vW.y, 0.0));
+  side *= clamp(1.0 - rel*2.6, 0.6, 1.25);
+  gl_FragColor = vec4(col*side, clamp(a*side + sc*0.5, 0.0, 1.0));
 }`;
 const allHolo = [];
 function holoMat(col, o={}){
   const m = new THREE.ShaderMaterial({vertexShader:VS, fragmentShader:FS, transparent:true, depthWrite:false, side:THREE.DoubleSide, blending:THREE.AdditiveBlending,
-    uniforms:{uCol:{value:new THREE.Color(col)}, uInt:{value:o.int??1}, uOp:{value:o.op??.8}, uRim:{value:o.rim??2.2}, uBase:{value:o.base??.25}, uScan:{value:-9}, uPor:{value:0}, uWarm:{value:0}, uT:{value:0}, uLines:{value:o.lines??0}, uSolid:{value:o.solid??0},
+    uniforms:{uCol:{value:new THREE.Color(col)}, uInt:{value:o.int??1}, uOp:{value:o.op??.8}, uRim:{value:o.rim??2.2}, uBase:{value:o.base??.25}, uScan:{value:-9}, uPor:{value:0}, uWarm:{value:0}, uT:{value:0}, uLines:{value:o.lines??0}, uSolid:{value:o.solid??0}, uBack:{value:o.back??1},
       uHot:{value:Array.from({length:5}, ()=>new THREE.Vector4(0,0,0,.1))}, uHotC:{value:Array.from({length:5}, ()=>new THREE.Vector3())}}});
   allHolo.push(m); return m;
 }
@@ -3741,8 +3746,11 @@ const ticks = new THREE.Group(); plat.add(ticks);
 /* ---------- build body (spread over a few frames so the page stays responsive) ---------- */
 const root = new THREE.Group(); scene.add(root);
 const B = [[-.35,-.94,-.17],[.35,.89,.17]];
-const skinMat = holoMat("#58b6ff", {op:.42, rim:2.5, base:.035, lines:.9});
+const skinMat = holoMat("#58b6ff", {op:.42, rim:2.5, base:.035, lines:.9, back:.4});
 const skin = new THREE.Mesh(meshSDF(bodyF, B[0], B[1], .0092), skinMat); skin.userData.sys = "whole"; root.add(skin);
+/* eyes: two soft lights on the face, shown only while the camera is in front, so front and back never look alike */
+const eyes = [-1, 1].map(s => { const e = new THREE.Sprite(new THREE.SpriteMaterial({map:DOT, color:0xbfeaff, transparent:true, opacity:0, blending:THREE.AdditiveBlending, depthWrite:false}));
+  e.position.set(s*.025, .742, .079); e.scale.setScalar(.022); root.add(e); return e; });
 await nextFrame();
 const boneMat = holoMat("#d5e6ff", {op:.42, rim:1.5, base:.2, solid:1});
 const skel = new THREE.Mesh(meshSDF(boneF, B[0], B[1], .0072), boneMat); skel.userData.sys = "bone"; root.add(skel);
@@ -3876,6 +3884,9 @@ function frame(){
   vesselMat.uniforms.uT.value = t; vesselMat.uniforms.uHz.value = st.hr/60;
   vesselMat.uniforms.uCol.value.copy(st.emergency==="heart" ? GRADE[3] : st.sl.heart>0 ? GRADE[st.sl.heart] : C_VES);
   vesselMat.uniforms.uOp.value = sel && sel!=="heart" ? .22 : .8;
+  /* eyes: brightest face-on, gone once the camera passes the side of the head */
+  { const f = tmp.copy(camera.position).sub(root.position).setY(0).normalize().z, eo = Math.max(0, Math.min(1, (f - .15)/.45)) * (layerVis.skin ? .7 : 0);
+    for(const e of eyes) e.material.opacity = eo; }
   /* skin, bones */
   const wlv = st.emergency==="whole" ? 3 : st.sl.whole;
   skinMat.uniforms.uCol.value.copy(wlv>0 ? GRADE[wlv] : C_SKIN);
