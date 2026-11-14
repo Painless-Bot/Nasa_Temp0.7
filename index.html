@@ -391,13 +391,18 @@ body.on-home footer{margin-top:72px}
 
 /* ---------- SOS ---------- */
 .sos-notice{border:1px solid var(--g3);background:var(--g3bg);color:var(--ink);border-radius:var(--r);padding:10px 14px;font-size:13.5px;margin-bottom:14px}
-.sos-grid{display:grid;grid-template-columns:400px minmax(0,1fr);gap:14px;align-items:start}
+.sos-grid{display:grid;grid-template-columns:420px minmax(0,1fr);gap:14px;align-items:start}
 @media (max-width:1000px){.sos-grid{grid-template-columns:minmax(0,1fr)}}
 .triage .q{font-family:var(--f-head);font-size:22px;font-weight:600;line-height:1.25;margin:6px 0 14px}
 .triage .yn{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .triage .prog{display:flex;gap:4px;margin-bottom:6px}
 .triage .prog i{flex:1;height:4px;border-radius:2px;background:var(--line)}
 .triage .prog i.on{background:var(--g3)}
+/* triage = the "don't know" path: make it the first thing the eye lands on */
+.triage{border:2px solid var(--g3);background:color-mix(in srgb,var(--g3) 9%,var(--panel));}
+.triage .tri-h{font-family:var(--f-head);font-size:20px;font-weight:700;color:var(--g3);line-height:1.25}
+.triage .tri-sub{font-size:13.5px;color:var(--ink2);margin-top:2px}
+.triage .q{font-size:25px}
 .glist{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
 .gcard{text-align:left;border:1px solid var(--line);background:var(--panel);border-radius:var(--r);padding:12px;cursor:pointer;display:flex;flex-direction:column;gap:6px;box-shadow:var(--shadow)}
 .gcard:hover{border-color:var(--ink3)}
@@ -689,7 +694,7 @@ dialog::backdrop{background:rgba(3,8,16,.6)}
       <div class="card who" id="whoCard"></div>
       <div class="sos-grid">
         <div class="card triage" id="triage"></div>
-        <details class="glist-more" id="glistMore">
+        <details class="glist-more" id="glistMore" open>
           <summary><span style="font-size:20px;font-weight:700;font-family:var(--f-head)" data-t>I already know what's happening</span> <span class="muted small" id="gcount"></span></summary>
           <div class="glist" id="glist"></div>
         </details>
@@ -1628,6 +1633,8 @@ const KO = {
 "Normal here about {0} mSv/day": "이곳 평소 약 {0} mSv/일",
 "Not sure what's happening?": "무슨 상황인지 모르겠나요?",
 "Not sure what's happening? Answer a few questions, most dangerous first.": "무슨 상황인지 모르겠나요? 가장 위험한 것부터 몇 가지 물어볼게요.",
+"Not sure what's happening? Start here": "무슨 상황인지 모르겠다면 여기서 시작",
+"Answer yes or no. Most dangerous first.": "예/아니오로 답하세요. 가장 위험한 것부터 물어봅니다.",
 "Not urgent. Add it to today's medical report.": "급하지 않아요. 오늘 의료 보고에 넣으세요.",
 "Not yet.": "아직은 아니에요.",
 "Note for Earth": "지구로 보내는 노트",
@@ -2756,7 +2763,8 @@ function renderTriage(){
   }
   const p = PROTOCOLS[tri.i]; const q = qText(p, pid);
   el.innerHTML = `<div class="card-b">
-    <div class="small muted">${pid!==S.me ? TE("Helping {0}. Answer for them, most dangerous first.", crewById(pid).n) : TE("Not sure what's happening? Answer a few questions, most dangerous first.")}</div>
+    <div class="tri-h">⚡ ${TE("Not sure what's happening? Start here")}</div>
+    <div class="tri-sub">${pid!==S.me ? TE("Helping {0}. Answer for them, most dangerous first.", crewById(pid).n) : TE("Answer yes or no. Most dangerous first.")}</div>
     <div class="prog" style="margin-top:10px" aria-hidden="true">${PROTOCOLS.map((_,j)=>`<i class="${j<=tri.i?"on":""}"></i>`).join("")}</div>
     <div class="small mono">${TE("Question {0} of {1}", tri.i+1, PROTOCOLS.length)}</div>
     <div class="q" id="triQ" tabindex="-1">${esc(T(q))}</div>
