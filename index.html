@@ -476,6 +476,18 @@ dialog::backdrop{background:rgba(3,8,16,.6)}
 .tx .end{position:absolute;top:0;font-size:20px}
 .tx .dot{position:absolute;top:8px;left:24px;width:12px;height:12px;border-radius:50%;background:#4fb0ff;box-shadow:0 0 12px #4fb0ff;transform:translateX(-50%)}
 .tx .st{font-family:var(--f-mono);font-size:12.5px}
+.inbox-btn{position:relative}
+.inbox-n{display:inline-block;min-width:20px;height:20px;padding:0 6px;margin-left:6px;border-radius:10px;background:var(--g3);color:#fff;font-size:12px;font-weight:700;line-height:20px;text-align:center}
+.inbox-n[hidden]{display:none}
+.ib-item{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px;background:var(--panel2)}
+.ib-item.new{border-color:#4fb0ff;box-shadow:0 0 0 1px #4fb0ff inset}
+.ib-head{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
+.ib-head b{font-size:15px}
+.ib-wait{font-family:var(--f-mono);font-size:12.5px;color:var(--ink3);margin-top:6px}
+.ib-item details{margin-top:8px}.ib-item summary{cursor:pointer;font-size:13px;color:var(--ink2)}
+.ib-item .note{margin-top:6px;max-height:260px;overflow:auto}
+.inbox-toast{position:fixed;right:16px;bottom:16px;z-index:90;max-width:min(420px,calc(100vw - 32px));text-align:left;border:1px solid #4fb0ff;background:var(--panel);color:var(--ink);border-radius:12px;padding:12px 14px;box-shadow:0 10px 30px rgba(0,0,0,.35);cursor:pointer;font-size:14px}
+.inbox-toast[hidden]{display:none}
 .reply{margin-top:10px;border-left:3px solid #4fb0ff;padding:6px 10px;font-size:13.5px;background:rgba(79,176,255,.08);border-radius:0 8px 8px 0}
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}.crew.need{animation:none}}
 </style>
@@ -500,6 +512,7 @@ dialog::backdrop{background:rgba(3,8,16,.6)}
     </nav>
     <div class="ctrls">
       <button class="btn lang" id="langBtn" type="button" aria-label="Switch language / 언어 전환"><span data-l="en">EN</span><span class="sep">/</span><span data-l="ko">한국어</span></button>
+      <button class="btn inbox-btn" id="inboxBtn" type="button" aria-label="Messages from Earth"><span data-t>📨 Earth messages</span><span class="inbox-n" id="inboxN" hidden></span></button>
       <button class="btn" id="demoBtn" type="button" data-t>▶ Guided demo</button>
       <button class="sos-btn" id="sosBtn" type="button" aria-label="SOS: open emergency guides">SOS</button>
     </div>
@@ -743,6 +756,12 @@ dialog::backdrop{background:rgba(3,8,16,.6)}
     <button class="btn primary" type="button" id="sendBtn" data-t>Send to Earth</button>
   </div>
 </dialog>
+<dialog id="inboxDlg" aria-labelledby="inboxTitle">
+  <div class="m-h"><h2 id="inboxTitle" style="font-size:19px" data-t>Messages with Earth</h2><button class="btn ghost" type="button" data-close aria-label="Close">✕</button></div>
+  <div class="m-b"><p class="small muted" style="margin:0 0 10px" data-t>Everything sent to Mission Control and every reply, newest first. Replies stay here after you close a window.</p><div id="inboxList"></div></div>
+  <div class="m-f"><button class="btn ghost" type="button" id="inboxClear" data-t>Clear all</button><button class="btn" type="button" data-close data-t>Close</button></div>
+</dialog>
+<button class="inbox-toast" id="inboxToast" type="button" hidden></button>
 <div class="sr" id="live" aria-live="polite"></div>
 <div class="demo-cap" id="demoCap" hidden><span class="n" id="demoN"></span><span id="demoTxt"></span><button type="button" id="demoStop" data-t>Stop</button></div>
 <script>
@@ -1959,6 +1978,17 @@ const KO = {
 "Not urgent yet. Keep the actions in your plan and recheck tomorrow.": "아직 급하지 않습니다. 계획의 조치를 계속하고 내일 다시 재 주세요.",
 "Added to today's medical review. Keep the actions in your plan and send tomorrow's numbers, sooner if it gets worse.": "오늘 의료 검토에 넣었습니다. 계획의 조치를 계속하고 내일 수치를 보내 주세요. 나빠지면 더 빨리.",
 "Treat this as urgent: start the matching emergency guide if you have not, and send numbers every 15 minutes.": "급한 상황으로 다루세요. 아직 안 했다면 해당 응급 가이드를 시작하고 15분마다 수치를 보내 주세요.",
+"📨 Earth messages": "📨 지구 통신",
+"Messages with Earth": "지구와 주고받은 메시지",
+"Everything sent to Mission Control and every reply, newest first. Replies stay here after you close a window.": "관제 센터로 보낸 것과 받은 답신이 모두 최신순으로 남습니다. 창을 닫아도 여기서 다시 볼 수 있습니다.",
+"Clear all": "모두 지우기",
+"Reply from the flight surgeon": "비행 군의관 답신 도착",
+"Open messages": "메시지 보기",
+"Reply from the flight surgeon received.": "비행 군의관 답신 수신.",
+"Nothing sent yet. Use \"Note for Earth\" on My body, or send the event log during a guide.": "아직 보낸 메시지가 없습니다. 내 몸 화면의 \"지구로 보내는 노트\"나 가이드 중 기록 전송을 사용하세요.",
+"Sent {0}": "{0} 전송",
+"Waiting for reply · about {0} left (shown 60× faster)": "답신 대기 중 · 약 {0} 남음 (60배 빠르게 표시)",
+"What we sent": "보낸 내용",
 "Thanks, added to today's medical review. Keep the actions in your plan and send tomorrow's numbers.": "감사합니다, 오늘 의료 검토에 넣었습니다. 계획의 조치를 계속하고 내일 수치를 보내 주세요.",
 "Timer cleared (step undone).": "타이머 지움 (단계 되돌림).",
 "Transmitting… {0} of {1}": "전송 중… {0} / {1}",
@@ -2074,6 +2104,7 @@ function setLang(l){
   S.lang = l; LS.set("lang", l);
   applyStatic(); renderEnvSel(); renderStageStatic(); renderAll(false); renderTriage(); renderGuideList(); renderMethod(); drawLearn();
   renderWho(); renderWaitBand(); renderTabGuides();
+  if($("#inboxDlg").open) renderInbox();
   if(R) renderRun();
 }
 
@@ -2667,7 +2698,7 @@ function drawLearn(){
 /* ---------------- Earth note (always written in English for Mission Control) ---------------- */
 let noteCtx = null, noteReturn = null, txTimers = [];
 function openNote(titleKey, text, lv, returnEl, reply){
-  noteCtx = {text, lv, reply}; noteReturn = returnEl || document.activeElement;
+  noteCtx = {text, lv, reply, titleKey}; noteReturn = returnEl || document.activeElement;
   $("#noteTitle").textContent = T(titleKey); $("#noteText").textContent = text;
   $("#noteLangHint").textContent = S.lang==="ko" ? T("The note is written in English for Mission Control.") : "";
   const e = ENVS[S.env];
@@ -2683,23 +2714,69 @@ function sendNote(){
   const e = ENVS[S.env]; const deep = e.delay >= 60; const speed = deep ? 60 : 1;
   const dur = e.delay/speed; const dot = $("#txDot"); if(!dot) return; dot.hidden = false; $("#sendBtn").disabled = true;
   const t0 = performance.now();
+  const lv0 = noteCtx ? noteCtx.lv : 0;
+  const plan = (noteCtx && noteCtx.reply) || [[lv0===3 ? "Received. Keep following the onboard guide; we are reviewing your log now. Keep measuring every 5 minutes and send updates." :
+              lv0===2 ? "Thanks, added to today's medical review. Keep the actions in your plan and send tomorrow's numbers." :
+              "Received, all noted. No changes to your plan.", []]];
+  const entry = inboxAdd({title: noteCtx ? noteCtx.titleKey : "Note for Earth", who: noteCtx ? noteCtx.who : "", sos: !!(noteCtx && noteCtx.sos),
+    lv: lv0, text: noteCtx ? noteCtx.text : "", reply: plan, rmin: replyMin(e), replyAt: Date.now() + dur*1000 + (2*e.delay+600)/60*1000});
   const iv = setInterval(()=>{
     const p = Math.min(1, (performance.now()-t0)/1000/dur);
     dot.style.left = `calc(24px + (100% - 48px) * ${p})`;
     $("#txSt").textContent = p<1 ? T("Transmitting… {0} of {1}", mmss(p*e.delay), mmss(e.delay)) + (deep ? " " + T("(shown 60× faster)") : "")
       : T("Delivered to Mission Control. Earliest reply in about {0} min.", replyMin(e));
     if(p>=1){ clearInterval(iv);
-      const t1 = setTimeout(()=>{ const lv = noteCtx?noteCtx.lv:0;
-        const plan = (noteCtx && noteCtx.reply) || [[lv===3 ? "Received. Keep following the onboard guide; we are reviewing your log now. Keep measuring every 5 minutes and send updates." :
-                    lv===2 ? "Thanks, added to today's medical review. Keep the actions in your plan and send tomorrow's numbers." :
-                    "Received, all noted. No changes to your plan.", []]];
-        $("#txReply").innerHTML = `<div class="reply"><strong>${TE("Flight surgeon (simulated reply, {0} min later):", replyMin(e))}</strong> ${plan.map(replyLine).join(" ")}</div>`; }, (2*e.delay+600)/60*1000);
+      const t1 = setTimeout(()=>{ inboxTick(); entry.read = true; inboxSave(); renderInboxBadge();
+        $("#txReply").innerHTML = `<div class="reply"><strong>${TE("Flight surgeon (simulated reply, {0} min later):", replyMin(e))}</strong> ${plan.map(replyLine).join(" ")}</div>`; }, Math.max(0, entry.replyAt - Date.now()));
       txTimers.push(t1);
     }
   }, 50);
   txTimers.push(iv);
 }
 const mmss = s => { s = Math.max(0, Math.round(s)); return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0"); };
+/* ---------------- Earth messages (inbox): sent notes and their replies, kept after the window closes ---------------- */
+let INBOX = LS.get("inbox", []), toastT = null;
+function inboxSave(){ if(INBOX.length > 30) INBOX = INBOX.slice(-30); LS.set("inbox", INBOX); }
+function inboxAdd(o){ const en = Object.assign({id: Date.now()+"-"+Math.random().toString(36).slice(2,6), sent: Date.now(), arrived:false, read:false}, o); INBOX.push(en); inboxSave(); renderInboxBadge(); return en; }
+function renderInboxBadge(){ const n = INBOX.filter(m=>m.arrived && !m.read).length, b = $("#inboxN"); if(!b) return; b.hidden = !n; b.textContent = n; }
+function inboxTick(){
+  let changed = false;
+  for(const m of INBOX){ if(!m.arrived && Date.now() >= m.replyAt){ m.arrived = true; changed = true;
+    const showing = $("#noteDlg").open && $("#sendBtn").disabled;   // the send window is open and will show this reply itself
+    if(!showing){ const tt = $("#inboxToast"); tt.innerHTML = `<b>📨 ${TE("Reply from the flight surgeon")}</b><br>${TE(m.title)}${m.who?" · "+TE(m.who):""} · <u>${TE("Open messages")}</u>`; tt.hidden = false;
+      clearTimeout(toastT); toastT = setTimeout(()=>tt.hidden = true, 9000); }
+    if(m.sos && R) log("Reply from the flight surgeon received.");
+  } }
+  if(changed){ inboxSave(); renderInboxBadge(); if($("#inboxDlg").open) renderInbox(); }
+  else if($("#inboxDlg").open && INBOX.some(m=>!m.arrived)) renderInbox();
+}
+const clock = t => new Date(t).toTimeString().slice(0,5);
+function renderInbox(){
+  const L = $("#inboxList");
+  if(!INBOX.length){ L.innerHTML = `<p class="muted">${TE("Nothing sent yet. Use \"Note for Earth\" on My body, or send the event log during a guide.")}</p>`; return; }
+  const openIds = new Set($$("#inboxList details[open]").map(d=>d.dataset.id));
+  L.innerHTML = INBOX.slice().reverse().map(m=>`<div class="ib-item${m.arrived&&!m.read?" new":""}">
+    <div class="ib-head"><b>${TE(m.title)}</b>${m.who?`<span>${TE(m.who)}</span>`:""}<span class="small muted mono">${TE("Sent {0}", clock(m.sent))}</span>
+      ${m.lv===3?`<span class="pill l3">${TE("Urgent")}</span>`:""}</div>
+    ${m.arrived ? `<div class="reply"><strong>${TE("Flight surgeon (simulated reply, {0} min later):", m.rmin)}</strong> ${m.reply.map(replyLine).join(" ")}</div>`
+                : `<div class="ib-wait">⏳ ${TE("Waiting for reply · about {0} left (shown 60× faster)", mmss((m.replyAt-Date.now())/1000*60))}</div>`}
+    <details data-id="${m.id}"${openIds.has(m.id)?" open":""}><summary>${TE("What we sent")}</summary><pre class="note">${esc(m.text)}</pre></details>
+  </div>`).join("");
+}
+function openInbox(){
+  renderInbox(); const d = $("#inboxDlg"); if(!d.open) d.showModal();
+  INBOX.forEach(m=>{ if(m.arrived) m.read = true; }); inboxSave(); renderInboxBadge(); $("#inboxToast").hidden = true;
+}
+function initInbox(){
+  const d = $("#inboxDlg");
+  $$("#inboxDlg [data-close]").forEach(b=>b.addEventListener("click", ()=>d.close()));
+  d.addEventListener("close", ()=>renderInbox());
+  $("#inboxBtn").addEventListener("click", openInbox);
+  $("#inboxToast").addEventListener("click", openInbox);
+  $("#inboxClear").addEventListener("click", ()=>{ INBOX = []; inboxSave(); renderInboxBadge(); renderInbox(); });
+  INBOX.forEach(m=>{ if(!m.arrived && Date.now() >= m.replyAt){ m.arrived = true; } }); inboxSave();
+  renderInboxBadge(); setInterval(inboxTick, 1000);
+}
 function initNote(){
   const d = $("#noteDlg");
   $$("#noteDlg [data-close]").forEach(b=>b.addEventListener("click", ()=>d.close()));
@@ -2777,7 +2854,7 @@ function openDailyNote(btn){
   L.push(`REQUEST: ${["None. For the record.","None yet. Will recheck tomorrow.","Please review with the next downlink.","Please advise as soon as possible. Onboard care has started; crew will not wait for the reply."][a.lv]}`);
   L.push("");
   L.push(`-- Orbit Guide hackathon prototype. Simulated data; thresholds illustrative; not a medical device.`);
-  openNote("Note for Earth", L.join("\n"), a.lv, btn, dailyReply(a, c, S.view));
+  openNote("Note for Earth", L.join("\n"), a.lv, btn, dailyReply(a, c, S.view)); noteCtx.who = c.n;
 }
 
 /* ---------------- SOS: who, triage, list, runner ----------------
@@ -3152,7 +3229,7 @@ function openEmergencyLog(btn, quiet){
   L.push("");
   L.push(`REQUEST: Ground support. Do not wait for reply; crew is continuing the onboard procedure.`);
   L.push(""); L.push(`-- Orbit Guide hackathon prototype. Example procedure; not a medical device.`);
-  openNote("Emergency log for Earth", L.join("\n"), 3, btn, sosReply());
+  openNote("Emergency log for Earth", L.join("\n"), 3, btn, sosReply()); noteCtx.who = pc.n; noteCtx.sos = true;
   if(!quiet && R) noteCtx.onSend = () => { if(R) log("Event log sent to Earth."); };   // logged when actually sent, not when opened
 }
 
@@ -3255,7 +3332,7 @@ function initIntro(){ renderTabGuides(); }
 
 /* ---------------- boot ---------------- */
 function boot(){
-  applyStatic(); initTop(); initStage(); initCheckin(); initNote();
+  applyStatic(); initTop(); initStage(); initCheckin(); initNote(); initInbox();
   C = computeFor(S.crew);
   renderAll(false); renderWho(); renderTriage(); renderGuideList(); renderMethod(); drawLearn();
   setTab(location.hash.slice(1) || "home");
