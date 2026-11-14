@@ -111,7 +111,9 @@ h1,h2,h3,h4{font-family:var(--f-head);margin:0;letter-spacing:.01em}
 .wait-band .mono{font-size:17px}
 .resume{max-width:760px;margin:12px auto;border:2px solid var(--g3);background:var(--panel);border-radius:12px;padding:14px 16px}
 .resume .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-.save-warn[hidden],.wait-band[hidden],.resume[hidden]{display:none}
+.save-warn[hidden],.wait-band[hidden],.resume[hidden],.cabin-band[hidden]{display:none}
+.cabin-band{max-width:1480px;margin:8px auto 0;padding:8px 14px;border-radius:10px;border:2px dashed var(--g2);background:var(--panel);display:flex;gap:10px 16px;align-items:center;flex-wrap:wrap;font-weight:600}
+.cabin-band.u{border-color:var(--g3);background:var(--g3bg)}
 .badges{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto}
 .btn.lang{gap:5px;font-size:13px;padding:7px 10px}
 .btn.lang .sep{opacity:.4}
@@ -463,6 +465,7 @@ dialog::backdrop{background:rgba(3,8,16,.6)}
   </div>
 </header>
 <div id="waitBand" class="wait-band" role="status" aria-live="polite" hidden></div>
+<div id="cabinBand" class="cabin-band" role="status" aria-live="polite" hidden></div>
 <div id="resumeBox" class="resume" role="alertdialog" aria-labelledby="resumeH" hidden></div>
 
 <main id="main">
@@ -1041,7 +1044,7 @@ const DataSource = {
         if(s.id==="co2"){ rec.co2 += [0.5,1.0,1.5][k]||1.5; rec.sleep -= 0.3; if(k>=1) rec.head = true; }
         if(s.id==="fever"){ rec.temp += 0.8 + 0.8*f; rec.hr += 10 + 9*f; }
         if(s.id==="solar"){ rec.radDay += 38; }
-        if(s.id==="collapse"){ rec.spo2 = 90; rec.hr = 128; }
+        if(s.id==="collapse"){ rec.hr = 38; rec.spo2 = 86; }   // pulse falling, then the wearable loses the signal: consistent with CPR
       }
       const ci = checkins[d];
       if(ci) for(const k of Object.keys(ci)) if(ci[k]!==null && ci[k]!==undefined && ci[k]!=="") rec[k] = ci[k];
@@ -1835,7 +1838,7 @@ const KO = {
 "Copied ✓": "복사됨 ✓",
 "Copy log": "기록 복사",
 "Copy log and close": "기록 복사 후 닫기",
-"Crewmate collapse: Novak holds the app. Kim's SpO₂ drops to 90%, her card flashes \"Needs help\", and Help Kim opens the guide written for Kim.": "동료 쓰러짐: 앱은 Novak이 들고 있습니다. Kim의 SpO₂가 90%로 떨어지면 카드에 \"도움 필요\"가 깜빡이고, Kim 돕기를 누르면 Kim 기준으로 쓰인 가이드가 열립니다.",
+"Crewmate collapse: Novak holds the app. Kim's heart rate falls to 38 and SpO₂ to 86%, her card flashes \"Needs help\", and Help Kim opens the guide written for Kim.": "동료 쓰러짐: 앱은 Novak이 들고 있습니다. Kim의 심박이 38, SpO₂가 86%로 떨어지면 카드에 \"도움 필요\"가 깜빡이고, Kim 돕기를 누르면 Kim 기준으로 쓰인 가이드가 열립니다.",
 "Day 45 on the ISS. Each body part is colored against Commander Kim's own normal range: blue means normal.": "ISS 45일차. 몸의 각 부위가 Kim 사령관의 평소 범위와 비교해 색칠됩니다: 파란색이 정상입니다.",
 "Delivered to Mission Control. Earliest reply in about {0} min.": "관제 센터에 전달됨. 가장 빠른 답신 약 {0}분 뒤.",
 "End this guide?": "이 가이드를 끝낼까요?",
@@ -1882,6 +1885,11 @@ const KO = {
 "{0} for {1}, started {2} UTC. The clock and log continue from where they stopped.": "{1}의 {0}, {2} UTC 시작. 시계와 기록은 멈춘 곳부터 이어집니다.",
 "■ Stop": "■ 중지",
 "Q: {0} → {1}": "질문: {0} → {1}",
+"Cabin": "선체",
+"Cabin CO₂ {0} mmHg": "선내 CO₂ {0} mmHg",
+"Radiation today {0} mSv": "오늘 방사선 {0} mSv",
+"Affects the whole crew. Follow the vehicle procedure first.": "크루 전원에게 해당됩니다. 선체 비상 절차를 먼저 따르세요.",
+"Opened from the cabin alert": "선체 경보에서 열림",
 "Manage crew": "크루 관리",
 "\"Me\" is the person holding this device. In an emergency they are logged as the responder.": "\"나\"는 이 기기를 들고 있는 사람입니다. 응급 상황에서는 처치자로 기록됩니다.",
 "Name": "이름",
@@ -1988,6 +1996,9 @@ function setCrew(id){
   S.sys = g.worst>0 ? worst.id : (S.sys||"heart"); S.metric = null;
   renderAll(true);
 }
+/* Cabin metrics (CO₂, today's radiation) belong to the vehicle, not to one person: they never raise "Needs help". */
+const CABIN_METRICS = ["co2","radDay"];
+const personalWorst = g => Math.max(0, ...Object.keys(g.ml).filter(k=>!CABIN_METRICS.includes(k)).map(k=>g.ml[k]));
 function todayGrade(id){ const cc = id===S.crew && C ? C : computeFor(id); return gradeDay(cc.recs, cc.recs.length-1, cc.bl, ENVS[S.env]); }
 function renderMeSel(){ if($("#crewDlg") && $("#crewDlg").open) renderCrewDlg(); }
 function setMe(id){ S.me = id; LS.set("me", id); S.patient = null; renderMeSel(); renderAll(false); renderWho(); renderTriage(); }
@@ -2039,7 +2050,7 @@ function initCrew(){
 function renderRoster(){
   $("#roster").innerHTML = CREW.map(c=>{
     const g = todayGrade(c.id);
-    const need = g.worst===3 && c.id!==S.me;           // FR-TOP-07: a crewmate needs help
+    const need = personalWorst(g)===3 && c.id!==S.me;  // FR-TOP-07: a crewmate needs help (personal metrics only)
     const waiting = R && !R.finished && R.patient===c.id && R.status==="waiting";
     return `<span class="crew-w"><button type="button" class="crew ${need?"need":""}" aria-pressed="${c.id===S.crew}" data-crew="${c.id}">
       <span class="av" style="background:${c.col}">${c.n[0]}</span>
@@ -2048,8 +2059,27 @@ function renderRoster(){
       ${need && !(R && !R.finished && R.patient===c.id)?`<button type="button" class="help-btn" data-help="${c.id}">${TE("Help {0}", c.n)}</button>`:""}</span>`;
   }).join("");
   document.body.classList.toggle("crew-alert", !!$("#roster .crew.need"));
+  renderCabinBand();
   $$("#roster .crew").forEach(b=>b.addEventListener("click", ()=>{ stopDemo(); setCrew(b.dataset.crew); }));
   $$("#roster [data-help]").forEach(b=>b.addEventListener("click", ()=>{ stopDemo(); helpCrew(b.dataset.help); }));
+}
+/* Vehicle alert band: the worst cabin reading across the crew in this environment, with the matching guide */
+function renderCabinBand(){
+  const el = $("#cabinBand"); if(!el) return;
+  let co2 = {lv:0}, rad = {lv:0};
+  for(const c of CREW){ const cc = c.id===S.crew && C ? C : computeFor(c.id); const i = cc.recs.length-1, g = gradeDay(cc.recs, i, cc.bl, ENVS[S.env]), r = cc.recs[i];
+    if(g.ml.co2 > co2.lv) co2 = {lv:g.ml.co2, v:r.co2}; if(g.ml.radDay > rad.lv) rad = {lv:g.ml.radDay, v:r.radDay}; }
+  const items = [];
+  if(co2.lv>=2) items.push({t:T("Cabin CO₂ {0} mmHg", fmt("co2",co2.v)), lv:co2.lv, g: co2.lv===3 ? "toxic" : "head"});
+  if(rad.lv>=2) items.push({t:T("Radiation today {0} mSv", fmt("radDay",rad.v)), lv:rad.lv, g:"solar"});
+  if(!items.length || (R && !R.finished)){ el.hidden = true; el.innerHTML = ""; return; }
+  const worst = Math.max(...items.map(x=>x.lv));
+  el.classList.toggle("u", worst===3);
+  el.innerHTML = `<span>🛰 ${TE("Cabin")}: ${items.map(x=>`${esc(x.t)} · <span class="pill l${x.lv}">${LVT(x.lv)}</span>`).join(" · ")}</span>
+    <span class="small muted">${TE("Affects the whole crew. Follow the vehicle procedure first.")}</span>
+    ${[...new Set(items.map(x=>x.g))].map(g=>`<button class="btn danger" type="button" data-cabin="${g}">⚠ ${TE(PROT[g].title)}</button>`).join("")}`;
+  el.hidden = false;
+  $$("#cabinBand [data-cabin]").forEach(b=>b.addEventListener("click", ()=>{ stopDemo(); startGuide(b.dataset.cabin, "Opened from the cabin alert", null, S.me); }));
 }
 /* Help {name}: patient already known, so skip "Who needs help?" and ask the triage about that crewmate */
 function helpCrew(id){
@@ -2549,8 +2579,8 @@ let pendingGuide = null;          // a crewmate-only guide (CPR) chosen with pat
 const patientId = () => S.patient || S.me;
 function renderWho(){
   const el = $("#whoCard"); if(!el) return;
-  const order = CREW.slice().sort((a,b)=>(a.id===S.me?-1:b.id===S.me?1:0) || (todayGrade(b.id).worst===3) - (todayGrade(a.id).worst===3));
-  const urgentFirst = [...order.filter(c=>c.id===S.me), ...order.filter(c=>c.id!==S.me && todayGrade(c.id).worst===3), ...order.filter(c=>c.id!==S.me && todayGrade(c.id).worst!==3)];
+  const order = CREW.slice().sort((a,b)=>(a.id===S.me?-1:b.id===S.me?1:0) || (personalWorst(todayGrade(b.id))===3) - (personalWorst(todayGrade(a.id))===3));
+  const urgentFirst = [...order.filter(c=>c.id===S.me), ...order.filter(c=>c.id!==S.me && personalWorst(todayGrade(c.id))===3), ...order.filter(c=>c.id!==S.me && personalWorst(todayGrade(c.id))!==3)];
   el.innerHTML = `<div class="card-b">
     <h2 style="font-size:20px">${TE("Who needs help?")}</h2>
     <div class="small muted">${TE("You are {0}. Pick yourself or a crewmate; the questions and steps are written for that person.", crewById(S.me).n)}</div>
@@ -2980,7 +3010,7 @@ async function runDemo(){
     await scene(6, "Stuffy cabin air: CO₂ builds up and a headache follows. The headache guide is offered on the flight-surgeon card.", ()=>{ reset(); toggleScenario("co2"); });
     await scene(7, "Fever: temperature passes 38 °C. The skin warms to orange and the card links straight to the fever guide.", ()=>{ reset(); toggleScenario("fever"); });
     await scene(8, "On the way to Mars a solar storm multiplies the daily dose. Radiation streaks turn red; the solar storm guide is one tap away.", ()=>{ reset(); S.env="transit"; $("#envSel").value="transit"; toggleScenario("solar"); });
-    await scene(9, "Crewmate collapse: Novak holds the app. Kim's SpO₂ drops to 90%, her card flashes \"Needs help\", and Help Kim opens the guide written for Kim.", ()=>{ reset(); S.env="iss"; $("#envSel").value="iss"; S.me="novak"; renderMeSel(); S.scen.kim=[{id:"collapse", dur:1, end:S.day}]; setCrew("kim");
+    await scene(9, "Crewmate collapse: Novak holds the app. Kim's heart rate falls to 38 and SpO₂ to 86%, her card flashes \"Needs help\", and Help Kim opens the guide written for Kim.", ()=>{ reset(); S.env="iss"; $("#envSel").value="iss"; S.me="novak"; renderMeSel(); S.scen.kim=[{id:"collapse", dur:1, end:S.day}]; setCrew("kim");
       setTimeout(()=>{ if(me.alive){ helpCrew("kim"); setTimeout(()=>{ if(me.alive){ demo = null; startGuide("cpr", "Triage: answered yes", [[qText(PROT.cpr,"kim"),"Yes"]], "kim"); demo = me; } }, 2500); } }, 2500); }, 9000);
     await scene(10, "Everything goes to Earth as a plain note that respects the 20-minute one-way delay.", ()=>{ reset(); location.hash = "#body"; setTab("body"); toggleScenario("fever"); openDailyNote($("#demoBtn")); setTimeout(()=>me.alive && sendNote(), 900); }, 9000);
   }catch(e){}
