@@ -154,14 +154,17 @@ body.on-body .crew-menu,body.on-home .crew-menu{background:#0e1829}   /* the hea
 .crew-alert-band .btn{margin-top:6px;background:#fff;color:var(--g3);border:0;border-radius:12px;font-weight:800;font-size:20px;padding:16px 20px;min-height:58px;cursor:pointer}
 .crew-alert-band .btn:hover{filter:brightness(.95)}
 .crew-alert-band[hidden]{display:none}
-/* after ✕: the same alert stays as a slim band under the header until the emergency is handled or changes */
-.crew-alert-band.mini{position:sticky;inset:auto;top:calc(var(--hdr-h,0px) + 8px);z-index:65;display:block;padding:0;background:none;-webkit-backdrop-filter:none;backdrop-filter:none;max-width:1480px;width:calc(100% - 32px);margin:8px auto 0}
-.crew-alert-band.mini .ca-box{width:100%;padding:8px 14px;border-radius:12px;display:flex;flex-direction:column;gap:6px;box-shadow:0 6px 20px color-mix(in srgb,var(--g3) 35%,transparent);animation:needPulse 1.2s ease-in-out infinite}
-.crew-alert-band.mini .ca-one{flex-direction:row;flex-wrap:wrap;align-items:center;gap:4px 14px}
-.crew-alert-band.mini .ca-one + .ca-one{padding-top:6px}
-.crew-alert-band.mini .ca-h{font-size:17px;padding-right:0}
-.crew-alert-band.mini .why{font-size:14px}
-.crew-alert-band.mini .btn{margin:0 0 0 auto;font-size:15px;padding:6px 14px;min-height:0;border-radius:9px}
+/* crewmate in need: a red chip in the empty middle of the header row, on every tab, for as long as the emergency lasts
+   (the big centre alert can be closed; this stays) */
+.need-chip{flex:1 1 auto;min-width:0;display:flex;justify-content:center}
+.need-chip[hidden]{display:none}
+.need-chip .nc{display:inline-flex;align-items:center;gap:6px 12px;flex-wrap:wrap;max-width:100%;background:var(--g3);color:#fff;border-radius:999px;padding:5px 6px 5px 14px;font-weight:700;font-size:14.5px;box-shadow:0 0 0 0 color-mix(in srgb,var(--g3) 50%,transparent);animation:needPulse 1.2s ease-in-out infinite}
+.need-chip .nc .why{font-weight:500;font-size:13px;opacity:.95}
+.need-chip .nc button{background:#fff;color:var(--g3);border:0;border-radius:999px;font-weight:800;font-size:13.5px;padding:5px 12px;cursor:pointer}
+.need-chip .nc button:hover{filter:brightness(.95)}
+.need-chip:not([hidden]) + .cabin-chip{margin-left:0}
+@media (max-width:760px){.need-chip{justify-content:flex-start}}
+@media (max-width:1700px) and (min-width:761px){.need-chip .nc .why{display:none}}   /* keep the header on two rows; the big alert already said why */
 /* simplified screens (ui-ux branch): answer first, details on request */
 .demo-set{position:relative}
 .demo-set > summary{list-style:none;cursor:pointer;font-size:13px}
@@ -642,6 +645,7 @@ dialog::backdrop{background:rgba(3,8,16,.6)}
       </div>
     </details>
     <div class="roster" id="roster" role="group" aria-label="Crew"></div>
+    <div id="needChip" class="need-chip" role="status" hidden></div>
     <div id="cabinBand" class="cabin-chip" role="status" aria-live="polite" hidden></div>
     <div class="badges" id="badges" aria-live="polite"></div>
   </div>
@@ -2388,24 +2392,25 @@ function renderCrewAlert(){
   const rows = need.map(c=>{ const g = todayGrade(c.id);
     return {c, why: SYSTEMS.filter(s=>s.metrics.some(k=>!CABIN_METRICS.includes(k) && g.ml[k]===3)).map(s=>s.id)}; });
   const sig = rows.map(r=>r.c.id+":"+r.why.join("+")).join("|");   // who and what: a new emergency opens it again
-  if(!need.length || (R && !R.finished)){ const was = !el.hidden; el.hidden = true; el.innerHTML = ""; el.classList.remove("mini"); if(was) alertFocus?.focus?.(); return; }
-  const mini = sig===alertClosed;            // closed once: keep a slim band at the top instead of the big alert
-  const wasBig = !el.hidden && !el.classList.contains("mini");
-  const fresh = !mini && (el.hidden || el.classList.contains("mini") || el.dataset.sig!==sig); el.dataset.sig = sig;
-  el.classList.toggle("mini", mini);
-  el.innerHTML = `<div class="ca-box"${mini ? "" : ` role="alertdialog" aria-modal="true" aria-labelledby="caH0"`}>
-    ${mini ? "" : `<button class="ca-x" type="button" aria-label="${TE("Close")}" title="${TE("Close")}">✕</button>`}
+  const nc = $("#needChip");
+  if(nc){ const show = need.length && !(R && !R.finished); nc.hidden = !show;
+    nc.innerHTML = show ? rows.map(r=>`<span class="nc">⚠ ${TE("{0} needs help now", r.c.n)} <span class="why">${TE("Urgent: {0}", r.why.map(id=>T(SYS[id].n)).join(", "))}</span>
+      <button type="button" data-need-help="${r.c.id}">${TE("Help {0}", r.c.n)} →</button></span>`).join("") : "";
+    $$("#needChip [data-need-help]").forEach(b=>b.addEventListener("click", ()=>{ stopDemo(); helpCrew(b.dataset.needHelp); })); }
+  if(!need.length || (R && !R.finished) || sig===alertClosed){ const was = !el.hidden; el.hidden = true; el.innerHTML = ""; if(was) alertFocus?.focus?.(); return; }
+  const fresh = el.hidden || el.dataset.sig!==sig; el.dataset.sig = sig;
+  el.innerHTML = `<div class="ca-box" role="alertdialog" aria-modal="true" aria-labelledby="caH0">
+    <button class="ca-x" type="button" aria-label="${TE("Close")}" title="${TE("Close")}">✕</button>
     ${rows.map((r, i)=>`<div class="ca-one"><div class="ca-h" id="caH${i}">⚠ ${TE("{0} needs help now", r.c.n)}</div>
       <div class="why">${TE("Urgent: {0}", r.why.map(id=>T(SYS[id].n)).join(", "))}</div>
       <button class="btn" type="button" data-alert-help="${r.c.id}">${TE("Help {0}", r.c.n)} →</button></div>`).join("")}
   </div>`;
   el.hidden = false;
   $$("#crewAlert [data-alert-help]").forEach(b=>b.addEventListener("click", ()=>{ stopDemo(); helpCrew(b.dataset.alertHelp); }));
-  const cx = $("#crewAlert .ca-x"); if(cx) cx.addEventListener("click", ()=>{ alertClosed = sig; renderCrewAlert(); });
-  if(mini && wasBig) alertFocus?.focus?.();
+  $("#crewAlert .ca-x").addEventListener("click", ()=>{ alertClosed = sig; renderCrewAlert(); });
   if(fresh){ alertFocus = document.activeElement; const b = $("#crewAlert [data-alert-help]"); if(b) b.focus(); }
 }
-document.addEventListener("keydown", e=>{ const el = $("#crewAlert"); if(e.key==="Escape" && el && !el.hidden && !el.classList.contains("mini")){ const x = el.querySelector(".ca-x"); if(x) x.click(); } });
+document.addEventListener("keydown", e=>{ const el = $("#crewAlert"); if(e.key==="Escape" && el && !el.hidden){ const x = el.querySelector(".ca-x"); if(x) x.click(); } });
 /* Vehicle alert band: the worst cabin reading across the crew in this environment, with the matching guide */
 function renderCabinBand(){
   const el = $("#cabinBand"); if(!el) return; refitSoon();
