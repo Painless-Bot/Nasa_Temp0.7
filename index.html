@@ -154,17 +154,6 @@ body.on-body .crew-menu,body.on-home .crew-menu{background:#0e1829}   /* the hea
 .crew-alert-band .btn{margin-top:6px;background:#fff;color:var(--g3);border:0;border-radius:12px;font-weight:800;font-size:20px;padding:16px 20px;min-height:58px;cursor:pointer}
 .crew-alert-band .btn:hover{filter:brightness(.95)}
 .crew-alert-band[hidden]{display:none}
-/* crewmate in need: a red chip in the empty middle of the header row, on every tab, for as long as the emergency lasts
-   (the big centre alert can be closed; this stays) */
-.need-chip{flex:1 1 auto;min-width:0;display:flex;justify-content:center}
-.need-chip[hidden]{display:none}
-.need-chip .nc{display:inline-flex;align-items:center;gap:6px 12px;flex-wrap:wrap;max-width:100%;background:var(--g3);color:#fff;border-radius:999px;padding:5px 6px 5px 14px;font-weight:700;font-size:14.5px;box-shadow:0 0 0 0 color-mix(in srgb,var(--g3) 50%,transparent);animation:needPulse 1.2s ease-in-out infinite}
-.need-chip .nc .why{font-weight:500;font-size:13px;opacity:.95}
-.need-chip .nc button{background:#fff;color:var(--g3);border:0;border-radius:999px;font-weight:800;font-size:13.5px;padding:5px 12px;cursor:pointer}
-.need-chip .nc button:hover{filter:brightness(.95)}
-.need-chip:not([hidden]) + .cabin-chip{margin-left:0}
-@media (max-width:760px){.need-chip{justify-content:flex-start}}
-@media (max-width:1700px) and (min-width:761px){.need-chip .nc .why{display:none}}   /* keep the header on two rows; the big alert already said why */
 /* simplified screens (ui-ux branch): answer first, details on request */
 .demo-set{position:relative}
 .demo-set > summary{list-style:none;cursor:pointer;font-size:13px}
@@ -531,6 +520,19 @@ button.mrow:hover{background:var(--panel2)}
 .voice-ctl{display:inline-flex;flex-wrap:wrap;gap:6px 8px;align-items:center}.voice-ctl .v-hint{opacity:.95;font-size:12.5px}
 .em-band .lnk{font-size:12.5px;opacity:.95}
 .run-grid{display:grid;grid-template-columns:240px minmax(0,1fr) 320px;gap:14px;align-items:start}
+/* wide screens: the guide fills the window down to the bottom edge and all three columns end on the same line
+   (--run-min is measured by fitRun()). The event log takes the spare height and scrolls inside its card. */
+@media (min-width:1101px){
+  .run-grid{align-items:stretch;min-height:var(--run-min,0px)}
+  .run-grid > .card{display:flex;flex-direction:column}
+  .run-grid > .card > .cur-step{flex:1;display:flex;flex-direction:column}
+  .run-grid > .run-steps{min-height:0}
+  .run-grid > .run-steps > .card-b{flex:1 1 0;min-height:0;overflow:auto;scrollbar-width:thin}
+  .run-grid > aside{min-height:0}
+  .run-grid > aside > .card{flex:1 1 0;min-height:220px;display:flex;flex-direction:column}
+  .run-grid > aside > .card > .card-b{flex:1 1 0;min-height:0;display:flex;flex-direction:column}
+  .run-grid > aside .log{flex:1 1 0;min-height:0;max-height:none}
+}
 @media (max-width:1100px){.run-grid{grid-template-columns:minmax(0,1fr) 300px} .run-steps{grid-column:1/-1}}
 @media (max-width:760px){.run-grid{grid-template-columns:minmax(0,1fr)}}
 .run-steps ol{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:2px}
@@ -545,14 +547,76 @@ button.mrow:hover{background:var(--panel2)}
 .cur-step .kind{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--g3)}
 .cur-step .txt{font-family:var(--f-head);font-size:28px;line-height:1.22;font-weight:600;margin:8px 0 10px}
 .cur-step .sub{font-size:15px;color:var(--ink2)}
-.cur-step .acts{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+/* step picture: drawing on the left, numbered points on the right, under the step text */
+.step-art{display:grid;grid-template-columns:190px minmax(0,1fr);gap:18px;align-items:center;margin:16px 0 0;padding:14px 16px;border:1px solid var(--line);border-radius:14px;background:var(--panel2)}
+.step-art svg{width:100%;height:auto;max-height:230px;display:block}
+.step-art ol{margin:0 0 8px;padding:0;list-style:none;counter-reset:art;display:flex;flex-direction:column;gap:10px;font-size:16px;line-height:1.4}
+.step-art li{counter-increment:art;display:grid;grid-template-columns:24px minmax(0,1fr);gap:10px;align-items:start}
+.step-art li::before{content:counter(art);width:24px;height:24px;border-radius:50%;background:var(--g3);color:#fff;font:700 13px/24px var(--f-mono);text-align:center}
+.step-art .a-skin{fill:color-mix(in srgb,var(--ink) 9%,var(--panel));stroke:var(--ink3);stroke-width:1.6;stroke-linejoin:round}
+.step-art .a-bone{fill:none;stroke:var(--ink3);stroke-width:1.4;stroke-linecap:round;opacity:.7}
+.step-art .a-board{fill:color-mix(in srgb,var(--accent) 9%,var(--panel));stroke:var(--line);stroke-width:1.6}
+.step-art .a-strap{fill:var(--accent);opacity:.9}
+.step-art .a-strapl{fill:none;stroke:var(--accent);stroke-width:5;stroke-linecap:round}
+.step-art .a-free{fill:color-mix(in srgb,var(--g3) 14%,transparent);stroke:var(--g3);stroke-width:2;stroke-dasharray:5 4}
+.step-art .a-ring{fill:color-mix(in srgb,var(--g3) 18%,transparent);stroke:var(--g3);stroke-width:2}
+.step-art .a-ring2{fill:none;stroke:var(--g3);stroke-width:1.5;opacity:.45;stroke-dasharray:4 5}
+.step-art .a-hand{fill:color-mix(in srgb,var(--ink) 22%,var(--panel));stroke:var(--ink2);stroke-width:1.6}
+.step-art .a-key{fill:var(--g3)}
+.step-art .a-lo{fill:none;stroke:var(--ink3);stroke-linecap:round;stroke-linejoin:round}
+.step-art .a-li{fill:none;stroke:color-mix(in srgb,var(--ink) 9%,var(--panel));stroke-linecap:round;stroke-linejoin:round}
+.step-art .a-say,.step-art .a-flow,.step-art .a-flowl{fill:none;stroke:var(--accent);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.step-art .a-flowl{stroke-width:2.4}
+.step-art .a-gaze{fill:none;stroke:var(--accent);stroke-width:2;stroke-dasharray:3 5;stroke-linecap:round}
+.step-art .a-drop{fill:var(--accent)}
+.step-art .a-eyeic{fill:var(--panel);stroke:var(--ink2);stroke-width:2}
+.step-art .a-white{fill:#fff;stroke:var(--ink2);stroke-width:1.6}
+.step-art .a-tape{fill:color-mix(in srgb,var(--ink) 30%,var(--panel));stroke:var(--ink3);stroke-width:1.2;opacity:.85}
+.step-art .a-shield{fill:color-mix(in srgb,var(--accent) 30%,var(--panel));stroke:var(--accent);stroke-width:2.4}
+.step-art .a-shelter{fill:color-mix(in srgb,var(--accent) 14%,var(--panel));stroke:var(--accent);stroke-width:5}
+.step-art .a-ray{fill:none;stroke:var(--g1);stroke-width:2.4;stroke-dasharray:6 5;stroke-linecap:round}
+.step-art .a-ban{fill:none;stroke:var(--g3);stroke-width:5;stroke-linecap:round}
+.step-art .a-ring2b{stroke:var(--accent)}
+.step-art .a-bt{fill:var(--ink);font:700 19px var(--f-head)}
+/* breathing pacer: 10 s cycle = 4 s in (circle grows), 6 s out (circle shrinks) */
+.step-art .a-breath{fill:color-mix(in srgb,var(--accent) 26%,transparent);stroke:var(--accent);stroke-width:2.5;transform-box:fill-box;transform-origin:center;animation:art-breath 10s ease-in-out infinite}
+.step-art .a-in{animation:art-in 10s linear infinite} .step-art .a-out{animation:art-out 10s linear infinite}
+@keyframes art-breath{0%{transform:scale(.5)}40%{transform:scale(1)}100%{transform:scale(.5)}}
+@keyframes art-in{0%,38%{opacity:1}42%,98%{opacity:0}100%{opacity:1}}
+@keyframes art-out{0%,38%{opacity:0}42%,98%{opacity:1}100%{opacity:0}}
+@media (prefers-reduced-motion:reduce){.step-art .a-breath,.step-art .a-in,.step-art .a-out{animation:none}.step-art .a-breath{transform:scale(.8)}.step-art .a-bt,.step-art .a-t.a-in,.step-art .a-t.a-out{display:none}}
+.step-art .a-shoe{fill:var(--g3);stroke:var(--panel);stroke-width:1}
+.step-art .a-pad{fill:#fff;stroke:var(--g3);stroke-width:2.4}
+.step-art .a-wire{fill:none;stroke:var(--ink2);stroke-width:2;stroke-linecap:round}
+.step-art .a-box{fill:color-mix(in srgb,var(--accent) 16%,var(--panel));stroke:var(--accent);stroke-width:2}
+.step-art .a-bolt{fill:var(--g1)}
+.step-art .a-mask{fill:color-mix(in srgb,var(--accent) 22%,var(--panel));stroke:var(--accent);stroke-width:2.2}
+.step-art .a-eye{fill:var(--ink3)}
+.step-art .a-rail{fill:none;stroke:var(--ink2);stroke-width:3;stroke-linecap:round}
+.step-art .a-arrow{fill:none;stroke:var(--g3);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.step-art .a-clear{fill:none;stroke:var(--g3);stroke-width:3;stroke-linecap:round}
+.step-art .a-t{fill:var(--ink);font:700 13px var(--f-mono)}
+.step-art .a-n circle{fill:var(--g3);stroke:var(--panel);stroke-width:2}
+.step-art .a-n text{fill:#fff;font:700 12px var(--f-mono)}
+@media (max-width:640px){.step-art{grid-template-columns:1fr;gap:10px;padding:12px}.step-art svg{max-height:190px}.step-art ol{font-size:15px}}
+.cur-step .acts{display:flex;flex-wrap:wrap;gap:12px;margin-top:20px}
+/* main step buttons: large, on the left (same place on every step). Undo / End guide stay small. */
+.cur-step .acts .btn.big{padding:18px 30px;font-size:20px;font-weight:600;border-radius:14px;min-height:62px;min-width:150px}
+.cur-step .acts.sec{margin-top:0;border-top:1px solid var(--line);padding-top:14px}
+.cur-step .grow{flex:1;min-height:22px}
+@media (max-width:640px){.cur-step .acts:not(.sec) .btn.big{flex:1 1 100%;padding:16px 20px;justify-content:center;text-align:center}}
 .cur-step .ex{font-size:12px;color:var(--ink3);margin-top:14px;border-top:1px dashed var(--line);padding-top:8px}
 .timer{margin-top:10px}
 .timer .t{font-family:var(--f-mono);font-size:44px;font-weight:600}
 .timer .bar{height:10px;border-radius:999px;background:var(--panel2);border:1px solid var(--line);overflow:hidden}
 .timer .bar i{display:block;height:100%;background:var(--g3);width:0}
-.cpr{display:flex;gap:18px;align-items:center;margin-top:10px;flex-wrap:wrap}
-.cpr .beat{width:96px;height:96px;border-radius:50%;background:var(--g3);display:grid;place-items:center;color:#fff;font-family:var(--f-mono);font-size:22px;font-weight:600;transition:transform .08s}
+/* CPR step: buttons on the left, the beat on the right with its text centred underneath */
+.cpr-row{display:flex;justify-content:space-between;align-items:flex-end;gap:20px 28px;flex-wrap:wrap;margin-top:20px}
+.cpr-row .acts{margin-top:0}
+.cpr{display:flex;flex-direction:column;gap:12px;align-items:center;text-align:center}
+@media (max-width:640px){.cpr-row .cpr{order:-1;width:100%}.cpr-row .acts{width:100%}}
+.cpr .beat{width:132px;height:132px;flex:none;border-radius:50%;background:var(--g3);display:grid;place-items:center;color:#fff;font-family:var(--f-mono);font-size:32px;font-weight:600;transition:transform .08s}
+.cpr #cprInfo{font-size:17px}
 .cpr .beat.on{transform:scale(1.18)}
 .log{font-family:var(--f-mono);font-size:12.5px;max-height:360px;overflow:auto;display:flex;flex-direction:column;gap:3px}
 .log div{display:grid;grid-template-columns:56px 1fr;gap:6px}
@@ -645,7 +709,6 @@ dialog::backdrop{background:rgba(3,8,16,.6)}
       </div>
     </details>
     <div class="roster" id="roster" role="group" aria-label="Crew"></div>
-    <div id="needChip" class="need-chip" role="status" hidden></div>
     <div id="cabinBand" class="cabin-chip" role="status" aria-live="polite" hidden></div>
     <div class="badges" id="badges" aria-live="polite"></div>
   </div>
@@ -1090,24 +1153,24 @@ const PROTOCOLS = [
    q:"Is someone not responding, or not breathing normally?", qp:"Is {name} not responding, or not breathing normally?", src:["ntrsCPR","ahaBLS","rCardio","csaBio"],
    steps:[
     {id:"a", type:"do", text:"Call a medical emergency out loud.", sub:"Tell every crewmate and the ground. One person leads, one person helps."},
-    {id:"b", type:"ask", text:"Tap the shoulders and shout their name. Do they respond?", tp:"Tap {name}'s shoulders and shout their name. Does {name} respond?", yes:"i", no:"next"},
-    {id:"c", type:"ask", text:"Watch the chest for 10 seconds. Are they breathing normally?", yes:"i", no:"next"},
-    {id:"d", type:"do", text:"Strap the person to the medical restraint.", tp:"Strap {name} to the medical restraint.", sub:"In weightlessness, brace your feet on the ceiling or a handrail so each push does not float you away."},
-    {id:"e", type:"cpr", text:"Push hard and fast in the centre of the chest.", sub:"Follow the beat: 110 per minute. Swap rescuers every 2 minutes."},
-    {id:"f", type:"do", text:"Attach the AED (heart shock device) and follow its voice.", sub:"Keep pushing while the pads go on. Stop only when it tells you to."},
-    {id:"g", type:"do", text:"Give oxygen from the medical kit, as the onboard checklist describes."},
+    {id:"b", type:"ask", art:"tap", text:"Tap the shoulders and shout their name. Do they respond?", tp:"Tap {name}'s shoulders and shout their name. Does {name} respond?", yes:"i", no:"next"},
+    {id:"c", type:"ask", art:"breath", text:"Watch the chest for 10 seconds. Are they breathing normally?", yes:"i", no:"next"},
+    {id:"d", type:"do", art:"restraint", text:"Strap the person to the medical restraint.", tp:"Strap {name} to the medical restraint.", sub:"In weightlessness, brace your feet on the ceiling or a handrail so each push does not float you away."},
+    {id:"e", type:"cpr", art:"hands", text:"Push hard and fast in the centre of the chest.", sub:"Follow the beat: 110 per minute. Swap rescuers every 2 minutes."},
+    {id:"f", type:"do", art:"aed", text:"Attach the AED (heart shock device) and follow its voice.", sub:"Keep pushing while the pads go on. Stop only when it tells you to."},
+    {id:"g", type:"do", art:"o2", text:"Give oxygen from the medical kit, as the onboard checklist describes."},
     {id:"h", type:"ask", text:"Are they breathing on their own now?", yes:"next", no:"e"},
-    {id:"i", type:"do", text:"Put them in the recovery position and stay with them.", sub:"Keep them restrained. Check breathing every minute."},
+    {id:"i", type:"do", art:"recovery", text:"Put them in the recovery position and stay with them.", sub:"Keep them restrained. Check breathing every minute."},
     {id:"j", type:"report", text:"Send the event log to Earth.", sub:"Do not wait for the answer. Keep watching the patient."},
    ]},
   {id:"toxic", title:"Smoke, ammonia or toxic air", short:"Smoke, a chemical smell, or a toxic air alarm.", sev:3, sys:"lungs", hz:["env"], aud:"both",
    q:"Is there smoke, a chemical smell, or a toxic air alarm?", src:["ntrsNH3","rHypoxia"],
    steps:[
-    {id:"a", type:"do", text:"Put on your emergency mask first.", sub:"Then help the people near you with theirs."},
+    {id:"a", type:"do", art:"mask", text:"Put on your emergency mask first.", sub:"Then help the people near you with theirs."},
     {id:"b", type:"timer", sec:300, text:"Move with the crew to the safe module and close the hatch.", sub:"Aim to be sealed in within about 5 minutes."},
     {id:"c", type:"do", text:"Count the crew. Read the air monitor in the safe module."},
     {id:"d", type:"ask", text:"Did anything touch your eyes or skin?", tp:"Did anything touch {name}'s eyes or skin?", yes:"next", no:"f"},
-    {id:"e", type:"timer", sec:900, text:"Rinse eyes and skin with clean water for 15 minutes."},
+    {id:"e", type:"timer", art:"rinse", sec:900, text:"Rinse eyes and skin with clean water for 15 minutes."},
     {id:"f", type:"measure", text:"Check each person: heart rate, blood oxygen, breathing."},
     {id:"g", type:"report", text:"Send the event log to Earth.", sub:"Stay in the safe module until the air is confirmed clean."},
    ]},
@@ -1117,7 +1180,7 @@ const PROTOCOLS = [
     {id:"a", type:"do", text:"Stop what you are doing. Hold on or strap in.", sub:"Tell a crewmate to stay with you.", tp:"Have {name} stop, then hold on or strap in.", sp:"Stay with {name}."},
     {id:"b", type:"measure", text:"Measure heart rate, blood pressure and blood oxygen.", sub:"Record a heart trace (ECG) too if the kit has one."},
     {id:"c", type:"ask", text:"Is blood oxygen below 94%?", sub:"Most adults should be at 94–98%.", yes:"next", no:"e"},
-    {id:"d", type:"do", text:"Start oxygen from the medical kit, as the checklist describes."},
+    {id:"d", type:"do", art:"o2", text:"Start oxygen from the medical kit, as the checklist describes."},
     {id:"e", type:"do", text:"Open the onboard cardiac checklist and follow it.", sub:"Take medicine only as that checklist or the flight surgeon says."},
     {id:"f", type:"timer", sec:300, text:"Wait 5 minutes, resting.", tp:"Keep {name} resting for 5 minutes."},
     {id:"g", type:"measure", text:"Measure again: heart rate, blood pressure, blood oxygen."},
@@ -1128,7 +1191,7 @@ const PROTOCOLS = [
    steps:[
     {id:"a", type:"ask", text:"Any serious signs: trouble breathing, chest pain, confusion, weakness or trouble seeing?", yes:"next", no:"c"},
     {id:"b", type:"do", text:"Tell the ground: \"serious decompression signs\".", sub:"Do not wait for the reply. Go on to the next step."},
-    {id:"c", type:"do", text:"Breathe 100% oxygen with the medical kit mask.", tp:"Give {name} 100% oxygen with the medical kit mask."},
+    {id:"c", type:"do", art:"o2", text:"Breathe 100% oxygen with the medical kit mask.", tp:"Give {name} 100% oxygen with the medical kit mask."},
     {id:"d", type:"do", text:"Raise the pressure only as the ground or the checklist directs.", sub:"NASA notes that at least 16.4 psia may relieve symptoms, but the right protocol depends on the situation. Never change pressure on your own."},
     {id:"e", type:"timer", sec:900, text:"Every 15 minutes, check feeling, strength and speech.", tp:"Every 15 minutes, check {name}'s feeling, strength and speech."},
     {id:"f", type:"measure", text:"Log heart rate, blood pressure and blood oxygen."},
@@ -1137,7 +1200,7 @@ const PROTOCOLS = [
   {id:"solar", title:"Solar storm", short:"A radiation or solar storm warning.", sev:2, sys:"whole", hz:["rad"], aud:"both",
    q:"Is there a radiation alarm or solar storm warning?", src:["lunarRad","rRad","csaRad","hazards"],
    steps:[
-    {id:"a", type:"do", text:"Go to the storm shelter now.", sub:"Line it with stowage bags and water containers: they block radiation."},
+    {id:"a", type:"do", art:"shelter", text:"Go to the storm shelter now.", sub:"Line it with stowage bags and water containers: they block radiation."},
     {id:"b", type:"do", text:"Get every crewmate inside. Nobody stays in the outer modules."},
     {id:"c", type:"timer", sec:3600, text:"Read your dosimeter and log the dose every hour."},
     {id:"d", type:"do", text:"When the all-clear comes, add the storm dose to each person's mission total."},
@@ -1147,8 +1210,8 @@ const PROTOCOLS = [
    q:"Is one side of your neck, an arm or a leg newly swollen or painful?", qp:"Is one side of {name}'s neck, an arm or a leg newly swollen or painful?", src:["venous","rCardio"],
    steps:[
     {id:"a", type:"ask", text:"Are you suddenly short of breath, or do you have chest pain?", tp:"Is {name} suddenly short of breath, or does {name} have chest pain?", yes:"switch:chest", no:"next"},
-    {id:"b", type:"do", text:"Do not rub or massage the swollen area."},
-    {id:"c", type:"do", text:"Compare both sides. Take photos of both for the ground."},
+    {id:"b", type:"do", art:"norub", text:"Do not rub or massage the swollen area."},
+    {id:"c", type:"do", art:"compare", text:"Compare both sides. Take photos of both for the ground."},
     {id:"d", type:"measure", text:"Log heart rate, blood pressure and blood oxygen."},
     {id:"e", type:"do", text:"Set up the ultrasound. The ground team will guide the scan."},
     {id:"f", type:"do", text:"Take blood-thinning medicine only if the flight surgeon tells you to.", tp:"Give blood-thinning medicine only if the flight surgeon says to."},
@@ -1158,9 +1221,9 @@ const PROTOCOLS = [
    q:"Did something get in your eye, or is it painful and red?", qp:"Did something get in {name}'s eye, or is it painful and red?", src:["cornea24","ntrsSANS","rSANS"],
    steps:[
     {id:"a", type:"do", text:"Do not rub your eye.", tp:"Make sure {name} does not rub the eye."},
-    {id:"b", type:"timer", sec:300, text:"Rinse the eye with the eyewash for 5 minutes."},
+    {id:"b", type:"timer", art:"eyewash", sec:300, text:"Rinse the eye with the eyewash for 5 minutes."},
     {id:"c", type:"ask", text:"Is your vision getting worse, or is something stuck in the eye?", tp:"Is {name}'s vision getting worse, or is something stuck in the eye?", yes:"next", no:"e"},
-    {id:"d", type:"do", text:"Tape an eye shield over it without pressing, and call the flight surgeon.", next:"g"},
+    {id:"d", type:"do", art:"shield", text:"Tape an eye shield over it without pressing, and call the flight surgeon.", next:"g"},
     {id:"e", type:"do", text:"Use antibiotic eye drops only as the onboard checklist says."},
     {id:"f", type:"do", text:"Check your vision with the eye chart every day until it is back to normal.", tp:"Check {name}'s vision with the eye chart every day until it is back to normal."},
     {id:"g", type:"report", text:"Send the event log to Earth."},
@@ -1190,7 +1253,7 @@ const PROTOCOLS = [
   {id:"sms", title:"Early space motion sickness", short:"Nausea or vomiting in the first days of flight.", sev:1, sys:"brain", hz:["grav"], aud:"self",
    q:"Is it early in the flight, and do you feel sick or have you vomited?", qp:"Is it early in the flight, and does {name} feel sick or has {name} vomited?", src:["ntrsSAS","rSensori"],
    steps:[
-    {id:"a", type:"do", text:"Keep your head still. Fix your eyes on one spot in the cabin.", tp:"Help {name} keep the head still and fix the eyes on one spot."},
+    {id:"a", type:"do", art:"gaze", text:"Keep your head still. Fix your eyes on one spot in the cabin.", tp:"Help {name} keep the head still and fix the eyes on one spot."},
     {id:"b", type:"do", text:"Keep a sick bag within reach."},
     {id:"c", type:"do", text:"Sip small amounts of water.", sub:"Take motion-sickness medicine only as the onboard checklist says."},
     {id:"d", type:"ask", text:"Have you vomited many times, or can you not keep water down?", tp:"Has {name} vomited many times, or can {name} not keep water down?", yes:"next", no:"f"},
@@ -1205,7 +1268,7 @@ const PROTOCOLS = [
     {id:"b", type:"ask", text:"Is there smoke, a CO₂ alarm, or SpO₂ 92% or lower?", sub:"Bad air causes the same racing heart and breathlessness.", yes:"switch:toxic", no:"next"},
     {id:"c", type:"measure", text:"Measure heart rate and blood oxygen.", tp:"Measure {name}'s heart rate and blood oxygen."},
     {id:"d", type:"do", text:"If it is safe, stay where you are. Ask a crewmate to stay with you.", tp:"If it is safe, stay where you are and stay with {name}."},
-    {id:"e", type:"do", text:"Breathe slowly and deeply.", tp:"Help {name} breathe slowly and deeply."},
+    {id:"e", type:"do", art:"breathe", text:"Breathe slowly and deeply.", tp:"Help {name} breathe slowly and deeply."},
     {id:"f", type:"do", text:"Remind yourself that the attack will pass.", tp:"Remind {name} that the attack will pass."},
     {id:"g", type:"ask", text:"Measure again. Are symptoms getting worse, or is there new chest pain?", tp:"Measure {name} again. Are symptoms getting worse, or is there new chest pain?", yes:"switch:chest", no:"next"},
     {id:"h", type:"report", text:"When calm, ask for a private medical conference with the flight surgeon and time to contact family.", tp:"When {name} is calm, ask for a private medical conference with the flight surgeon for {name}."},
@@ -1642,6 +1705,57 @@ const KO = {
 "Health streak": "건강 연속 기록",
 "Heart & circulation": "심장·순환",
 "Heart": "심장·순환",
+"Picture for this step": "이 단계 그림",
+"Breathe in": "들이쉬기", "Breathe out": "내쉬기",
+"Tap both shoulders firmly.": "양쪽 어깨를 힘 있게 두드리세요.",
+"Call their name loudly, close to the ear.": "귀 가까이에서 이름을 크게 부르세요.",
+"No answer and no movement: answer No and go on.": "대답도 움직임도 없으면 '아니오'를 누르고 다음으로 가세요.",
+"Look at the chest: does it rise and fall?": "가슴을 보세요. 오르내리나요?",
+"Count 10 seconds, no longer.": "10초만 세세요. 더 오래 보지 마세요.",
+"Gasping, or only an odd breath now and then, is not normal breathing: answer No.": "헐떡이거나 가끔 한 번씩만 쉬는 숨은 정상 호흡이 아닙니다. '아니오'를 누르세요.",
+"Turn them onto their side, top knee bent so the body does not roll.": "옆으로 돌려 눕히고, 위쪽 무릎을 굽혀 몸이 구르지 않게 하세요.",
+"Tilt the head back a little to keep the airway open.": "머리를 살짝 뒤로 젖혀 숨길을 열어 두세요.",
+"Keep the straps on. Check the breathing every minute.": "고정 끈은 그대로 두고, 1분마다 호흡을 확인하세요.",
+"Your own mask first: over the nose and mouth.": "내 마스크부터 쓰세요. 코와 입을 덮습니다.",
+"Pull the straps tight. Breathe in to check that it seals.": "끈을 단단히 당기고, 숨을 들이쉬어 새는 곳이 없는지 확인하세요.",
+"Then help the people near you.": "그다음 가까이 있는 사람을 도우세요.",
+"Flush the eyes and skin with plenty of clean water.": "눈과 피부를 깨끗한 물로 충분히 씻어내세요.",
+"Soak up the used water with towels so it does not float away.": "씻어낸 물은 떠다니지 않게 수건으로 흡수하세요.",
+"Take off clothing the chemical touched. Keep rinsing the full 15 minutes.": "물질이 묻은 옷은 벗으세요. 15분을 다 채워 씻으세요.",
+"Go to the shelter: the best-shielded place on board.": "대피소로 가세요. 기내에서 차폐가 가장 좋은 곳입니다.",
+"Line the walls with stowage bags and water containers.": "벽에 보관 가방과 물통을 둘러 세우세요.",
+"Everyone inside. Stay until the all-clear.": "전원 안으로 들어가고, 해제 통보가 올 때까지 머무르세요.",
+"Do not rub, massage or squeeze the swollen area.": "부은 곳을 문지르거나 주무르거나 누르지 마세요.",
+"Keep the limb still and loosely supported.": "그 팔다리는 움직이지 말고 편하게 받쳐 두세요.",
+"A clot that comes loose can travel to the lungs.": "떨어져 나온 혈전은 폐로 갈 수 있습니다.",
+"Put both sides next to each other: same position, same light.": "양쪽을 나란히 두세요. 같은 자세, 같은 조명으로.",
+"Look for a difference in size, colour or warmth.": "굵기, 색, 따뜻한 정도가 다른지 보세요.",
+"Photograph both and note the time.": "양쪽을 모두 찍고 시각을 적어 두세요.",
+"Hold the eyelids open with clean fingers.": "깨끗한 손가락으로 눈꺼풀을 벌려 잡으세요.",
+"Let the eyewash run from the nose side to the outer corner.": "세안액이 코 쪽에서 눈 바깥쪽으로 흐르게 하세요.",
+"Blink, and look up, down, left and right while you rinse.": "씻는 동안 눈을 깜빡이고 위, 아래, 좌우를 보세요.",
+"Rest the shield on the bone around the eye, not on the eye.": "안대는 눈이 아니라 눈 주위 뼈에 걸치게 대세요.",
+"Tape it from the forehead to the cheek.": "이마에서 뺨까지 테이프로 붙이세요.",
+"Do not press on it, and do not put a pad under it.": "누르지 말고, 안대 밑에 거즈를 넣지 마세요.",
+"Hold your head still. If you must move, move slowly.": "머리를 움직이지 마세요. 꼭 움직여야 하면 천천히.",
+"Pick one fixed spot and keep your eyes on it.": "고정된 한 점을 정해 계속 바라보세요.",
+"To look somewhere else, turn your whole body, not just your head.": "다른 곳을 볼 때는 머리만 돌리지 말고 몸 전체를 돌리세요.",
+"Breathe in through the nose while the circle grows: about 4 seconds.": "원이 커지는 동안 코로 들이쉬세요. 약 4초.",
+"Breathe out slowly through the mouth while it shrinks: about 6 seconds.": "원이 작아지는 동안 입으로 천천히 내쉬세요. 약 6초.",
+"Keep going for a few minutes. Let your shoulders drop.": "몇 분 동안 계속하세요. 어깨에 힘을 빼세요.",
+"Simple picture, not to scale. Follow the onboard checklist first.": "단순화한 그림이며 실제 비율과 다릅니다. 기내 체크리스트를 먼저 따르세요.",
+"Lay the person on the restraint, face up. Fasten the straps so the body cannot float.": "환자를 고정대 위에 얼굴이 위로 오게 눕히고, 몸이 떠오르지 않게 끈을 조이세요.",
+"Leave the centre of the chest free for your hands and the AED pads.": "가슴 한가운데는 손과 AED 패드를 댈 수 있게 비워 두세요.",
+"Brace yourself: feet on a handrail or the ceiling, so each push goes into the chest.": "내 몸도 고정하세요. 발을 손잡이나 천장에 대야 누르는 힘이 가슴에 전달됩니다.",
+"Heel of one hand on the centre of the chest: the lower half of the breastbone.": "한 손의 손꿈치를 가슴 한가운데(가슴뼈 아래쪽 절반)에 대세요.",
+"Other hand on top, fingers locked, arms straight.": "다른 손을 그 위에 포개 깍지를 끼고, 팔을 곧게 펴세요.",
+"Push about 5 cm deep, then let the chest come all the way back up.": "약 5 cm 깊이로 누른 뒤, 가슴이 완전히 올라오게 힘을 빼세요.",
+"Bare, dry chest. Switch the AED on and do what its voice says.": "가슴의 옷을 벗기고 물기를 닦으세요. AED 전원을 켜고 음성 안내를 따르세요.",
+"One pad below the right collarbone. One pad on the left side, below the armpit.": "패드 하나는 오른쪽 쇄골 아래, 다른 하나는 왼쪽 겨드랑이 아래 옆구리에 붙이세요.",
+"Nobody touches the patient while it checks the heart or gives a shock. Then push again.": "심장 리듬 분석과 충격 중에는 아무도 환자에게 닿지 마세요. 끝나면 바로 다시 누르세요.",
+"Connect the mask tube to the oxygen supply and open the flow.": "마스크 튜브를 산소 공급 장치에 연결하고 산소를 여세요.",
+"Mask over the nose and mouth. Strap behind the head.": "마스크로 코와 입을 덮고, 끈을 머리 뒤로 넘기세요.",
+"Press the edges so no oxygen leaks out.": "가장자리를 눌러 산소가 새지 않게 밀착시키세요.",
 "Lungs & air": "폐·선내 공기",
 "Heart rate": "심박",
 "Help {0}": "{0} 돕기",
@@ -2392,11 +2506,6 @@ function renderCrewAlert(){
   const rows = need.map(c=>{ const g = todayGrade(c.id);
     return {c, why: SYSTEMS.filter(s=>s.metrics.some(k=>!CABIN_METRICS.includes(k) && g.ml[k]===3)).map(s=>s.id)}; });
   const sig = rows.map(r=>r.c.id+":"+r.why.join("+")).join("|");   // who and what: a new emergency opens it again
-  const nc = $("#needChip");
-  if(nc){ const show = need.length && !(R && !R.finished); nc.hidden = !show;
-    nc.innerHTML = show ? rows.map(r=>`<span class="nc">⚠ ${TE("{0} needs help now", r.c.n)} <span class="why">${TE("Urgent: {0}", r.why.map(id=>T(SYS[id].n)).join(", "))}</span>
-      <button type="button" data-need-help="${r.c.id}">${TE("Help {0}", r.c.n)} →</button></span>`).join("") : "";
-    $$("#needChip [data-need-help]").forEach(b=>b.addEventListener("click", ()=>{ stopDemo(); helpCrew(b.dataset.needHelp); })); }
   if(!need.length || (R && !R.finished) || sig===alertClosed){ const was = !el.hidden; el.hidden = true; el.innerHTML = ""; if(was) alertFocus?.focus?.(); return; }
   const fresh = el.hidden || el.dataset.sig!==sig; el.dataset.sig = sig;
   el.innerHTML = `<div class="ca-box" role="alertdialog" aria-modal="true" aria-labelledby="caH0">
@@ -3344,13 +3453,175 @@ function renderRun(){
     <aside style="display:flex;flex-direction:column;gap:12px">
       <div class="mini3d" id="mini3d"></div>
       <div class="card"><div class="card-h"><h3>${TE("Event log")}</h3><button class="btn" type="button" id="sendLog">✉ ${TE("Send log to Earth")}</button></div><div class="card-b"><div class="log" id="log" aria-live="polite"></div></div></div>
-      <div class="card"><div class="card-h"><h3>${TE("Based on")}</h3></div><div class="card-b">
-        <ul class="based">${p.src.map(k=>{const r=SOURCES[k]; return `<li>${r.url?`<a href="${r.url}" target="_blank" rel="noopener">${esc(r.t)}</a>`:esc(r.t)} <span class="muted">(${esc(r.org)})</span></li>`;}).join("")}</ul>
-        <p class="small muted" style="margin:8px 0 0">${TE("Example procedure written from public space-agency material. Not a flight checklist and not medical advice.")}</p></div></div>
     </aside>
   </div>`;
   renderLog(); bindRun(s); renderSaveWarn(); saveSOS();
-  mount3D(); tickSOS();
+  mount3D(); tickSOS(); fitRun();
+}
+/* how tall the guide must be to reach the bottom of the window (see .run-grid) */
+function fitRun(){
+  const g = $("#sosRun .run-grid"); if(!g) return;
+  g.style.setProperty("--run-min", Math.max(460, innerHeight - (g.getBoundingClientRect().top + scrollY) - 16) + "px");
+  const cur = g.querySelector(".run-steps li.cur"), box = g.querySelector(".run-steps > .card-b");   // keep the current step in view in the step list
+  if(cur && box && box.scrollHeight > box.clientHeight) box.scrollTop = cur.offsetTop - box.offsetTop - box.clientHeight/2 + cur.offsetHeight/2;
+}
+addEventListener("resize", fitRun);
+/* ---------- step pictures: a simple drawing + 3 numbered points under the step text ----------
+   A step gets one by naming it (art:"restraint", "hands", "aed", …: the keys of STEP_ART). The numbers on the drawing match
+   the numbered points. Inline SVG: no image files, works offline, follows the light/dark theme.
+   The body is drawn facing the viewer, so the patient's right side is on the left of the picture. */
+const ART_N = (x,y,n) => `<g class="a-n"><circle cx="${x}" cy="${y}" r="10"/><text x="${x}" y="${y+4}" text-anchor="middle">${n}</text></g>`;
+const ART_TORSO = `<circle class="a-skin" cx="100" cy="30" r="20"/><path class="a-skin" d="M91 48h18v12H91z"/>
+  <path class="a-skin" d="M22 84q0-18 18-20l14-2v40l-8 96q-1 8-9 8t-9-8z"/><path class="a-skin" d="M178 84q0-18-18-20l-14-2v40l8 96q1 8 9 8t9-8z"/>
+  <path class="a-skin" d="M48 74q0-16 18-16h68q18 0 18 16l-9 138q-1 12-13 12H70q-12 0-13-12z"/>
+  <path class="a-bone" d="M100 68v66M100 70q-18-2-38 6M100 70q18-2 38 6"/>`;
+const ART_FACE = `<circle class="a-skin" cx="100" cy="100" r="60"/><path class="a-skin" d="M40 94q-10 4-8 18t12 12M160 94q10 4 8 18t-12 12"/>
+  <circle class="a-eye" cx="78" cy="90" r="4"/><circle class="a-eye" cx="122" cy="90" r="4"/>`;
+/* limbs drawn as thick round lines: all outlines first, then all fills, so joints merge into one shape */
+const ART_BODY = parts => parts.map(([d,w])=>`<path class="a-lo" stroke-width="${w+3.2}" d="${d}"/>`).join("") + parts.map(([d,w])=>`<path class="a-li" stroke-width="${w}" d="${d}"/>`).join("");
+const STEP_ART = {
+  tap: {
+    svg: `${ART_TORSO}
+      <rect class="a-hand" x="34" y="52" width="40" height="22" rx="10" transform="rotate(-14 54 63)"/><rect class="a-hand" x="126" y="52" width="40" height="22" rx="10" transform="rotate(14 146 63)"/>
+      <path class="a-arrow" d="M30 40l-7-9M46 36l-2-12M20 54l-11-4M170 40l7-9M154 36l2-12M180 54l11-4"/>
+      <path class="a-say" d="M128 18l14-7M131 28h16M128 38l14 7"/>
+      ${ART_N(54,98,1)}${ART_N(160,18,2)}`,
+    pts: ["Tap both shoulders firmly.", "Call their name loudly, close to the ear.", "No answer and no movement: answer No and go on."] },
+  breath: {
+    svg: `${ART_TORSO}
+      <path class="a-say" d="M40 92q-10 16 0 32M30 86q-14 22 0 44M160 92q10 16 0 32M170 86q14 22 0 44"/>
+      <circle class="a-ring" cx="100" cy="108" r="20"/>
+      <path class="a-eyeic" d="M146 22q16-14 32 0-16 14-32 0z"/><circle class="a-eye" cx="162" cy="22" r="4"/><path class="a-gaze" d="M154 32L112 96"/>
+      <circle class="a-box" cx="28" cy="26" r="20"/><path class="a-wire" d="M28 26V14M28 26l9 6"/><text class="a-t" x="28" y="62" text-anchor="middle">10 s</text>
+      ${ART_N(100,108,1)}${ART_N(58,22,2)}`,
+    pts: ["Look at the chest: does it rise and fall?", "Count 10 seconds, no longer.", "Gasping, or only an odd breath now and then, is not normal breathing: answer No."] },
+  recovery: {
+    svg: `<rect class="a-board" x="6" y="56" width="188" height="118" rx="16"/>
+      ${ART_BODY([["M68 114L124 120",32],["M124 126L188 132",13],["M124 114L152 84L186 98",13],["M74 106L84 70",11],["M78 110L58 90L44 104",11]])}
+      <circle class="a-skin" cx="40" cy="112" r="16"/>
+      <rect class="a-strap" x="96" y="56" width="10" height="118" rx="3"/><rect class="a-strap" x="162" y="56" width="10" height="118" rx="3"/>
+      <path class="a-arrow" d="M22 86q10-16 28-12M50 74l-9-1M50 74l-5 8"/>
+      ${ART_N(84,48,1)}${ART_N(22,66,2)}${ART_N(134,190,3)}`,
+    pts: ["Turn them onto their side, top knee bent so the body does not roll.", "Tilt the head back a little to keep the airway open.", "Keep the straps on. Check the breathing every minute."] },
+  mask: {
+    svg: `${ART_FACE}
+      <path class="a-strapl" d="M70 116q-26-8-32-26M130 116q26-8 32-26"/>
+      <path class="a-mask" d="M100 92q22 0 30 24 4 30-30 32-34-2-30-32 8-24 30-24z"/><circle class="a-box" cx="100" cy="128" r="11"/>
+      <circle class="a-skin" cx="174" cy="200" r="20"/><path class="a-mask" d="M174 198q9 0 12 9 1 11-12 12-13-1-12-12 3-9 12-9z"/>
+      <path class="a-arrow" d="M132 170l16 12M148 182l-10-2M148 182l-3-9"/>
+      ${ART_N(100,64,1)}${ART_N(30,74,2)}${ART_N(140,208,3)}`,
+    pts: ["Your own mask first: over the nose and mouth.", "Pull the straps tight. Breathe in to check that it seals.", "Then help the people near you."] },
+  rinse: {
+    svg: `<rect class="a-tape" x="14" y="186" width="160" height="30" rx="8"/>
+      ${ART_BODY([["M34 176L146 96",30]])}<circle class="a-skin" cx="160" cy="84" r="17"/>
+      <ellipse class="a-free" cx="92" cy="134" rx="24" ry="13" transform="rotate(-36 92 134)"/>
+      <rect class="a-box" x="50" y="12" width="46" height="52" rx="12"/><rect class="a-box" x="66" y="64" width="14" height="10" rx="3"/>
+      <path class="a-flow" d="M74 78q2 22 14 42"/><circle class="a-drop" cx="66" cy="96" r="3.5"/><circle class="a-drop" cx="84" cy="90" r="3"/><circle class="a-drop" cx="110" cy="150" r="3.5"/><circle class="a-drop" cx="74" cy="160" r="3"/>
+      ${ART_N(112,60,1)}${ART_N(186,200,2)}`,
+    pts: ["Flush the eyes and skin with plenty of clean water.", "Soak up the used water with towels so it does not float away.", "Take off clothing the chemical touched. Keep rinsing the full 15 minutes."] },
+  shelter: {
+    svg: `<path class="a-ray" d="M8 14l34 58M34 8l26 60M64 6l14 56"/><circle class="a-bolt" cx="12" cy="10" r="9"/>
+      <rect class="a-skin" x="6" y="100" width="54" height="52" rx="12"/><rect class="a-skin" x="140" y="100" width="54" height="52" rx="12"/><rect class="a-skin" x="58" y="116" width="14" height="20"/><rect class="a-skin" x="128" y="116" width="14" height="20"/>
+      <rect class="a-shelter" x="70" y="86" width="60" height="80" rx="12"/>
+      <path class="a-strap" d="M76 92h10v10H76zM88 92h10v10H88zM102 92h10v10h-10zM114 92h10v10h-10zM76 150h10v10H76zM88 150h10v10H88zM102 150h10v10h-10zM114 150h10v10h-10z"/>
+      <circle class="a-eye" cx="88" cy="120" r="5"/><circle class="a-eye" cx="104" cy="126" r="5"/><circle class="a-eye" cx="94" cy="136" r="5"/><circle class="a-eye" cx="112" cy="116" r="5"/>
+      <path class="a-arrow" d="M26 126h28M54 126l-8-6M54 126l-8 6M174 126h-28M146 126l8-6M146 126l8 6"/>
+      ${ART_N(100,64,1)}${ART_N(100,188,2)}${ART_N(33,172,3)}`,
+    pts: ["Go to the shelter: the best-shielded place on board.", "Line the walls with stowage bags and water containers.", "Everyone inside. Stay until the all-clear."] },
+  norub: {
+    svg: `${ART_BODY([["M66 14L80 150",36],["M80 152L82 186L124 200",17]])}
+      <ellipse class="a-free" cx="74" cy="92" rx="27" ry="38"/>
+      <rect class="a-hand" x="122" y="78" width="52" height="28" rx="13"/><circle class="a-ban" cx="148" cy="92" r="38"/><path class="a-ban" d="M121 65l54 54"/>
+      ${ART_N(148,40,1)}${ART_N(34,150,2)}`,
+    pts: ["Do not rub, massage or squeeze the swollen area.", "Keep the limb still and loosely supported.", "A clot that comes loose can travel to the lungs."] },
+  compare: {
+    svg: `${ART_BODY([["M58 22L58 168",26],["M142 22L142 168",26]])}
+      <ellipse class="a-free" cx="142" cy="96" rx="24" ry="38"/>
+      <path class="a-flowl" d="M12 30V10h20M188 30V10h-20M12 170v20h20M188 170v20h-20"/>
+      <path class="a-arrow" d="M82 96h34M82 96l8-6M82 96l8 6M116 96l-8-6M116 96l-8 6"/>
+      <rect class="a-box" x="84" y="198" width="34" height="24" rx="6"/><circle class="a-eyeic" cx="101" cy="210" r="6"/>
+      ${ART_N(100,72,1)}${ART_N(176,96,2)}${ART_N(134,210,3)}`,
+    pts: ["Put both sides next to each other: same position, same light.", "Look for a difference in size, colour or warmth.", "Photograph both and note the time."] },
+  eyewash: {
+    svg: `${ART_FACE}
+      <ellipse class="a-white" cx="122" cy="90" rx="15" ry="10"/><circle class="a-eye" cx="122" cy="90" r="5"/>
+      <rect class="a-hand" x="104" y="64" width="36" height="11" rx="5"/><rect class="a-hand" x="104" y="106" width="36" height="11" rx="5"/>
+      <g transform="rotate(38 166 36)"><rect class="a-box" x="150" y="6" width="32" height="46" rx="9"/><rect class="a-box" x="160" y="52" width="12" height="9" rx="3"/></g>
+      <circle class="a-drop" cx="142" cy="66" r="3.5"/><circle class="a-drop" cx="134" cy="78" r="3"/>
+      <path class="a-flow" d="M104 90h56M160 90l-8-6M160 90l-8 6" transform="translate(0,42)"/>
+      ${ART_N(88,64,1)}${ART_N(176,132,2)}`,
+    pts: ["Hold the eyelids open with clean fingers.", "Let the eyewash run from the nose side to the outer corner.", "Blink, and look up, down, left and right while you rinse."] },
+  shield: {
+    svg: `${ART_FACE}
+      <rect class="a-tape" x="70" y="42" width="16" height="96" rx="4" transform="rotate(-28 78 90)"/><rect class="a-tape" x="70" y="42" width="16" height="96" rx="4" transform="rotate(28 78 90)"/>
+      <ellipse class="a-shield" cx="78" cy="90" rx="24" ry="19"/><circle class="a-eye" cx="70" cy="86" r="1.6"/><circle class="a-eye" cx="78" cy="94" r="1.6"/><circle class="a-eye" cx="86" cy="86" r="1.6"/>
+      <path class="a-arrow" d="M150 150l-16-12M146 136l12 16M158 136l-12 16" transform="translate(6,22)"/>
+      ${ART_N(78,90,1)}${ART_N(44,44,2)}${ART_N(182,170,3)}`,
+    pts: ["Rest the shield on the bone around the eye, not on the eye.", "Tape it from the forehead to the cheek.", "Do not press on it, and do not put a pad under it."] },
+  gaze: {
+    svg: `<g transform="translate(-14,34) scale(.82)">${ART_FACE}</g>
+      <path class="a-gaze" d="M54 106L160 52M88 104L160 52"/>
+      <circle class="a-ring" cx="170" cy="48" r="14"/><path class="a-arrow" d="M170 28v40M150 48h40"/>
+      <path class="a-flowl" d="M32 62q36-32 72 0M32 62l1-11M32 62l11-1M104 62l-1-11M104 62l-11-1"/><path class="a-ban" d="M52 30l32 28"/>
+      ${ART_N(68,18,1)}${ART_N(170,84,2)}`,
+    pts: ["Hold your head still. If you must move, move slowly.", "Pick one fixed spot and keep your eyes on it.", "To look somewhere else, turn your whole body, not just your head."] },
+  breathe: {
+    svg: () => `<circle class="a-ring2 a-ring2b" cx="100" cy="104" r="86"/><circle class="a-breath" cx="100" cy="104" r="86"/>
+      <text class="a-bt a-in" x="100" y="100" text-anchor="middle">${TE("Breathe in")}</text><text class="a-bt a-out" x="100" y="100" text-anchor="middle">${TE("Breathe out")}</text>
+      <text class="a-t a-in" x="100" y="124" text-anchor="middle">4 s</text><text class="a-t a-out" x="100" y="124" text-anchor="middle">6 s</text>
+      <text class="a-t" x="100" y="218" text-anchor="middle" opacity=".7">4 s ↑ · 6 s ↓</text>`,
+    pts: ["Breathe in through the nose while the circle grows: about 4 seconds.", "Breathe out slowly through the mouth while it shrinks: about 6 seconds.", "Keep going for a few minutes. Let your shoulders drop."] },
+  restraint: {
+    svg: `<rect class="a-board" x="34" y="4" width="132" height="222" rx="16"/>
+      <circle class="a-skin" cx="100" cy="26" r="14"/><path class="a-skin" d="M94 38h12v8H94z"/>
+      <path class="a-skin" d="M66 56q0-10 12-10h44q12 0 12 10l-5 62H71z"/>
+      <path class="a-skin" d="M50 60q0-10 9-11l5-1v20l-3 52q-1 5-5 5t-5-5z"/><path class="a-skin" d="M150 60q0-10-9-11l-5-1v20l3 52q1 5 5 5t5-5z"/>
+      <path class="a-skin" d="M71 118h27l-2 92q0 6-8 6t-9-6z"/><path class="a-skin" d="M129 118h-27l2 92q0 6 8 6t9-6z"/>
+      <rect class="a-strap" x="34" y="20" width="132" height="9" rx="3"/><rect class="a-strap" x="34" y="120" width="132" height="12" rx="3"/><rect class="a-strap" x="34" y="160" width="132" height="12" rx="3"/><rect class="a-strap" x="34" y="196" width="132" height="12" rx="3"/>
+      <circle class="a-free" cx="100" cy="82" r="19"/>
+      ${ART_N(22,126,1)}${ART_N(100,82,2)}
+      <path class="a-rail" d="M172 218h26M176 218v8M194 218v8"/><path class="a-shoe" d="M175 214v-10h9q3 6 12 6 2 0 2 4z"/>${ART_N(185,188,3)}`,
+    pts: ["Lay the person on the restraint, face up. Fasten the straps so the body cannot float.",
+          "Leave the centre of the chest free for your hands and the AED pads.",
+          "Brace yourself: feet on a handrail or the ceiling, so each push goes into the chest."] },
+  hands: {
+    svg: `${ART_TORSO}
+      <circle class="a-ring" cx="100" cy="114" r="24"/><circle class="a-ring2" cx="100" cy="114" r="34"/>
+      <rect class="a-hand" x="76" y="103" width="48" height="24" rx="11" transform="rotate(-18 100 114)"/>
+      <rect class="a-hand" x="76" y="101" width="48" height="24" rx="11" transform="rotate(18 100 114)"/>
+      <circle class="a-key" cx="100" cy="114" r="5"/>
+      ${ART_N(146,104,1)}${ART_N(54,128,2)}
+      <path class="a-arrow" d="M88 160v40M88 200l-6-9M88 200l6-9M88 160l-6 9M88 160l6 9"/><text class="a-t" x="98" y="185">5 cm</text>${ART_N(66,180,3)}`,
+    pts: ["Heel of one hand on the centre of the chest: the lower half of the breastbone.",
+          "Other hand on top, fingers locked, arms straight.",
+          "Push about 5 cm deep, then let the chest come all the way back up."] },
+  aed: {
+    svg: `${ART_TORSO}
+      <rect class="a-pad" x="57" y="78" width="32" height="40" rx="7" transform="rotate(-8 73 98)"/>
+      <rect class="a-pad" x="113" y="140" width="32" height="42" rx="7" transform="rotate(10 129 161)"/>
+      <path class="a-wire" d="M73 118q-6 78 62 86M131 182q2 14 8 20"/>
+      <rect class="a-box" x="132" y="196" width="60" height="30" rx="7"/><path class="a-bolt" d="M165 200l-9 13h8l-4 10 11-14h-8z"/>
+      ${ART_N(73,98,2)}${ART_N(129,161,2)}${ART_N(112,214,1)}
+      <path class="a-clear" d="M14 30l10 10M24 30l-10 10"/>${ART_N(19,58,3)}`,
+    pts: ["Bare, dry chest. Switch the AED on and do what its voice says.",
+          "One pad below the right collarbone. One pad on the left side, below the armpit.",
+          "Nobody touches the patient while it checks the heart or gives a shock. Then push again."] },
+  o2: {
+    svg: `<circle class="a-skin" cx="92" cy="92" r="58"/><path class="a-skin" d="M34 86q-10 4-8 18t12 12M150 86q10 4 8 18t-12 12"/>
+      <circle class="a-eye" cx="72" cy="78" r="4"/><circle class="a-eye" cx="112" cy="78" r="4"/>
+      <path class="a-strapl" d="M64 106q-22-8-28-22M120 106q22-8 28-22"/>
+      <path class="a-mask" d="M92 84q20 0 28 22 4 28-28 30-32-2-28-30 8-22 28-22z"/><path class="a-bone" d="M82 114h20"/>
+      <path class="a-wire" d="M92 136q0 44 44 44h14"/>
+      <rect class="a-box" x="150" y="150" width="36" height="72" rx="12"/><rect class="a-box" x="160" y="138" width="16" height="12" rx="3"/><text class="a-t" x="168" y="192" text-anchor="middle">O₂</text>
+      ${ART_N(168,122,1)}${ART_N(92,60,2)}${ART_N(30,140,3)}<path class="a-arrow" d="M44 132l14-10M124 132l14-10" transform="translate(0,0)"/>`,
+    pts: ["Connect the mask tube to the oxygen supply and open the flow.",
+          "Mask over the nose and mouth. Strap behind the head.",
+          "Press the edges so no oxygen leaks out."] },
+};
+function artHTML(s){
+  const a = s.art && STEP_ART[s.art]; if(!a) return "";
+  return `<figure class="step-art"><svg viewBox="0 0 200 230" role="img" aria-label="${TE("Picture for this step")}">${typeof a.svg==="function" ? a.svg() : a.svg}</svg>
+    <figcaption><ol>${a.pts.map(t=>`<li>${TE(t)}</li>`).join("")}</ol><div class="small muted">${TE("Simple picture, not to scale. Follow the onboard checklist first.")}</div></figcaption></figure>`;
 }
 function stepHTML(s, i, p){
   let body = "";
@@ -3360,8 +3631,10 @@ function stepHTML(s, i, p){
   else if(s.type==="timer") body = `<div class="timer"><div class="t mono" id="tmT">${hms(tm ? (tm.dueAt-Date.now())/1000 : s.sec)}</div><div class="bar"><i id="tmBar"></i></div></div>
     <div class="acts">${tm?"":`<button class="btn big danger" type="button" id="tmStart">▶ ${TE("Start timer")}</button>`}<button class="btn big" type="button" data-next>${TE("Done, next step")} →</button></div>
     ${s.sec>LONG_WAIT?`<div class="small muted" style="margin-top:8px">${tm?TE("Waiting. You can leave this screen: a band at the top counts down and turns red when the re-check is due."):TE("Long wait: once started you can leave this screen. A band at the top will remind you.")}</div>`:""}`;
-  else if(s.type==="cpr") body = `<div class="cpr"><div class="beat" id="beat">110</div><div><div class="mono" id="cprInfo"></div><div class="small muted">${TE("110 compressions per minute · 2-minute cycles")}</div><div class="small" id="cprSwap"></div></div></div>
-    <div class="acts"><button class="btn big danger" type="button" id="cprStart">${cprT?"■ "+TE("Stop beat"):"▶ "+TE("Start beat")}</button><button class="btn big" type="button" data-next>${TE("Next step")} →</button></div>`;
+  else if(s.type==="cpr") body = `<div class="cpr-row">
+    <div class="acts"><button class="btn big danger" type="button" id="cprStart">${cprT?"■ "+TE("Stop beat"):"▶ "+TE("Start beat")}</button><button class="btn big" type="button" data-next>${TE("Next step")} →</button></div>
+    <div class="cpr"><div class="beat" id="beat">110</div><div><div class="mono" id="cprInfo"></div><div class="small muted">${TE("110 compressions per minute · 2-minute cycles")}</div><div class="small" id="cprSwap"></div></div></div>
+  </div>`;
   else if(s.type==="measure") body = `<div class="small muted" style="margin-top:6px">${R.patient ? TE("Saved to {0}'s record for today and graded at once.", crewById(R.patient).n) : TE("Kept in the log. Saved to the patient's record once you tap who it is.")}</div><div class="fields" style="margin-top:12px">
       ${[["hr","Heart rate","bpm"],["sbp","Blood pressure (top)","mmHg"],["spo2","SpO₂","%"],["temp","Temperature","°C"]].map(([k,n,u])=>`<div class="fld"><label for="ms-${k}">${TE(n)} (${u})</label><input id="ms-${k}" inputmode="decimal" autocomplete="off" placeholder="${TE("optional")}"></div>`).join("")}
     </div><div class="acts"><button class="btn big danger" type="button" id="msLog">${TE("Log and continue")} →</button><button class="btn big" type="button" id="msWear">⌚ ${TE("Fill from wearable")}</button></div>
@@ -3374,8 +3647,10 @@ function stepHTML(s, i, p){
     <div class="kind">${TE("Step {0} of {1}", i+1, p.steps.length)} · ${TE(KIND[s.type])}</div>
     <div class="txt" id="stepTxt" tabindex="-1">${esc(T(stText(s)))}</div>
     ${sub?`<div class="sub">${esc(T(sub))}</div>`:""}
+    ${artHTML(s)}
     ${body}
-    <div class="acts" style="margin-top:22px;border-top:1px solid var(--line);padding-top:14px">
+    <div class="grow"></div>
+    <div class="acts sec">
       <button class="btn" type="button" id="prevBtn" ${R.hist.length?"":"disabled"}>← ${TE("Undo last step")}</button>
       <button class="btn" type="button" id="endBtn">${TE("End guide")}</button>
     </div>
@@ -3514,6 +3789,9 @@ function renderMethod(){
   <p class="small">${TE("Exercise is graded on the 7-day average, not one day, so one rest day does not raise a flag.")}</p>
   <h3>${TE("Emergency guides")}</h3>
   <p class="small">${TE("{0} guides. Each can be run for yourself or for a crewmate (CPR only by a crewmate). Peer wording only changes who is addressed, never the medical content. Measurements are saved to the patient's record. Timers have a due time and long waits run in the background with a reminder band. A guide in progress is saved in the browser and can be resumed after a reload. Undo walks back one step at a time, also across guide switches; the log keeps every entry.", PROTOCOLS.length)}</p>
+  <div class="tbl-wrap"><table class="tbl"><tr><th>${TE("Emergency guides")}</th><th>${TE("Based on")}</th></tr>
+  ${PROTOCOLS.map(g=>`<tr><td><strong>${TE(g.title)}</strong></td><td><ul class="based" style="margin:0">${g.src.map(k=>{const r=SOURCES[k]; return `<li>${r.url?`<a href="${r.url}" target="_blank" rel="noopener">${esc(r.t)}</a>`:esc(r.t)} <span class="muted">(${esc(r.org)})</span></li>`;}).join("")}</ul></td></tr>`).join("")}</table></div>
+  <p class="small muted">${TE("Example procedure written from public space-agency material. Not a flight checklist and not medical advice.")}</p>
   <h3>${TE("Data")}</h3>
   <p class="small">${TE("All data is simulated; no real astronaut medical data is used (that requires data-use agreements and ethics approval). Each crew member has fixed baselines plus seeded random noise, so the same settings always give the same numbers. Situations and your check-in entries are applied on top. Ranges are being calibrated against public NASA data (HRP evidence, OSDR Inspiration4 clinical panels). Everything comes from one function, DataSource.build(); to connect real data, replace that function and keep the daily record shape:")}</p>
   <p><code>{day, hr, sbp, spo2, temp, glu, sleep, mood, ex, co2, radDay, radTot, bone, head, vision}</code></p>
