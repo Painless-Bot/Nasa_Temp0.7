@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Orbit Guide</title>
-<meta name="description" content="Orbit Guide: self-check and emergency guide for astronauts far from Earth. Team Temp7, NASA Space Apps Challenge 2026. Hackathon prototype with simulated data, not a medical device.">
+<meta name="description" content="Orbit Guide: self-check and emergency guide for astronauts far from Earth. Team Temp0.7, NASA Space Apps Challenge 2026. Hackathon prototype with simulated data, not a medical device.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Saira+Semi+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
@@ -49,6 +49,11 @@
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--f-body);overflow-x:hidden}
+/* Line breaks: lines fill up as usual, but a unit of meaning is never cut in half. Short bracketed parts
+   "(CO₂, oxygen)" and a number with its unit "3.0 mmHg" are glued with no-break spaces in T(), so the whole
+   unit drops to the next line together. Korean breaks between words only, never inside one. */
+body{overflow-wrap:break-word}
+:lang(ko) body{word-break:keep-all}
 a{color:var(--accent)}
 button,input,select{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--focus);outline-offset:2px}
@@ -86,6 +91,22 @@ h1,h2,h3,h4{font-family:var(--f-head);margin:0;letter-spacing:.01em}
 .sos-btn:hover{filter:brightness(1.08)}
 .row2{max-width:1480px;margin:0 auto;padding:0 16px 10px;display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
 .roster{display:flex;gap:6px;flex-wrap:wrap}
+.crew-pick{position:relative}
+.crew-cur{padding-right:12px}
+.crew-cur .caret{font-size:14px;opacity:.8;margin-left:2px;transition:transform .15s}
+.crew-cur[aria-expanded="true"] .caret{transform:rotate(180deg)}
+.crew-cur .others-need{min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--g3);color:#fff;font-size:11px;font-weight:800;display:grid;place-items:center}
+.crew-menu{position:absolute;top:calc(100% + 6px);left:0;z-index:80;min-width:400px;max-width:calc(100vw - 32px);display:flex;flex-direction:column;gap:4px;padding:6px;border:1px solid var(--line);border-radius:14px;background:var(--panel);box-shadow:0 14px 36px rgba(0,0,0,.45)}
+body.on-body .crew-menu,body.on-home .crew-menu{background:#0e1829}   /* the header panel colour is see-through there */
+.crew-menu[hidden]{display:none}
+.top:has(.crew-menu:not([hidden])){z-index:75}   /* the open list sits above the crewmate alert band */
+.crew-menu .crew .need-t,.crew-menu .lv{white-space:nowrap}
+.crew-row{display:flex;align-items:center;gap:6px}
+.crew-menu .crew{flex:1;border-radius:10px;border-color:transparent;padding:8px 10px 8px 8px;font-size:13.5px;background:transparent;text-align:left}
+.crew-menu .crew:hover,.crew-menu .crew:focus-visible{background:color-mix(in srgb,var(--accent) 10%,transparent)}
+.crew-menu .crew[aria-pressed="true"]{border-color:var(--accent);box-shadow:none;background:color-mix(in srgb,var(--accent) 8%,transparent)}
+.crew-menu .crew .cw-name{flex:1}
+.crew-menu .crew.need{border-color:var(--g3)}
 .crew{display:flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:4px 10px 4px 5px;cursor:pointer;font-size:13px}
 .crew .av{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:11px;color:#fff}
 .crew[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 30%,transparent)}
@@ -111,13 +132,16 @@ h1,h2,h3,h4{font-family:var(--f-head);margin:0;letter-spacing:.01em}
 .aud{font-size:11px;font-weight:600;border:1px solid var(--line);border-radius:6px;padding:0 6px;color:var(--ink2)}
 .helping{flex-basis:100%;font-size:13px;background:rgba(255,255,255,.15);border-radius:8px;padding:4px 10px}
 .save-warn{flex-basis:100%;background:#fff;color:#000;border-radius:8px;padding:6px 10px;font-size:13px;font-weight:600;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.wait-band{position:sticky;top:0;z-index:60;max-width:1480px;margin:8px auto 0;padding:8px 14px;border-radius:10px;background:var(--g2);color:#000;display:flex;gap:10px 16px;align-items:center;flex-wrap:wrap;font-weight:600}
+/* alert bands stick just under the sticky header (--hdr-h, set by JS), never over the menus and SOS */
+.wait-band{position:sticky;top:calc(var(--hdr-h,0px) + 8px);z-index:60;max-width:1480px;margin:8px auto 0;padding:8px 14px;border-radius:10px;background:var(--g2);color:#000;display:flex;gap:10px 16px;align-items:center;flex-wrap:wrap;font-weight:600}
 .wait-band.due{background:var(--g3);color:#fff}
 .wait-band .mono{font-size:17px}
-.resume{max-width:760px;margin:12px auto;border:2px solid var(--g3);background:var(--panel);border-radius:12px;padding:14px 16px}
+/* floats above the page (never pushes the layout down) */
+.resume{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:70;width:min(620px,calc(100vw - 32px));box-sizing:border-box;margin:0;border:2px solid var(--g3);background:var(--panel);border-radius:12px;padding:14px 44px 14px 16px;box-shadow:0 16px 48px rgba(0,0,0,.5)}
 .resume .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.resume .rs-x{position:absolute;top:8px;right:8px;width:32px;height:32px;padding:0;display:grid;place-items:center}
 .save-warn[hidden],.wait-band[hidden],.resume[hidden],.cabin-band[hidden]{display:none}
-.crew-alert-band{position:sticky;top:0;z-index:65;max-width:1480px;width:calc(100% - 32px);box-sizing:border-box;margin:8px auto 0;padding:10px 16px;border-radius:12px;background:var(--g3);color:#fff;display:flex;gap:10px 16px;align-items:center;flex-wrap:wrap;font-weight:700;font-size:17px;box-shadow:0 6px 20px color-mix(in srgb,var(--g3) 35%,transparent);animation:needPulse 1.2s ease-in-out infinite}
+.crew-alert-band{position:sticky;top:calc(var(--hdr-h,0px) + 8px);z-index:65;max-width:1480px;width:calc(100% - 32px);box-sizing:border-box;margin:8px auto 0;padding:10px 16px;border-radius:12px;background:var(--g3);color:#fff;display:flex;gap:10px 16px;align-items:center;flex-wrap:wrap;font-weight:700;font-size:17px;box-shadow:0 6px 20px color-mix(in srgb,var(--g3) 35%,transparent);animation:needPulse 1.2s ease-in-out infinite}
 .crew-alert-band[hidden]{display:none}
 /* simplified screens (ui-ux branch): answer first, details on request */
 .demo-set{position:relative}
@@ -125,13 +149,6 @@ h1,h2,h3,h4{font-family:var(--f-head);margin:0;letter-spacing:.01em}
 .demo-set > summary::-webkit-details-marker{display:none}
 .demo-set[open] > summary{border-color:var(--accent)}
 .demo-set-in{position:absolute;top:calc(100% + 6px);left:0;z-index:80;display:flex;flex-wrap:wrap;gap:10px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px;box-shadow:var(--shadow);min-width:max-content}
-.today-card{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1.3fr) minmax(0,1fr);gap:0;border:1px solid var(--line);border-left:6px solid var(--g0);background:var(--panel);border-radius:14px;margin-bottom:14px;box-shadow:var(--shadow)}
-.today-card.lv1{border-left-color:var(--g1)} .today-card.lv2{border-left-color:var(--g2)} .today-card.lv3{border-left-color:var(--g3)}
-.today-card > div{padding:12px 16px;display:flex;flex-direction:column;gap:4px}
-.today-card > div + div{border-left:1px solid var(--line2)}
-.today-card b{font-size:17px;line-height:1.3}
-.today-card .tc-status{font-size:20px}
-@media (max-width:820px){.today-card{grid-template-columns:1fr} .today-card > div + div{border-left:0;border-top:1px solid var(--line2)}}
 .ring-card{display:none}
 .sim-more > summary,.more > summary,.glist-more > summary{cursor:pointer;padding:12px 16px;font-weight:600;list-style-position:inside}
 .glist-more > summary{padding:10px 0}
@@ -149,8 +166,13 @@ h1,h2,h3,h4{font-family:var(--f-head);margin:0;letter-spacing:.01em}
 #steps .fld input::placeholder{color:var(--ink3);opacity:.6;font-style:italic;font-family:var(--f-body)}
 .crew-alert-band .why{font-weight:500;font-size:14px;opacity:.95}
 .crew-alert-band .btn{background:#fff;color:var(--g3);border:0;font-weight:800;font-size:16px;padding:8px 16px}
-.cabin-band{max-width:1480px;margin:8px auto 0;padding:8px 14px;border-radius:10px;border:2px dashed var(--g2);background:var(--panel);display:flex;gap:10px 16px;align-items:center;flex-wrap:wrap;font-weight:600}
-.cabin-band.u{border-color:var(--g3);background:var(--g3bg)}
+/* cabin alert (CO₂, radiation: the whole crew): a compact chip in the header's badge row, not a full-width band */
+.cabin-chip{margin-left:auto;display:inline-flex;align-items:center;gap:6px;border:1.5px dashed var(--g2);background:var(--panel);border-radius:8px;padding:2px 4px 2px 9px;font-size:12px;font-weight:600;white-space:nowrap}
+.cabin-chip.u{border-color:var(--g3);background:color-mix(in srgb,var(--g3) 14%,var(--panel))}
+.cabin-chip[hidden]{display:none}
+.cabin-chip .pill{font-size:11px}
+.cabin-chip .btn{padding:2px 8px;font-size:12px;border-radius:6px}
+.cabin-chip:not([hidden]) + .badges{margin-left:0}
 .badges{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto}
 .btn.lang{gap:5px;font-size:13px;padding:7px 10px}
 .btn.lang .sep{opacity:.4}
@@ -172,9 +194,12 @@ section[hidden]{display:none!important}
 
 /* ---------- home ---------- */
 body.on-home .row2{display:none}
-body.on-home.crew-alert .row2{display:flex}  /* a crewmate needing help is shown on every tab */
+body.on-home.crew-alert .row2,body.on-home.cabin-alert .row2{display:flex}  /* a crewmate needing help is shown on every tab */
 body.on-home .top{color:#e9f1fb;--ink:#e9f1fb;--ink2:#b9c8dc;--ink3:#8fa2ba;--panel:rgba(16,28,48,.72);--line:#27405f;--accent:#5cb8ff;--accent-ink:#04121f;background:rgba(4,9,18,.86);border-bottom-color:#12233a}
 body.on-home main{max-width:none;padding:0}
+body.on-body .top{color:#e9f1fb;--ink:#e9f1fb;--ink2:#b9c8dc;--ink3:#8fa2ba;--panel:rgba(16,28,48,.6);--line:#27405f;--accent:#5cb8ff;--accent-ink:#04121f;background:rgba(4,9,18,.42);border-bottom-color:rgba(60,100,150,.25)}
+/* drop-down panels over the 3D screens must be solid: the translucent --panel above let the page show through */
+body.on-home .top .demo-set-in,body.on-home .top .crew-menu,body.on-body .top .demo-set-in,body.on-body .top .crew-menu{background:#0f1c30;box-shadow:0 14px 36px rgba(0,0,0,.5)}
 .wrap{max-width:1240px;margin:0 auto;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
 .hero{position:relative;background:#040912;color:#e9f1fb;min-height:min(820px,calc(100vh - 56px));display:flex;align-items:center;overflow:hidden;isolation:isolate}
 .hero-3d{position:absolute;inset:0;z-index:0}
@@ -206,6 +231,8 @@ body.on-home main{max-width:none;padding:0}
 .hbtn.sos:hover{border-color:#ff5a5a}
 .hbtn.ghost{background:transparent;border-color:transparent;color:#9fc6ee;padding-left:10px}
 .hero-strip{display:flex;flex-wrap:wrap;gap:8px;margin-top:38px;max-width:640px!important}
+/* wide screens: the four status chips always stay on one line, whatever font or language is used */
+@media (min-width:760px){.hero-strip{flex-wrap:nowrap;width:max-content;max-width:none!important}}
 .hs{border:1px solid #1f3554;background:rgba(10,20,36,.66);border-radius:12px;padding:9px 13px;backdrop-filter:blur(6px);min-width:118px}
 .hs span{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#7f95b0}
 .hs b{font-family:var(--f-mono);font-weight:500;font-size:14.5px;color:#eaf3ff;white-space:nowrap}
@@ -309,8 +336,16 @@ body.on-home footer{margin-top:72px}
 .hud b{color:#e5f2ff;font-weight:500}
 .stage-tools{position:absolute;top:10px;right:10px;display:flex;flex-direction:column;gap:6px;align-items:flex-end}
 .stage-tools .row{display:flex;gap:6px}
-.stage .sbtn{background:rgba(10,22,40,.75);border:1px solid #24426b;color:#d6e9ff;border-radius:8px;padding:5px 10px;font-size:12.5px;cursor:pointer}
-.stage .sbtn[aria-pressed="true"]{background:#1a4a80;border-color:#3d84d1}
+.sbtn{background:rgba(10,22,40,.75);border:1px solid #24426b;color:#d6e9ff;border-radius:8px;padding:5px 10px;font-size:12.5px;cursor:pointer}
+.sbtn[aria-pressed="true"]{background:#1a4a80;border-color:#3d84d1}
+.sbtn.icon-btn{width:42px;height:42px;padding:0;display:grid;place-items:center;border-radius:12px;color:#dcecff;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);transition:background .15s,border-color .15s,color .15s,box-shadow .15s,transform .1s}
+.sbtn.icon-btn svg{width:24px;height:24px;display:block}
+.sbtn.icon-btn:hover{border-color:#4f9be8;color:#fff;background:rgba(20,44,78,.85)}
+.sbtn.icon-btn:active{transform:scale(.94)}
+.sbtn.icon-btn[aria-pressed="true"]{background:#1a4a80;border-color:#6db6ff;color:#fff;box-shadow:0 0 0 3px rgba(79,176,255,.22),0 0 18px rgba(79,176,255,.35)}
+.sbtn.icon-btn.spin svg{animation:sbtn-spin .6s ease}
+@keyframes sbtn-spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.sbtn.icon-btn.spin svg{animation:none}}
 .layers{position:absolute;bottom:10px;left:10px;right:10px;display:flex;flex-wrap:wrap;gap:5px}
 .layers button{background:rgba(10,22,40,.75);border:1px solid #24426b;color:#9fb9d8;border-radius:999px;padding:3px 10px;font-size:12px;cursor:pointer}
 .layers button[aria-pressed="true"]{color:#e8f4ff;border-color:#4fb0ff;background:rgba(30,80,140,.6)}
@@ -330,21 +365,80 @@ body.on-home footer{margin-top:72px}
 .scen button{border:1px dashed var(--line);background:var(--panel2);border-radius:8px;padding:6px 10px;font-size:13px;cursor:pointer}
 .scen button[aria-pressed="true"]{border-style:solid;border-color:var(--g2);background:var(--g2bg)}
 
+/* My body: the first screen fits the viewport on every device (the page itself does not scroll there;
+   long lists scroll inside their own panel). Simulate and "Method, data and sources" sit below, reached
+   with the ↓ button. --top-h = where <main> starts (header and any bands), measured by fitBody(). */
+.body-fit{position:relative;display:flex;flex-direction:column;height:calc(100vh - var(--top-h,64px) - 14px);height:calc(100dvh - var(--top-h,64px) - 14px);min-height:500px;padding-bottom:14px}
+/* the body fills the whole first screen under the menus (edge to edge); text floats over it on glass panels.
+   --bt/--bl/--br = distance from this box to the top of <main> and to the window edges, set by fitBody(). */
+.body-fit > .stage{position:absolute;top:calc(-1 * (var(--top-h,64px) + var(--bt,14px)));left:calc(-1 * var(--bl,16px));right:calc(-1 * var(--br,16px));bottom:0;height:auto;min-height:0;border:0;border-radius:0;z-index:0;
+  background:radial-gradient(ellipse at 50% 45%,#0f2240 0%,var(--stage) 72%)}
+.body-fit > :not(.stage){position:relative;z-index:1}
+/* the grid box covers the body: let clicks and drags through its empty parts to the 3D canvas underneath */
+.body-fit .body-grid{pointer-events:none}
+.body-fit .rail,.body-fit .detail{pointer-events:auto}
+.body-fit .stage-col{position:relative;pointer-events:none;color:var(--stage-ink)}
+.body-fit .stage-col > *{pointer-events:auto}
+.body-fit .stage-col > .stage-cap{pointer-events:none}
+.body-fit .card{background:color-mix(in srgb,var(--panel) 72%,transparent);-webkit-backdrop-filter:blur(14px) saturate(1.3);backdrop-filter:blur(14px) saturate(1.3);border-radius:14px;border-color:color-mix(in srgb,var(--line) 80%,transparent);box-shadow:0 10px 30px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.06)}
+.body-fit .fs-card{border-left-width:4px;border-left-color:var(--g0)}
+.body-fit .fs-card.k1{border-left-color:var(--g1)} .body-fit .fs-card.k2{border-left-color:var(--g2)} .body-fit .fs-card.k3{border-left-color:var(--g3);box-shadow:0 10px 30px rgba(0,0,0,.28),0 0 0 1px color-mix(in srgb,var(--g3) 55%,transparent),0 0 24px color-mix(in srgb,var(--g3) 28%,transparent)}
+.body-fit .body-grid{flex:1;min-height:0;align-items:stretch;grid-template-rows:minmax(0,1fr)}
+.body-fit .rail,.body-fit .detail{min-height:0;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;padding-right:2px}
+.body-fit .detail{padding-bottom:64px}   /* room to scroll the last card out from under the ↓ button */
+.body-fit .stage-col{min-height:0}
+@media (max-width:1240px){
+  .body-fit .body-grid{grid-template-columns:260px minmax(0,1fr);grid-template-rows:minmax(0,1fr) minmax(0,1.25fr);grid-template-areas:"rail stage" "detail stage"}
+  .body-fit .rail{grid-area:rail}
+  .body-fit .stage-col{grid-area:stage}
+  .body-fit .detail{grid-area:detail;grid-column:auto}
+}
+@media (max-width:820px){
+  .body-fit{min-height:460px}
+  .body-fit .body-grid{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(200px,1fr) auto;grid-template-areas:"stage" "detail";gap:10px}
+  .body-fit .detail{max-height:36vh}
+  .body-more .rail{margin-bottom:12px}
+  /* phones: the crew row and the badges each take one line that scrolls sideways, instead of four wrapped lines */
+  .row2{flex-wrap:nowrap;flex-direction:column;align-items:stretch;gap:6px}
+  .row2 > .demo-set{align-self:flex-start}
+  .badges{display:flex;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;gap:6px;min-width:0}
+  .badges::-webkit-scrollbar{display:none}
+  .badges > *{flex:none}
+}
+.body-more{padding-top:22px;display:flex;flex-direction:column;gap:12px}
+.more-down{position:fixed;right:max(18px,env(safe-area-inset-right,0px));bottom:max(18px,env(safe-area-inset-bottom,0px));z-index:55;width:48px;height:48px;border-radius:50%;border:1px solid var(--line);background:var(--panel);color:var(--ink);box-shadow:0 8px 24px rgba(0,0,0,.35);font-size:22px;font-weight:700;line-height:1;display:grid;place-items:center;cursor:pointer}
+.more-down:hover{border-color:var(--accent);color:var(--accent)}
+
 .detail{display:flex;flex-direction:column;gap:12px}
 .d-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
 .d-head h2{font-size:22px}
 .tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
 .mrows{display:flex;flex-direction:column;gap:4px;margin-top:4px}
-.mrow{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:center;padding:7px 8px;border-radius:8px;border:1px solid transparent;cursor:pointer;background:transparent;text-align:left;width:100%}
-.mrow:hover{background:var(--panel2)}
-.mrow[aria-pressed="true"]{border-color:var(--line);background:var(--panel2)}
-.mrow .v{font-family:var(--f-mono);font-weight:600}
+.mrow{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:9px 10px 9px 14px;border-radius:10px;border:1px solid transparent;cursor:pointer;background:transparent;text-align:left;width:100%;transition:background .15s,border-color .15s}
+.mrow::before{content:"";position:absolute;left:5px;top:9px;bottom:9px;width:3px;border-radius:3px;background:var(--g0)}
+.mrow.lv1::before{background:var(--g1)} .mrow.lv2::before{background:var(--g2)} .mrow.lv3::before{background:var(--g3)}
+.mrow[aria-disabled="true"]{cursor:default}
+button.mrow:hover{background:var(--panel2)}
+.mrow[aria-pressed="true"]{border-color:color-mix(in srgb,var(--accent) 55%,var(--line));background:color-mix(in srgb,var(--accent) 9%,var(--panel2))}
+.mrow .mn{font-weight:600}
+.mrow .v{font-family:var(--f-mono);font-weight:600;font-size:19px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.mrow .v .u{font-size:12px;font-weight:400;color:var(--ink3)}
+.mrow.lv1 .v{color:var(--g1)} .mrow.lv2 .v{color:var(--g2)} .mrow.lv3 .v{color:var(--g3)}
+.mrow .v .u{color:var(--ink3)}
 .mrow .rng{font-size:12px;color:var(--ink3)}
+/* mini range bar: green zone = this person's own normal, dot = today */
+.meter{position:relative;display:block;height:4px;border-radius:4px;background:var(--line);margin:7px 0 2px;max-width:170px}
+.meter .mband{position:absolute;left:33.33%;width:33.34%;top:0;bottom:0;border-radius:4px;background:color-mix(in srgb,var(--g0) 60%,transparent)}
+.meter .dot{position:absolute;top:50%;width:10px;height:10px;border-radius:50%;transform:translate(-50%,-50%);background:var(--g0);border:2px solid var(--panel);box-shadow:0 0 0 1px rgba(0,0,0,.25)}
+.meter .dot.l1{background:var(--g1)} .meter .dot.l2{background:var(--g2)} .meter .dot.l3{background:var(--g3)}
+.sys-chip{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:600;color:var(--ink2);border:1px solid var(--line);background:var(--panel2);border-radius:999px;padding:2px 10px;white-space:nowrap}
 .chart{width:100%;height:auto;display:block}
 .chart .band{fill:color-mix(in srgb,var(--g0) 16%,transparent)}
 .chart .lim{stroke-dasharray:4 4;stroke-width:1.1}
 .chart .lim.g1{stroke:var(--g1)}.chart .lim.g2{stroke:var(--g2)}.chart .lim.g3{stroke:var(--g3)}
 .chart .limt{font:8.5px var(--f-mono)}
+.more-grid{display:grid;grid-template-columns:minmax(0,560px) minmax(0,1fr);gap:14px 28px;align-items:start}
+@media (max-width:820px){.more-grid{grid-template-columns:1fr}}
 .chart .limt.g1{fill:var(--g1)}.chart .limt.g2{fill:var(--g2)}.chart .limt.g3{fill:var(--g3)}
 .gr{display:flex;flex-direction:column;align-items:flex-end;gap:3px}
 .srcTag{font:10.5px var(--f-mono);color:var(--ink3);white-space:nowrap}
@@ -531,12 +625,12 @@ dialog::backdrop{background:rgba(3,8,16,.6)}
       </div>
     </details>
     <div class="roster" id="roster" role="group" aria-label="Crew"></div>
+    <div id="cabinBand" class="cabin-chip" role="status" aria-live="polite" hidden></div>
     <div class="badges" id="badges" aria-live="polite"></div>
   </div>
 </header>
 <div id="waitBand" class="wait-band" role="status" aria-live="polite" hidden></div>
 <div id="crewAlert" class="crew-alert-band" role="alert" hidden></div>
-<div id="cabinBand" class="cabin-band" role="status" aria-live="polite" hidden></div>
 <div id="resumeBox" class="resume" role="alertdialog" aria-labelledby="resumeH" hidden></div>
 
 <main id="main">
@@ -546,7 +640,7 @@ dialog::backdrop{background:rgba(3,8,16,.6)}
       <div id="heroHost" class="hero-3d" data-shift="0.2"></div>
       <div class="hero-scrim"></div>
       <div class="hero-in">
-        <p class="eyebrow">NASA Space Apps Challenge 2026 · Team Temp7</p>
+        <p class="eyebrow">NASA Space Apps Challenge 2026 · Team Temp0.7</p>
         <h2 class="hero-h" data-t>A health guide that stays in orbit around you.</h2>
         <p class="hero-p" data-t>When Earth is up to 20 minutes away, Orbit Guide helps a crew member with no medical training see what is changing in their body, and know what to do first.</p>
         <nav class="launch" aria-label="Start here">
@@ -596,8 +690,15 @@ dialog::backdrop{background:rgba(3,8,16,.6)}
 
   <!-- ============ MY BODY ============ -->
   <section id="tab-body" data-tabpanel="body" aria-label="My body" hidden>
-    <div class="tab-guide" data-guide-tab="body"></div>
-    <div class="today-card" id="todayCard" aria-live="polite"></div>
+   <div class="body-fit" id="bodyFit">
+    <div class="stage" id="stage">
+      <div id="canvasHost" style="position:absolute;inset:0"></div>
+      <div class="labels" id="labels"></div>
+      <div class="fallback3d" id="fallback3d">
+        <strong data-t>3D view is not available on this device.</strong>
+        <span class="small" style="color:#9fb9d8" data-t>Everything else still works: use the body systems list on the left.</span>
+      </div>
+    </div>
     <div class="body-grid">
       <aside class="rail">
         <div class="card ring-card"><div class="card-b">
@@ -619,25 +720,27 @@ dialog::backdrop{background:rgba(3,8,16,.6)}
         </div>
       </aside>
 
-      <div class="stage-col">
-        <div class="stage" id="stage">
-          <div id="canvasHost" style="position:absolute;inset:0"></div>
-          <div class="labels" id="labels"></div>
+      <div class="stage-col" id="stageCol">
           <div class="hud" id="hud" aria-label="Today's vital signs"></div>
           <div class="stage-tools">
             <div class="row">
-              <button class="sbtn" id="rescanBtn" type="button" data-t>Rescan</button>
-              <button class="sbtn" id="wholeBtn" type="button" aria-pressed="false" data-t>Whole body</button>
+              <button class="sbtn icon-btn" id="rescanBtn" type="button" data-tlabel="Rescan"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.5-5.8"/><path d="M20.2 3.6v4.6h-4.6"/></svg></button>
+              <!-- whole-body view: inline SVG (no image file needed, follows the text colour) -->
+              <button class="sbtn icon-btn" id="wholeBtn" type="button" aria-pressed="false" data-tlabel="Whole body"><svg viewBox="2 1 20 22.5" aria-hidden="true" fill="currentColor"><circle cx="12" cy="4.6" r="2.6"/><path d="M9 8.6h6a3 3 0 0 1 3 3v4.9a1.3 1.3 0 0 1-2.6 0v-4.1h-.5V21a1.35 1.35 0 0 1-2.7 0v-5.2h-.4V21a1.35 1.35 0 0 1-2.7 0v-8.6h-.5v4.1a1.3 1.3 0 0 1-2.6 0v-4.9a3 3 0 0 1 3-3z"/></svg></button>
             </div>
           </div>
           <div class="stage-cap" id="stageCap" data-t>Drag to turn · scroll or pinch to zoom · tap a glowing part</div>
           <div class="layers" id="layers" role="group" aria-label="3D layers"></div>
-          <div class="fallback3d" id="fallback3d">
-            <strong data-t>3D view is not available on this device.</strong>
-            <span class="small" style="color:#9fb9d8" data-t>Everything else still works: use the body systems list on the left.</span>
-          </div>
-        </div>
-        <details class="card sim-more" id="simMore"><summary><span aria-hidden="true">🧪</span> <span data-t>Simulate: replay the mission or try a situation</span></summary><div class="card-b timeline">
+      </div>
+
+      <div class="detail" id="detail"></div>
+    </div>
+   </div>
+
+   <!-- below the first screen: reached with the ↓ button (or by scrolling) -->
+   <div class="body-more" id="bodyMore">
+        <div id="detailMoreHost"></div>
+        <details class="card sim-more" id="simMore" open><summary><span aria-hidden="true">🧪</span> <span data-t>Simulate: replay the mission or try a situation</span></summary><div class="card-b timeline">
           <div class="tl-row">
             <strong style="font-family:var(--f-head)" data-t>Mission timeline</strong>
             <span class="mono small" id="tlLabel"></span>
@@ -653,10 +756,8 @@ dialog::backdrop{background:rgba(3,8,16,.6)}
           <div class="tl-row"><span class="small muted" data-t>What if… (simulate a situation for this crew member)</span></div>
           <div class="scen" id="scen" role="group" aria-label="Situation simulation"></div>
         </div></details>
-      </div>
-
-      <div class="detail" id="detail"></div>
-    </div>
+   </div>
+   <button class="more-down" id="bodyDown" type="button" aria-label="Details, simulate and sources">↓</button>
   </section>
 
   <!-- ============ CHECK-IN ============ -->
@@ -723,7 +824,7 @@ dialog::backdrop{background:rgba(3,8,16,.6)}
     <summary data-t>Method, data and sources</summary>
     <div id="methodBody"></div>
   </details>
-  <p class="disc" data-t>Orbit Guide · Team Temp7 · NASA Space Apps Challenge 2026. Hackathon prototype with simulated data. Not a medical device and not medical advice.</p>
+  <p class="disc" data-t>Orbit Guide · Team Temp0.7 · NASA Space Apps Challenge 2026. Hackathon prototype with simulated data. Not a medical device and not medical advice.</p>
 </footer>
 
 <dialog id="crewDlg" aria-labelledby="crewTitle">
@@ -769,7 +870,7 @@ dialog::backdrop{background:rgba(3,8,16,.6)}
 /* =====================================================================
    Orbit Guide — data, sources and rules
    Written during the hackathon (2026-11-14 onward) with AI assistance
-   (Claude); reviewed by Team Temp7.
+   (Claude); reviewed by Team Temp0.7.
    All data is SIMULATED. Absolute thresholds come from NASA-STD-3001 and
    public clinical references (NEWS2, AHA, CDC, ADA, AASM, NHS).
    Personal-baseline rules are our own design. Not a medical device.
@@ -1256,7 +1357,7 @@ function rangeText(k, bl, env){
 /* =====================================================================
    Orbit Guide — app
    Written during the hackathon (2026-11-14 onward) with AI assistance
-   (Claude); reviewed by Team Temp7.
+   (Claude); reviewed by Team Temp0.7.
    ===================================================================== */
 const $ = (s, el=document) => el.querySelector(s);
 const $$ = (s, el=document) => [...el.querySelectorAll(s)];
@@ -1288,7 +1389,7 @@ function stText(st){ const peer = R && R.patient && R.patient!==R.responder; ret
 function subText(st){ const peer = R && R.patient && R.patient!==R.responder; return st.sub ? nm(peer && st.sp ? st.sp : st.sub, R?R.patient:S.me) : ""; }
 const AUD = {self:"Self", crewmate:"Crewmate", both:"Self or crewmate"};
 
-/* Korean UI dictionary (AI-assisted translation, Claude, 2026-11-14; reviewed by Team Temp7).
+/* Korean UI dictionary (AI-assisted translation, Claude, 2026-11-14; reviewed by Team Temp0.7).
    Keys are the English source strings. Notes and logs sent to Earth stay in English. */
 const KO = {
 "\"Do I need the flight surgeon?\"": "\"비행 군의관에게 연락해야 할까요?\"",
@@ -1479,7 +1580,7 @@ const KO = {
 "Flight engineer": "비행 엔지니어",
 "Fluid shift": "체액 이동",
 "Fluid shifts change blood pressure; a big change from your normal can mean dehydration or strain on the heart.": "체액 이동은 혈압을 바꿉니다. 평소보다 크게 변하면 탈수나 심장 부담일 수 있습니다.",
-"Follow the actions above and check again tomorrow.": "위의 조치를 하고 내일 다시 확인하세요.",
+"Follow today's to-do and check again tomorrow.": "오늘 할 일을 하고 내일 다시 확인하세요.",
 "Follow the beat: 110 per minute. Swap rescuers every 2 minutes.": "박자를 따라가세요: 분당 110회. 2분마다 구조자를 바꾸세요.",
 "Follow the daily routine and enter your readings.": "하루 루틴을 따라 측정값을 입력하세요.",
 "Follow the onboard checklist for low blood sugar.": "저혈당 기내 체크리스트를 따르세요.",
@@ -1519,6 +1620,8 @@ const KO = {
 "Headache, chest pain or blurred vision with it? Open the matching guide.": "두통, 흉통, 시야 흐림이 같이 있나요? 해당 가이드를 여세요.",
 "Health streak": "건강 연속 기록",
 "Heart & circulation": "심장·순환",
+"Heart": "심장·순환",
+"Lungs & air": "폐·선내 공기",
 "Heart rate": "심박",
 "Help {0}": "{0} 돕기",
 "Help {name} breathe slowly and deeply.": "{name}이(가) 천천히 깊게 숨 쉬도록 도와주세요.",
@@ -1642,6 +1745,7 @@ const KO = {
 "NASA's 5 Hazards in Orbit Guide": "Orbit Guide 속 NASA 5대 위험",
 "Nausea or vomiting in the first days of flight.": "비행 첫 며칠 동안의 메스꺼움이나 구토.",
 "Needs help": "도움 필요",
+"Switch crew member": "크루원 바꾸기",
 "New swelling or pain on one side of the neck, an arm or a leg.": "목, 팔, 다리 한쪽이 새로 붓거나 아픔.",
 "Next step": "다음 단계",
 "No": "아니요",
@@ -1672,7 +1776,7 @@ const KO = {
 "Open the onboard cardiac checklist and follow it.": "기내 심장 체크리스트를 열고 따르세요.",
 "Open-source: three.js (MIT). Fonts: IBM Plex, Saira (SIL Open Font License).": "오픈소스: three.js (MIT). 글꼴: IBM Plex, Saira (SIL Open Font License).",
 "Orbit Guide is a hackathon prototype. It is not a medical device and does not give medical advice. Absolute thresholds are taken from the references above and personal-baseline rules are our own design; emergency guides are example procedures that support, never replace, the onboard medical checklist and the flight surgeon.": "Orbit Guide는 해커톤 프로토타입입니다. 의료기기가 아니며 의학적 조언을 하지 않습니다. 절대 기준은 위 참고 자료에서 가져왔고 개인 기준선 규칙은 우리 팀이 설계했습니다. 응급 가이드는 기내 의료 체크리스트와 비행 군의관을 돕는 예시 절차이며, 결코 대신하지 않습니다.",
-"Orbit Guide · Team Temp7 · NASA Space Apps Challenge 2026. Hackathon prototype with simulated data. Not a medical device and not medical advice.": "Orbit Guide · Team Temp7 · NASA Space Apps Challenge 2026. 시뮬레이션 데이터를 쓴 해커톤 프로토타입입니다. 의료기기도, 의학적 조언도 아닙니다.",
+"Orbit Guide · Team Temp0.7 · NASA Space Apps Challenge 2026. Hackathon prototype with simulated data. Not a medical device and not medical advice.": "Orbit Guide · Team Temp0.7 · NASA Space Apps Challenge 2026. 시뮬레이션 데이터를 쓴 해커톤 프로토타입입니다. 의료기기도, 의학적 조언도 아닙니다.",
 "Organs": "장기",
 "Overall": "전체",
 "Pain or tingling after a spacewalk (DCS)": "선외활동 후 통증이나 저림 (감압병)",
@@ -1943,6 +2047,9 @@ const KO = {
 "On the way to Mars a solar storm multiplies the daily dose. Radiation streaks turn red; the solar storm guide is one tap away.": "화성으로 가는 길에 태양 폭풍이 하루 선량을 몇 배로 늘립니다. 방사선 줄기가 빨갛게 바뀌고, 태양 폭풍 가이드가 한 번에 열립니다.",
 "Received. Keep following the onboard guide; we are reviewing your log now. Keep measuring every 5 minutes and send updates.": "수신했습니다. 기내 가이드를 계속 따르세요. 지금 기록을 검토 중입니다. 5분마다 계속 재고 업데이트를 보내 주세요.",
 "Resume emergency in progress?": "진행 중이던 응급 상황을 이어서 할까요?",
+"Later": "나중에",
+"Details, simulate and sources": "자세히, 시뮬레이션, 출처",
+"Back to top": "맨 위로",
 "Resumed after the app was closed or reloaded.": "앱이 닫혔거나 새로고침된 뒤 이어서 진행.",
 "Rising blood sugar: a slow climb over 10 days is caught against Kim's own normal, long before a textbook limit.": "혈당 상승: 10일에 걸친 느린 상승을 교과서 한계보다 훨씬 전에 Kim의 평소 범위로 잡아냅니다.",
 "Selected: press Ctrl+C": "선택됨: Ctrl+C를 누르세요",
@@ -2084,7 +2191,13 @@ window.__miss = new Set();
 function T(s, ...a){
   let r = s;
   if(S.lang==="ko"){ const k = (typeof KO!=="undefined") && (KO[s] || koName(s)); if(k) r = k; else if(/[A-Za-z]{2}/.test(s)) window.__miss.add(s); }
-  return a.length ? r.replace(/\{(\d)\}/g, (m,i)=>a[i]) : r;
+  return glue(a.length ? r.replace(/\{(\d)\}/g, (m,i)=>a[i]) : r);
+}
+/* keep units of meaning on one line: a short "(…)" group, and a number with its unit (see the CSS note on line breaks) */
+function glue(r){
+  if(typeof r!=="string") return r;
+  return r.replace(/\(([^()<>"=]{1,24})\)/g, (m,x)=>"("+x.replace(/ /g,"\u00A0")+")")
+          .replace(/(\d) (?=(?:mmHg|bpm|mSv|mg\/dL|°C|%|min|분|초)(?![A-Za-z]))/g, "$1\u00A0");
 }
 /* crewmate-mode texts arrive with the name already filled in ("Tap Kim's shoulders…"): look up the {name} template */
 function koName(s){
@@ -2096,6 +2209,7 @@ const TE = (s, ...a) => esc(T(s, ...a));
 function applyStatic(){
   document.documentElement.lang = S.lang;
   $$("[data-t]").forEach(el=>{ if(!el.dataset.t) el.dataset.t = el.textContent.trim(); el.textContent = T(el.dataset.t); });
+  $$("[data-tlabel]").forEach(el=>{ const l = T(el.dataset.tlabel); el.setAttribute("aria-label", l); el.title = l; });   // icon-only buttons
   $$("[data-th]").forEach(el=>{ if(!el.dataset.th) el.dataset.th = el.innerHTML.trim(); el.innerHTML = T(el.dataset.th); });
   $$("#langBtn [data-l]").forEach(el=>el.classList.toggle("on", el.dataset.l===S.lang));
   $("#copyBtn").textContent = T("Copy text");
@@ -2203,25 +2317,52 @@ function initCrew(){
   $("#crewAdd").addEventListener("submit", e=>{ e.preventDefault(); if(addCrew($("#caName").value, $("#caRole").value)){ $("#caName").value = ""; $("#caRole").value = ""; $("#caName").focus(); } });
   $("#crewReset").addEventListener("click", ()=>{ if(R && !R.finished) return; CREW.splice(0, CREW.length, ...CREW_DEFAULT.map(c=>({...c}))); crewChanged(); });
 }
+/* Crew picker: only the selected person shows; clicking them opens a list of everyone to switch to.
+   A crewmate who needs help is still flagged on the closed picker (red count) and in the alert band. */
 function renderRoster(){
-  $("#roster").innerHTML = CREW.map(c=>{
+  const info = CREW.map(c=>{
     const g = todayGrade(c.id);
     const need = personalWorst(g)===3 && c.id!==S.me;  // FR-TOP-07: a crewmate needs help (personal metrics only)
     const waiting = R && !R.finished && R.patient===c.id && R.status==="waiting";
-    return `<span class="crew-w"><button type="button" class="crew ${need?"need":""}" aria-pressed="${c.id===S.crew}" data-crew="${c.id}">
-      <span class="av" style="background:${c.col}">${c.n[0]}</span>
-      <span><strong>${esc(c.n)}</strong>${c.id===S.me?` <span class="muted small">(${TE("me")})</span>`:""} <span class="muted small">${TE(c.role)}</span></span>
-      <span class="pill l${g.worst} lv">${LVT(g.worst)}</span>${need?`<span class="need-t">${TE("Needs help")}</span>`:""}${waiting?`<span class="wait-t" title="${TE("Guide waiting on a timer")}">⏱</span>`:""}</button>
-      ${need && !(R && !R.finished && R.patient===c.id)?`<button type="button" class="help-btn" data-help="${c.id}">${TE("Help {0}", c.n)}</button>`:""}</span>`;
-  }).join("");
-  document.body.classList.toggle("crew-alert", !!$("#roster .crew.need"));
+    return {c, g, need, waiting};
+  });
+  const face = ({c, g, need, waiting})=>`<span class="av" style="background:${c.col}">${c.n[0]}</span>
+      <span class="cw-name"><strong>${esc(c.n)}</strong>${c.id===S.me?` <span class="muted small">(${TE("me")})</span>`:""} <span class="muted small">${TE(c.role)}</span></span>
+      <span class="pill l${g.worst} lv">${LVT(g.worst)}</span>${need?`<span class="need-t">${TE("Needs help")}</span>`:""}${waiting?`<span class="wait-t" title="${TE("Guide waiting on a timer")}">⏱</span>`:""}`;
+  const cur = info.find(x=>x.c.id===S.crew) || info[0];
+  const others = info.filter(x=>x.need && x.c.id!==cur.c.id).length;
+  $("#roster").innerHTML = `<div class="crew-pick">
+    <button type="button" class="crew crew-cur ${cur.need?"need":""}" id="crewCur" aria-haspopup="true" aria-expanded="false" aria-controls="crewMenu" title="${TE("Switch crew member")}">
+      ${face(cur)}${others?`<span class="others-need" title="${TE("Needs help")}">${others}</span>`:""}<span class="caret" aria-hidden="true">▾</span></button>
+    <div class="crew-menu" id="crewMenu" role="group" aria-label="${TE("Crew")}" hidden>
+      ${info.map(x=>`<div class="crew-row"><button type="button" class="crew ${x.need?"need":""}" aria-pressed="${x.c.id===S.crew}" data-crew="${x.c.id}">${face(x)}</button>
+      ${x.need && !(R && !R.finished && R.patient===x.c.id)?`<button type="button" class="help-btn" data-help="${x.c.id}">${TE("Help {0}", x.c.n)}</button>`:""}</div>`).join("")}
+    </div></div>`;
+  document.body.classList.toggle("crew-alert", info.some(x=>x.need));
   renderCrewAlert(); renderCabinBand();
-  $$("#roster .crew").forEach(b=>b.addEventListener("click", ()=>{ stopDemo(); setCrew(b.dataset.crew); }));
-  $$("#roster [data-help]").forEach(b=>b.addEventListener("click", ()=>{ stopDemo(); helpCrew(b.dataset.help); }));
+  $("#crewCur").addEventListener("click", e=>{ e.stopPropagation(); crewMenu($("#crewMenu").hidden); });
+  $$("#crewMenu .crew").forEach(b=>b.addEventListener("click", ()=>{ stopDemo(); crewMenu(false); setCrew(b.dataset.crew); }));
+  $$("#crewMenu [data-help]").forEach(b=>b.addEventListener("click", ()=>{ stopDemo(); crewMenu(false); helpCrew(b.dataset.help); }));
 }
+function crewMenu(open){
+  const m = $("#crewMenu"), b = $("#crewCur"); if(!m || !b) return;
+  m.hidden = !open; b.setAttribute("aria-expanded", String(open));
+  if(open){ const sel = m.querySelector('.crew[aria-pressed="true"]') || m.querySelector(".crew"); if(sel) sel.focus(); }
+}
+document.addEventListener("click", e=>{ const m = $("#crewMenu"); if(m && !m.hidden && !e.target.closest(".crew-pick")) crewMenu(false); });
+document.addEventListener("keydown", e=>{
+  const m = $("#crewMenu"); if(!m || m.hidden) return;
+  if(e.key==="Escape"){ crewMenu(false); $("#crewCur").focus(); }
+  else if(e.key==="ArrowDown" || e.key==="ArrowUp"){
+    const items = [...m.querySelectorAll(".crew")], i = items.indexOf(document.activeElement);
+    items[(i + (e.key==="ArrowDown" ? 1 : -1) + items.length) % items.length].focus(); e.preventDefault();
+  }
+});
 /* Crewmate alert band (every tab): a crewmate's own readings are Urgent → one big, unmissable Help button */
+/* a band showing or hiding moves where My body starts: re-fit right after the band is updated */
+function refitSoon(){ queueMicrotask(()=>{ if(S.tab==="body") fitBody(); }); }
 function renderCrewAlert(){
-  const el = $("#crewAlert"); if(!el) return;
+  const el = $("#crewAlert"); if(!el) return; refitSoon();
   const need = CREW.filter(c=>c.id!==S.me && personalWorst(todayGrade(c.id))===3);
   if(!need.length || (R && !R.finished)){ el.hidden = true; el.innerHTML = ""; return; }
   el.innerHTML = need.map(c=>{ const g = todayGrade(c.id);
@@ -2232,19 +2373,23 @@ function renderCrewAlert(){
 }
 /* Vehicle alert band: the worst cabin reading across the crew in this environment, with the matching guide */
 function renderCabinBand(){
-  const el = $("#cabinBand"); if(!el) return;
+  const el = $("#cabinBand"); if(!el) return; refitSoon();
   let co2 = {lv:0}, rad = {lv:0};
   for(const c of CREW){ const cc = c.id===S.crew && C ? C : computeFor(c.id); const i = cc.recs.length-1, g = gradeDay(cc.recs, i, cc.bl, ENVS[S.env]), r = cc.recs[i];
     if(g.ml.co2 > co2.lv) co2 = {lv:g.ml.co2, v:r.co2}; if(g.ml.radDay > rad.lv) rad = {lv:g.ml.radDay, v:r.radDay}; }
   const items = [];
   if(co2.lv>=2) items.push({t:T("Cabin CO₂ {0} mmHg", fmt("co2",co2.v)), lv:co2.lv, g: co2.lv===3 ? "toxic" : "head"});
   if(rad.lv>=2) items.push({t:T("Radiation today {0} mSv", fmt("radDay",rad.v)), lv:rad.lv, g:"solar"});
-  if(!items.length || (R && !R.finished)){ el.hidden = true; el.innerHTML = ""; return; }
+  const on = items.length && !(R && !R.finished);
+  document.body.classList.toggle("cabin-alert", !!on);
+  if(!on){ el.hidden = true; el.innerHTML = ""; return; }
   const worst = Math.max(...items.map(x=>x.lv));
   el.classList.toggle("u", worst===3);
-  el.innerHTML = `<span>🛰 ${TE("Cabin")}: ${items.map(x=>`${esc(x.t)} · <span class="pill l${x.lv}">${LVT(x.lv)}</span>`).join(" · ")}</span>
-    <span class="small muted">${TE("Affects the whole crew. Follow the vehicle procedure first.")}</span>
-    ${[...new Set(items.map(x=>x.g))].map(g=>`<button class="btn danger" type="button" data-cabin="${g}">⚠ ${TE(PROT[g].title)}</button>`).join("")}`;
+  el.title = T("Affects the whole crew. Follow the vehicle procedure first.");
+  /* the guide button only when the same guide is not already on screen (My body's flight-surgeon card offers it) */
+  const shown = S.tab==="body" && isToday() ? guideLinks(vi()) : [];
+  el.innerHTML = `<span>🛰 ${items.map(x=>`${esc(x.t)} <span class="pill l${x.lv}">${LVT(x.lv)}</span>`).join(" · ")}</span>
+    ${[...new Set(items.map(x=>x.g))].filter(g=>!shown.includes(g)).map(g=>`<button class="btn danger" type="button" data-cabin="${g}">⚠ ${TE(PROT[g].title)}</button>`).join("")}`;
   el.hidden = false;
   $$("#cabinBand [data-cabin]").forEach(b=>b.addEventListener("click", ()=>{ stopDemo(); startGuide(b.dataset.cabin, "Opened from the cabin alert", null, S.me); }));
 }
@@ -2339,12 +2484,61 @@ function setTab(t){
   const changed = S.tab !== t; S.tab = t;
   document.body.classList.toggle("sos-active", t==="sos");
   document.body.classList.toggle("on-home", t==="home");
+  document.body.classList.toggle("on-body", t==="body");
+  if(C) renderCabinBand();   // the chip's guide button depends on the tab
   $$("[data-tabpanel]").forEach(p=>p.hidden = p.dataset.tabpanel!==t);
   $$(".tabs a").forEach(a=>{ if(a.dataset.tab===t) a.setAttribute("aria-current","page"); else a.removeAttribute("aria-current"); });
   mount3D();
   if(changed) window.scrollTo({top:0});
+  if(t==="body") fitBody();
 }
 window.addEventListener("hashchange", ()=>setTab(location.hash.slice(1)));
+
+/* My body fits one screen: measure where <main> starts (header, crew row, any alert band) for the CSS.
+   On phones the to-do and body-system lists move below the first screen, next to Simulate. */
+function fitBody(){
+  const top = Math.round($("main").getBoundingClientRect().top + scrollY);
+  document.documentElement.style.setProperty("--top-h", top + "px");
+  const rail = $("#tab-body .rail"), grid = $("#tab-body .body-grid"), more = $("#bodyMore");
+  const phone = matchMedia("(max-width:820px)").matches;
+  if(phone && rail.parentElement!==more) more.prepend(rail);
+  else if(!phone && rail.parentElement!==grid) grid.prepend(rail);
+  /* the background body reaches the window edges and the bottom of the header */
+  const fit = $("#bodyFit"), fr = fit.getBoundingClientRect(), mr = $("main").getBoundingClientRect(), R = document.documentElement.style;
+  R.setProperty("--bt", Math.round(fr.top - mr.top) + "px");
+  R.setProperty("--bl", Math.round(fr.left) + "px");
+  R.setProperty("--br", Math.round(document.documentElement.clientWidth - fr.right) + "px");
+  /* aim the camera at the middle of the open area between the panels */
+  const stg = $("#stage").getBoundingClientRect(), gap = $("#stageCol").getBoundingClientRect(), ch = $("#canvasHost");
+  if(stg.width && gap.width){
+    ch.dataset.sx = (((gap.left + gap.right) - (stg.left + stg.right)) / 2 / stg.width).toFixed(4);
+    ch.dataset.sy = (((gap.top + gap.bottom) - (stg.top + stg.bottom)) / 2 / stg.height).toFixed(4);
+    ch.dataset.k = Math.max(.35, Math.min(1, gap.height / (.8 * stg.height))).toFixed(3);   // the whole body fits the gap height
+    if(window.B3 && B3.resize) B3.resize();
+  }
+  updBodyDown();
+}
+function updBodyDown(){
+  const b = $("#bodyDown"); if(!b) return;
+  const down = scrollY < 60;
+  b.textContent = down ? "↓" : "↑";
+  b.setAttribute("aria-label", T(down ? "Details, simulate and sources" : "Back to top")); b.title = b.getAttribute("aria-label");
+}
+$("#bodyDown").addEventListener("click", ()=>{
+  if(scrollY < 60){
+    const more = $("#bodyMore"), top = $(".top");
+    const dm = $("#detailMore"); if(dm){ dm.open = true; S.moreOpen = true; } $("#simMore").open = true; $("#method").open = true;           // show what the button promises
+    const stick = getComputedStyle(top).position==="sticky" ? top.offsetHeight : 0;
+    window.scrollTo({top: more.getBoundingClientRect().top + scrollY - stick - 10, behavior:"smooth"});
+  } else window.scrollTo({top:0, behavior:"smooth"});
+});
+addEventListener("scroll", updBodyDown, {passive:true});
+addEventListener("resize", ()=>{ if(S.tab==="body") fitBody(); });
+{ const ro = new ResizeObserver(()=>{ if(S.tab==="body") fitBody(); }); ro.observe($(".top")); ro.observe($("#stageCol"));
+  for(const id of ["#waitBand", "#crewAlert", "#cabinBand"]) ro.observe($(id)); }   // a band showing or hiding moves where My body starts
+/* height of the sticky header, so alert bands stick below it (0 on phones, where the header scrolls away) */
+function setHdrH(){ const t = $(".top"); document.documentElement.style.setProperty("--hdr-h", (getComputedStyle(t).position==="sticky" ? t.offsetHeight : 0) + "px"); }
+new ResizeObserver(setHdrH).observe($(".top")); addEventListener("resize", setHdrH); setHdrH();
 
 /* ---------------- rail ---------------- */
 function renderRing(){
@@ -2413,37 +2607,43 @@ function renderDetail(){
   const s = SYS[S.sys||"heart"]; const i = vi(); const g = gradeAt(i); const rec = C.recs[i];
   const ks = s.metrics;
   if(!S.metric || !ks.includes(S.metric) || (S.metric==="mood" && moodHidden())) S.metric = ks.filter(k=>!(k==="mood"&&moodHidden())).sort((a,b)=>g.ml[b]-g.ml[a])[0];
-  const worstK = ks.slice().sort((a,b)=>g.ml[b]-g.ml[a])[0];
-  const acts = g.sl[s.id]>0 ? actionsFor(worstK, rec, C.bl).slice(0,4) : ["Keep your daily routine: it is working.", "Log your check-in tonight so changes are caught early."];
   const m = METRICS[S.metric];
   const sym = [rec.head?T("Headache"):null, rec.vision?T("Blurred vision"):null].filter(Boolean).join(", ");
   const extra = s.id==="brain" && sym ? `<p class="small" style="margin:6px 0 0"><span class="pill l1">${LVT(1)}</span> ${TE("Logged in the evening check: {0}.", sym)}</p>` : "";
-  $("#detail").innerHTML = `
+  /* where today's value sits against this person's own normal band (personal-baseline measures only) */
+  const meter = k => { const mk = METRICS[k], bl = C.bl[k]; if(mk.kind!=="p" || !bl || rec[k]==null || !(bl.hi>bl.lo)) return "";
+    const sp = bl.hi-bl.lo, lo = bl.lo-sp, pos = Math.max(0, Math.min(100, (rec[k]-lo)/(sp*3)*100));
+    return `<span class="meter" aria-hidden="true"><i class="mband"></i><i class="dot l${g.ml[k]}" style="left:${pos.toFixed(1)}%"></i></span>`; };
+  const numbersCard = `
+  <div class="card num-card"><div class="card-h"><h3>${TE("Today's numbers")}</h3><span class="sys-chip"><span aria-hidden="true">${s.ic}</span> ${TE(s.n)}</span></div><div class="card-b">
+    <div class="mrows">${ks.map(k=>k==="mood" && moodHidden() ? `<div class="mrow lv${g.ml[k]}" aria-disabled="true"><span><span class="mn">${TE(METRICS[k].n)}</span><br><span class="rng">${TE("Private to {0}. Only the grade is shown.", crewObj().n)}</span></span><span class="v">—</span><span class="gr"><span class="pill l${g.ml[k]}">${LVT(g.ml[k])}</span></span></div>` : `<button type="button" class="mrow lv${g.ml[k]}" data-m="${k}" aria-pressed="${k===S.metric}">
+      <span><span class="mn">${TE(METRICS[k].n)}</span><br><span class="rng">${esc(rangeT(k))}</span>${meter(k)}</span>
+      <span class="v">${fmt(k, rec[k])} <span class="u">${esc(unit(k))}</span></span>
+      <span class="gr"><span class="pill l${g.ml[k]}">${LVT(g.ml[k])}</span>${g.ml[k]>0?`<span class="srcTag">${TE(g.info[k].src)}</span>`:""}</span></button>`).join("")}</div>
+    ${s.id==="heart" && C.bl.hr.mean>=40.5 && C.bl.hr.mean<50.5 ? `<p class="small muted" style="margin:6px 0 0">${TE("Your resting heart rate is usually low.")}</p>`:""}
+  </div></div>`;
+  const systemCard = `
   <div class="card"><div class="card-b">
     <div class="d-head"><div><div class="small muted">${s.ic} ${TE("Body system")} · ${TE("Day {0}", S.view)}</div><h2>${TE(s.n)}</h2></div><span class="pill l${g.sl[s.id]}" style="font-size:13px">${LVT(g.sl[s.id])}</span></div>
     <p style="margin:8px 0 0">${TE(s.plain)}</p>${extra}
-  </div></div>
-  <div class="card"><div class="card-h"><h3>${TE("What to do now")}</h3></div><div class="card-b"><ol class="do-list">${acts.map(a=>`<li>${TE(a)}</li>`).join("")}</ol></div></div>
-  ${surgeonCard()}
-  <div class="card"><div class="card-h"><h3>${TE("Today's numbers")}</h3></div><div class="card-b">
-    <div class="mrows">${ks.map(k=>k==="mood" && moodHidden() ? `<div class="mrow" aria-disabled="true"><span><span style="font-weight:600">${TE(METRICS[k].n)}</span><br><span class="rng">${TE("Private to {0}. Only the grade is shown.", crewObj().n)}</span></span><span class="v">—</span><span class="gr"><span class="pill l${g.ml[k]}">${LVT(g.ml[k])}</span></span></div>` : `<button type="button" class="mrow" data-m="${k}" aria-pressed="${k===S.metric}">
-      <span><span style="font-weight:600">${TE(METRICS[k].n)}</span><br><span class="rng">${esc(rangeT(k))}</span></span>
-      <span class="v">${fmt(k, rec[k])} <span class="muted small">${esc(unit(k))}</span></span>
-      <span class="gr"><span class="pill l${g.ml[k]}">${LVT(g.ml[k])}</span>${g.ml[k]>0?`<span class="srcTag">${TE(g.info[k].src)}</span>`:""}</span></button>`).join("")}</div>
-    ${s.id==="heart" && C.bl.hr.mean>=40.5 && C.bl.hr.mean<50.5 ? `<p class="small muted" style="margin:6px 0 0">${TE("Your resting heart rate is usually low.")}</p>`:""}
-  </div></div>
-  <details class="card more" id="detailMore" ${S.moreOpen?"open":""}><summary>${TE("More: trend, how to measure, how space affects this, sources")}</summary><div class="card-b">
-    <div>
+  </div></div>`;
+  /* order: today's numbers → what this system is → do I need the flight surgeon.
+     Only on an Urgent day the flight-surgeon card moves to the top, so "call now" is never below the fold. */
+  const urgentFirst = surgeonAssess(i).lv===3;
+  $("#detail").innerHTML = (urgentFirst ? [surgeonCard(), numbersCard, systemCard] : [numbersCard, systemCard, surgeonCard()]).join("");
+  $("#detailMoreHost").innerHTML = `
+  <details class="card more" id="detailMore" ${S.moreOpen!==false?"open":""}><summary><span aria-hidden="true">${s.ic}</span> ${TE(s.n)} · ${TE("More: trend, how to measure, how space affects this, sources")}</summary><div class="card-b more-grid">
+    <div class="more-trend">
       <div class="small" style="font-weight:600">${TE("{0}: last 28 days", T(m.n))}</div>
       <svg class="chart" id="trend" viewBox="0 0 340 150" role="img" aria-label="${TE("{0}: last 28 days", T(m.n))}"></svg>
       <div class="small muted"><strong>${TE("How to measure:")}</strong> ${TE(m.how)}</div>
       <div class="small muted" style="margin-top:3px"><strong>${TE("Why we measure it:")}</strong> ${TE(m.why)}</div>
       <div class="small muted" style="margin-top:3px">${m.kind==="p"?TE("Green band = your normal (days 1–14).")+" ":""}${TE("Dashed lines = named limits from NASA and clinical references.")}</div>
     </div>
-    <h3 style="margin:14px 0 4px">${TE("How space affects this")}</h3><p style="margin:0" class="small">${TE(s.space)}</p>
+    <div class="more-info"><h3 style="margin:0 0 4px">${TE("How space affects this")}</h3><p style="margin:0" class="small">${TE(s.space)}</p>
     <div class="tags">${s.hz.map(h=>`<span class="tag">${TE("NASA Hazard")}: ${TE(HAZARDS[h].n)}</span>`).join("")}</div>
     <div class="tags">${s.risks.map(r=>`<a class="tag" href="${SOURCES[r].url}" target="_blank" rel="noopener">HRP Risk: ${esc(SOURCES[r].t.replace(/^Risk (of|from) /,""))} ↗</a>`).join("")}</div>
-    <p class="small muted" style="margin:6px 0 0">${TE("Source:")} <a href="${SOURCES.hazards.url}" target="_blank" rel="noopener">NASA HRP, 5 Hazards of Human Spaceflight</a> · HRP Risks</p>
+    <p class="small muted" style="margin:6px 0 0">${TE("Source:")} <a href="${SOURCES.hazards.url}" target="_blank" rel="noopener">NASA HRP, 5 Hazards of Human Spaceflight</a> · HRP Risks</p></div>
   </div></details>`;
   const dm = $("#detailMore"); if(dm) dm.addEventListener("toggle", ()=>{ S.moreOpen = dm.open; });
   $$("#detail button.mrow").forEach(b=>b.addEventListener("click", ()=>{ S.metric = b.dataset.m; renderDetail(); }));
@@ -2476,7 +2676,7 @@ function surgeonCard(){
   let ans, sub;
   if(a.lv===3){ ans = T("Yes: call now."); sub = e.delay<60 ? T("The Earth link is live (about 1 second). Call the flight surgeon now and start onboard care.") : T("A reply takes at least about {0} minutes (round trip plus about 10 minutes to review). Start onboard care now; do not wait.", replyMin(e)); }
   else if(a.lv===2){ ans = T("Not urgent. Add it to today's medical report."); sub = T("Send a note with the next data downlink."); }
-  else if(a.lv===1){ ans = T("Not yet."); sub = T("Follow the actions above and check again tomorrow."); }
+  else if(a.lv===1){ ans = T("Not yet."); sub = T("Follow today's to-do and check again tomorrow."); }
   else { ans = T("No."); sub = e.delay<60 ? T("Nothing to report beyond your routine private medical conference.") : T("Nothing to send beyond the routine weekly summary. Onboard guides cover common problems."); }
   const links = isToday() ? guideLinks(i) : [];
   return `<div class="card fs-card k${a.lv}"><div class="card-h"><h3>${TE("Do I need the flight surgeon?")}</h3></div><div class="card-b">
@@ -2524,7 +2724,7 @@ function renderStageStatic(){
 }
 function initStage(){
   renderStageStatic();
-  $("#rescanBtn").addEventListener("click", ()=>window.B3 && B3.rescan());
+  $("#rescanBtn").addEventListener("click", e=>{ const b = e.currentTarget; b.classList.remove("spin"); void b.offsetWidth; b.classList.add("spin"); if(window.B3) B3.rescan(); });
   $("#wholeBtn").addEventListener("click", ()=>{ S.whole = !S.whole; $("#wholeBtn").setAttribute("aria-pressed", S.whole); if(window.B3) B3.whole(S.whole); });
   const rg = $("#tlRange");
   rg.addEventListener("input", ()=>{ stopReplay(); S.view = +rg.value; renderView(); });
@@ -2565,20 +2765,7 @@ function push3D(rescan){
   B3.update({sl:g.sl, hr:r.hr, temp:r.temp, bone:r.bone, g:e.g, radRatio:r.radDay/e.dose, urgent:g.worst===3, selected:S.sys});
   if(rescan) B3.rescan();
 }
-/* One answer first: who, how they are, the one thing to do, and whether to call the flight surgeon */
-function renderTodayCard(){
-  const el = $("#todayCard"); if(!el || !C) return;
-  const i = vi(), g = gradeAt(i), a = surgeonAssess(i), c = crewObj();
-  const bad = SYSTEMS.filter(s=>g.sl[s.id]>0).sort((x,y)=>g.sl[y.id]-g.sl[x.id]);
-  const status = bad.length ? `${TE(bad[0].n)} <span class="pill l${g.sl[bad[0].id]}">${LVT(g.sl[bad[0].id])}</span>${bad.length>1?` <span class="muted small">${TE("(+{0} more)", bad.length-1)}</span>`:""}` : `${TE("All normal")} <span class="pill l0">${LVT(0)}</span>`;
-  const todo = todoItems()[0];
-  const surgeon = [T("No."), T("Not yet."), T("Not urgent. Add it to today's medical report."), T("Yes: call now.")][a.lv];
-  el.innerHTML = `<div class="tc-who"><span class="small muted">${esc(c.n)} · ${esc(dayT())}</span><b class="tc-status">${status}</b></div>
-    <div class="tc-cell"><span class="small muted">${TE("Do now")}</span><b>${todo ? TE(todo.t) : "—"}</b></div>
-    <div class="tc-cell k${a.lv}"><span class="small muted">${TE("Do I need the flight surgeon?")}</span><b>${esc(surgeon)}</b></div>`;
-  el.className = "today-card lv" + Math.max(g.worst, a.lv);
-}
-function renderView(){ renderTodayCard(); renderRing(); renderTodo(); renderSysList(); renderDetail(); renderTimeline(); renderHUD(); push3D(false); }
+function renderView(){ renderRing(); renderTodo(); renderSysList(); renderDetail(); renderTimeline(); renderHUD(); push3D(false); }
 function renderAll(rescan){
   C = computeFor(S.crew);
   if(S.view > S.day) S.view = S.day;
@@ -2953,8 +3140,10 @@ function offerResume(){
   const box = $("#resumeBox");
   box.innerHTML = `<h2 id="resumeH" style="font-size:20px">⚠ ${TE("Resume emergency in progress?")}</h2>
     <p class="small" style="margin:6px 0 0">${TE("{0} for {1}, started {2} UTC. The clock and log continue from where they stopped.", T(PROT[o.gid].title), crewById(o.patient).n, o.wall.toISOString().slice(11,16))}</p>
-    <div class="acts"><button class="btn big danger" type="button" id="rsGo">${TE("Resume")}</button><button class="btn big" type="button" id="rsCopy">${TE("Copy log and close")}</button></div>`;
+    <div class="acts"><button class="btn big danger" type="button" id="rsGo">${TE("Resume")}</button><button class="btn big" type="button" id="rsCopy">${TE("Copy log and close")}</button></div>
+    <button class="btn ghost rs-x" type="button" id="rsLater" aria-label="${TE("Later")}" title="${TE("Later")}">✕</button>`;
   box.hidden = false;
+  $("#rsLater").addEventListener("click", ()=>{ box.hidden = true; });   // only hides it: the saved emergency is kept and offered again on the next load
   const restore = () => { box.hidden = true; R = o; if(ENVS[o.env]) { S.env = o.env; $("#envSel").value = o.env; } if(o.day){ S.day = o.day; S.view = o.day; $("#dayIn").value = o.day; } delete R.env; delete R.day; delete R.v; };
   $("#rsGo").addEventListener("click", ()=>{ restore(); log("Resumed after the app was closed or reloaded.", [], "warn"); enterRun(); if(R.patient) setCrew(R.patient); renderRun(); });
   $("#rsCopy").addEventListener("click", e=>{ restore(); log("Closed after reload; log copied.", [], "warn"); openEmergencyLog(e.currentTarget, true); $("#noteDlg").addEventListener("close", exitGuide, {once:true}); });
@@ -3070,7 +3259,7 @@ function tickSOS(){
   const wb = $("#wbLeft"); if(wb) wb.textContent = left>0 ? hms(left) : T("due now");
 }
 function renderWaitBand(){
-  const el = $("#waitBand"); if(!el) return;
+  const el = $("#waitBand"); if(!el) return; refitSoon();
   const t = R && !R.finished && R.timer;
   if(!t || (!t.due && R.status!=="waiting")){ el.hidden = true; el.innerHTML = ""; return; }
   const left = (t.dueAt - Date.now())/1000;
@@ -3314,7 +3503,6 @@ function stopDemo(){
    Someone who knows nothing should see what to press at once: three big buttons on the first screen
    (Body check · Daily checklist · Emergency guide) and a one-line "what is this / try" strip on each tab. */
 const TAB_GUIDE = {
-  body:   {ic:"🧍", what:"Your body today. Each part is colored against your own normal:", key:true, tryit:"tap a glowing part, or open Simulate below to try a situation and see what changes."},
   checkin:{ic:"📋", what:"Your morning routine. Enter readings and save: the app grades them and updates your body.", tryit:"press ⌚ Fill from wearable, then Save today’s log."},
   sos:    {ic:"🆘", what:"Emergency guides. Pick who needs help, answer yes/no questions, then follow one step per screen.", tryit:"open any guide. It is safe to practise, and the log shows what was done and when."}};
 function renderTabGuides(){
@@ -3397,6 +3585,7 @@ function bodyF(x,y,z){
   if(ax > .34 || y > .88 || y < -.93) return .05;
   let d = sdEll(x, y-.765, z+.005, .076,.098,.09);                         // cranium
   d = smin(d, sdEll(x, y-.705, z-.018, .058,.062,.062), .035);            // face and jaw
+  d = smin(d, sdEll(x, y-.722, z-.074, .013,.024,.017), .012);            // nose: the face points forward (+z)
   d = smin(d, sdRC(x,y,z, 0,.585,-.008, 0,.69,-.002, .047,.04), .03);     // neck
   d = smin(d, sdRC(ax,y,z, 0,.6,-.02, .15,.515,-.01, .038,.045), .05);    // trapezius
   d = smin(d, sdEll(x, y-.405, z+.002, .158,.135,.098), .05);             // rib cage
@@ -3523,12 +3712,12 @@ camera.position.set(.9, .35, 5.2);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true; controls.dampingFactor = 0.08; controls.minDistance = 0.45; controls.maxDistance = 4.8;
 controls.target.set(0, 0, 0); controls.autoRotateSpeed = 0.9; controls.enablePan = false;
-let composer = null;
+let composer = null, bloom = null;
 if(EffectComposer){
   try{
     composer = new EffectComposer(renderer);
     composer.addPass(new RenderPass(scene, camera));
-    composer.addPass(new UnrealBloomPass(new THREE.Vector2(512,512), 0.5, 0.5, 0.24));
+    composer.addPass(bloom = new UnrealBloomPass(new THREE.Vector2(512,512), 0.5, 0.5, 0.24));
     composer.addPass(new OutputPass());
   }catch(e){ composer = null; }
 }
@@ -3538,7 +3727,7 @@ const GRADE = [new THREE.Color("#4fc3ff"), new THREE.Color("#f2c230"), new THREE
 const C_SKIN = new THREE.Color("#58b6ff"), C_BONE = new THREE.Color("#d5e6ff"), C_VES = new THREE.Color("#ff5d7a");
 const VS = `varying vec3 vN; varying vec3 vW; varying vec3 vV; varying vec2 vUv; varying vec3 vO;
 void main(){ vUv = uv; vO = position; vec4 w = modelMatrix*vec4(position,1.); vW = w.xyz; vN = normalize(mat3(modelMatrix)*normal); vV = normalize(cameraPosition - w.xyz); gl_Position = projectionMatrix*viewMatrix*w; }`;
-const FS = `uniform vec3 uCol; uniform float uInt; uniform float uOp; uniform float uRim; uniform float uBase; uniform float uScan; uniform float uPor; uniform float uWarm; uniform float uT; uniform float uLines; uniform float uSolid;
+const FS = `uniform vec3 uCol; uniform float uInt; uniform float uOp; uniform float uRim; uniform float uBase; uniform float uScan; uniform float uPor; uniform float uWarm; uniform float uT; uniform float uLines; uniform float uSolid; uniform float uBack;
 uniform vec4 uHot[5]; uniform vec3 uHotC[5];
 varying vec3 vN; varying vec3 vW; varying vec3 vV;
 float h3(vec3 p){ return fract(sin(dot(p, vec3(127.1,311.7,74.7)))*43758.5453); }
@@ -3556,12 +3745,16 @@ void main(){
   for(int i=0;i<5;i++){ float d = distance(vW, uHot[i].xyz); float h = exp(-d*d/(uHot[i].w*uHot[i].w)); col += uHotC[i]*h*(0.35 + fr); a += h*length(uHotC[i])*0.25; }
   float sc = exp(-pow((vW.y - uScan)*26.0, 2.0));
   col += vec3(0.55,0.9,1.0)*sc*1.7;
-  gl_FragColor = vec4(col, clamp(a + sc*0.5, 0.0, 1.0));
+  float side = gl_FrontFacing ? 1.0 : uBack;                    // the far wall of the shell is dimmer, so the near side reads first
+  // depth cue: what is nearer the camera than the body's centre line glows a little more, what is behind it less
+  float rel = distance(cameraPosition, vW) - distance(cameraPosition, vec3(0.0, vW.y, 0.0));
+  side *= clamp(1.0 - rel*2.6, 0.6, 1.25);
+  gl_FragColor = vec4(col*side, clamp(a*side + sc*0.5, 0.0, 1.0));
 }`;
 const allHolo = [];
 function holoMat(col, o={}){
   const m = new THREE.ShaderMaterial({vertexShader:VS, fragmentShader:FS, transparent:true, depthWrite:false, side:THREE.DoubleSide, blending:THREE.AdditiveBlending,
-    uniforms:{uCol:{value:new THREE.Color(col)}, uInt:{value:o.int??1}, uOp:{value:o.op??.8}, uRim:{value:o.rim??2.2}, uBase:{value:o.base??.25}, uScan:{value:-9}, uPor:{value:0}, uWarm:{value:0}, uT:{value:0}, uLines:{value:o.lines??0}, uSolid:{value:o.solid??0},
+    uniforms:{uCol:{value:new THREE.Color(col)}, uInt:{value:o.int??1}, uOp:{value:o.op??.8}, uRim:{value:o.rim??2.2}, uBase:{value:o.base??.25}, uScan:{value:-9}, uPor:{value:0}, uWarm:{value:0}, uT:{value:0}, uLines:{value:o.lines??0}, uSolid:{value:o.solid??0}, uBack:{value:o.back??1},
       uHot:{value:Array.from({length:5}, ()=>new THREE.Vector4(0,0,0,.1))}, uHotC:{value:Array.from({length:5}, ()=>new THREE.Vector3())}}});
   allHolo.push(m); return m;
 }
@@ -3580,13 +3773,13 @@ const DOT = dotTex();
   const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.BufferAttribute(p,3)); g.setAttribute("color", new THREE.BufferAttribute(c,3));
   scene.add(new THREE.Points(g, new THREE.PointsMaterial({size:.16, map:DOT, vertexColors:true, transparent:true, opacity:.9, depthWrite:false, blending:THREE.AdditiveBlending})));
 }
-const earth = new THREE.Mesh(new THREE.SphereGeometry(2.4, 64, 48), new THREE.ShaderMaterial({vertexShader:VS, uniforms:{uT:{value:0}}, fragmentShader:`
-  uniform float uT; varying vec3 vN; varying vec3 vV; varying vec3 vO;
+const earth = new THREE.Mesh(new THREE.SphereGeometry(2.4, 64, 48), new THREE.ShaderMaterial({vertexShader:VS, transparent:true, depthWrite:false, uniforms:{uT:{value:0}, uA:{value:0}}, fragmentShader:`
+  uniform float uT; uniform float uA; varying vec3 vN; varying vec3 vV; varying vec3 vO;
   float h(vec3 p){ return fract(sin(dot(p, vec3(127.1,311.7,74.7)))*43758.5453); }
   float vn(vec3 p){ vec3 i = floor(p), f = fract(p); f = f*f*(3.0-2.0*f);
     return mix(mix(mix(h(i),h(i+vec3(1,0,0)),f.x), mix(h(i+vec3(0,1,0)),h(i+vec3(1,1,0)),f.x), f.y), mix(mix(h(i+vec3(0,0,1)),h(i+vec3(1,0,1)),f.x), mix(h(i+vec3(0,1,1)),h(i+vec3(1,1,1)),f.x), f.y), f.z); }
   float fbm(vec3 p){ return vn(p)*0.5 + vn(p*2.1)*0.27 + vn(p*4.3)*0.15 + vn(p*8.7)*0.08; }
-  void main(){ vec3 n = normalize(vN); vec3 sun = normalize(vec3(0.75,0.35,0.55));
+  void main(){ vec3 n = normalize(vN); vec3 sun = normalize(vec3(0.75,0.12,0.55));
     float land = smoothstep(0.5, 0.56, fbm(vO*1.25 + 4.0));
     vec3 base = mix(vec3(0.015,0.09,0.3), vec3(0.05,0.22,0.12), land);
     float cl = smoothstep(0.52, 0.75, fbm(vO*2.3 + vec3(uT*0.01, 0.0, 7.0)));
@@ -3594,8 +3787,125 @@ const earth = new THREE.Mesh(new THREE.SphereGeometry(2.4, 64, 48), new THREE.Sh
     float l = smoothstep(-0.12, 0.5, dot(n, sun));
     float rim = pow(1.0 - max(dot(n, normalize(vV)), 0.0), 2.6);
     vec3 col = base*(0.012 + l*0.75) + vec3(0.2,0.5,1.0)*rim*(0.12 + l*0.75);
-    gl_FragColor = vec4(col, 1.0); }`}));
-earth.position.set(-9.5, 4.6, -22); earth.rotation.set(.3, 1.1, .2); scene.add(earth);
+    gl_FragColor = vec4(col, uA); }`}));
+earth.position.set(-9.5, 4.6, -22); earth.rotation.set(.3, 1.1, .2); scene.add(earth);   // home screen only: faded with the rest of the home sky below
+
+/* ---------- home-screen sky: Sun, planets, Moon, Milky Way (fade in and out with st.hero) ----------
+   Spread around the whole sky like a real one: the first view keeps Earth, Moon and Mars; as the camera
+   slowly turns, the Sun, Venus, Jupiter and Saturn come into view one at a time. The Sun sits exactly in
+   the direction every planet shader is lit from, so facing it shows the planets as backlit crescents. */
+const SUN_DIR = new THREE.Vector3(.75, .12, .55).normalize();
+const NOISE_GLSL = `float h(vec3 p){ return fract(sin(dot(p, vec3(127.1,311.7,74.7)))*43758.5453); }
+  float vn(vec3 p){ vec3 i = floor(p), f = fract(p); f = f*f*(3.0-2.0*f);
+    return mix(mix(mix(h(i),h(i+vec3(1,0,0)),f.x), mix(h(i+vec3(0,1,0)),h(i+vec3(1,1,0)),f.x), f.y), mix(mix(h(i+vec3(0,0,1)),h(i+vec3(1,0,1)),f.x), mix(h(i+vec3(0,1,1)),h(i+vec3(1,1,1)),f.x), f.y), f.z); }
+  float fbm(vec3 p){ return vn(p)*0.5 + vn(p*2.1)*0.27 + vn(p*4.3)*0.15 + vn(p*8.7)*0.08; }`;
+/* a planet: `surface` sets vec3 base from o (unit position on the sphere); lit from SUN_DIR with a thin rim */
+function planetMat(surface, rimCol = "vec3(0.0)", rimK = 0){
+  return new THREE.ShaderMaterial({vertexShader:VS, transparent:true, depthWrite:false, uniforms:{uA:{value:0}}, fragmentShader:`
+  uniform float uA; varying vec3 vN; varying vec3 vV; varying vec3 vO; ${NOISE_GLSL}
+  void main(){ vec3 n = normalize(vN); vec3 sun = normalize(vec3(0.75,0.12,0.55)); vec3 o = normalize(vO); vec3 base;
+    ${surface}
+    float l = smoothstep(-0.1, 0.55, dot(n, sun));
+    float rim = pow(1.0 - max(dot(n, normalize(vV)), 0.0), 3.0);
+    gl_FragColor = vec4(base*(0.05 + l) + ${rimCol}*rim*(0.06 + l*${rimK.toFixed(2)}), uA); }`});   // a little light on the night side, never a black hole
+}
+const homeSky = [];   // [object, max opacity]: faded together in the loop
+function addSky(obj, op = 1){ scene.add(obj); homeSky.push([obj, op]); return obj; }
+homeSky.push([earth, 1]);   // Earth too: the My body screen shows the body alone
+
+/* Mars, with the crew's Earth → Mars route */
+const MARS_AT = new THREE.Vector3(2.4, 4.9, -24);
+const mars = addSky(new THREE.Mesh(new THREE.SphereGeometry(1.05, 64, 48), planetMat(`
+    base = mix(vec3(0.40,0.15,0.07), vec3(0.66,0.32,0.15), fbm(o*1.8 + 11.0));
+    base = mix(base, vec3(0.22,0.09,0.05), smoothstep(0.55, 0.68, fbm(o*2.7 + 3.0))*0.7);   // dark plains
+    base = mix(base, vec3(0.86,0.83,0.8), smoothstep(0.88, 0.94, abs(o.y)));                // polar caps`,
+  "vec3(1.0,0.5,0.28)", .45)));
+mars.position.copy(MARS_AT); mars.rotation.set(.45, .6, .1);
+const route = new THREE.QuadraticBezierCurve3(earth.position.clone(), earth.position.clone().lerp(MARS_AT, .5).add(new THREE.Vector3(0, 4.2, 0)), MARS_AT.clone());
+const routeLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints(route.getPoints(120)),
+  new THREE.LineDashedMaterial({color:0xffa36b, dashSize:.35, gapSize:.3, transparent:true, opacity:0, depthWrite:false, blending:THREE.AdditiveBlending}));
+routeLine.computeLineDistances(); addSky(routeLine, .12);
+const ship = addSky(new THREE.Sprite(new THREE.SpriteMaterial({map:DOT, color:0xffd2a8, transparent:true, opacity:0, blending:THREE.AdditiveBlending, depthWrite:false})), .55); ship.scale.setScalar(.42);
+
+/* the Moon beside Earth */
+const moon = addSky(new THREE.Mesh(new THREE.SphereGeometry(.5, 48, 32), planetMat(`
+    float g = 0.55 + 0.25*fbm(o*2.5 + 2.0) - 0.22*smoothstep(0.52, 0.64, fbm(o*1.2 + 9.0));   // highlands and dark maria
+    base = vec3(g)*vec3(0.92,0.92,0.96)*0.85;`)));
+moon.position.set(-5.3, 2.9, -19);
+
+/* the Sun, far out along the light direction: a white core in a warm glow */
+function glowTex(stops){ const c = document.createElement("canvas"); c.width = c.height = 256; const x = c.getContext("2d"); const g = x.createRadialGradient(128,128,0,128,128,128);
+  for(const [s, col] of stops) g.addColorStop(s, col); x.fillStyle = g; x.fillRect(0,0,256,256); return new THREE.CanvasTexture(c); }
+const SUN_AT = SUN_DIR.clone().multiplyScalar(44);
+const sunGlow = addSky(new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex([[0,"rgba(255,240,215,.9)"],[.12,"rgba(255,214,150,.45)"],[.35,"rgba(255,170,90,.12)"],[1,"rgba(255,150,80,0)"]]),
+  transparent:true, opacity:0, blending:THREE.AdditiveBlending, depthWrite:false})), .9);
+sunGlow.position.copy(SUN_AT); sunGlow.scale.setScalar(20);
+const sunCore = addSky(new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex([[0,"rgba(255,255,255,1)"],[.55,"rgba(255,250,235,1)"],[.7,"rgba(255,230,180,.5)"],[1,"rgba(255,220,160,0)"]]),
+  transparent:true, opacity:0, blending:THREE.AdditiveBlending, depthWrite:false})), 1);
+sunCore.position.copy(SUN_AT); sunCore.scale.setScalar(3.2);
+
+/* Venus, close to the Sun in the sky, so it shows as a thin crescent like the real one */
+const venus = addSky(new THREE.Mesh(new THREE.SphereGeometry(.6, 48, 32), planetMat(`
+    base = mix(vec3(0.95,0.88,0.7), vec3(0.8,0.68,0.48), fbm(o*vec3(1.4,3.0,1.4) + 3.0));`, "vec3(1.0,0.9,0.7)", .5)));
+venus.position.copy(new THREE.Vector3(.5, .1, .86).normalize().multiplyScalar(26));
+
+/* Jupiter and Saturn on the sky opposite the Sun (to the left of the first view), so their lit faces show */
+const jupiter = addSky(new THREE.Mesh(new THREE.SphereGeometry(1.7, 64, 48), planetMat(`
+    float w = fbm(o*vec3(1.2,6.0,1.2) + 5.0);
+    float b = sin(o.y*18.0 + w*3.2);
+    base = mix(vec3(0.80,0.68,0.52), vec3(0.50,0.32,0.20), smoothstep(-0.2, 0.7, b));
+    base = mix(base, vec3(0.9,0.86,0.78), smoothstep(0.8, 1.0, sin(o.y*7.0 + 1.0))*0.3);
+    float spot = 1.0 - smoothstep(0.0, 0.2, length(vec2((atan(o.z, o.x) - 1.9)*0.55, (o.y + 0.36)*1.7)));
+    base = mix(base, vec3(0.7,0.3,0.18), spot*0.8);
+    base *= 0.82;`, "vec3(0.9,0.8,0.6)", .2)));
+jupiter.position.copy(new THREE.Vector3(-.9, .1, .35).normalize().multiplyScalar(30)); jupiter.rotation.set(.05, 0, .05);
+
+const saturn = new THREE.Group(); saturn.position.copy(new THREE.Vector3(-.8, .14, -.55).normalize().multiplyScalar(28));
+saturn.rotation.z = .42;                                   // ring plane tipped toward the middle of the scene
+const saturnTilt = new THREE.Group(); saturnTilt.rotation.x = -Math.PI/2; saturn.add(saturnTilt);   // ring plane horizontal
+const saturnBall = new THREE.Mesh(new THREE.SphereGeometry(1.15, 64, 48), planetMat(`
+    float b = sin(o.y*22.0 + fbm(o*3.0)*2.0);
+    base = mix(vec3(0.88,0.79,0.58), vec3(0.72,0.6,0.4), 0.5 + 0.5*b)*0.85;`, "vec3(1.0,0.9,0.7)", .2));
+saturnBall.rotation.x = Math.PI/2;   // its poles along the ring axis, so the bands run parallel to the rings
+const R_IN = 1.5, R_OUT = 2.7;
+const saturnRing = new THREE.Mesh(new THREE.RingGeometry(R_IN, R_OUT, 160, 1), new THREE.ShaderMaterial({vertexShader:VS, transparent:true, depthWrite:false, side:THREE.DoubleSide, uniforms:{uA:{value:0}}, fragmentShader:`
+  uniform float uA; varying vec3 vO;
+  void main(){ float r = (length(vO.xy) - ${R_IN.toFixed(2)})/${(R_OUT-R_IN).toFixed(2)};
+    float band = 0.6 + 0.4*sin(r*70.0)*sin(r*17.0 + 1.0);
+    float gap = smoothstep(0.012, 0.03, abs(r - 0.66));                  // Cassini division
+    float a = band*gap*smoothstep(0.0, 0.06, r)*smoothstep(1.0, 0.92, r);
+    gl_FragColor = vec4(vec3(0.86,0.77,0.6)*a*0.75, a*0.8*uA); }`}));
+saturnTilt.add(saturnBall, saturnRing); scene.add(saturn); homeSky.push([saturnBall, 1], [saturnRing, .8]);
+
+/* the Milky Way: a faint band of tiny stars across the sky, and one far spiral galaxy */
+const milky = (()=>{
+  // a soft band of light with specks of stars and a darker dust lane, drawn once on a canvas
+  const W = 1024, H = 200, cv = document.createElement("canvas"); cv.width = W; cv.height = H; const x = cv.getContext("2d");
+  const gauss = () => (Math.random() + Math.random() + Math.random() - 1.5)/1.5;
+  for(let i=0;i<700;i++){ const px = Math.random()*W, py = H/2 + gauss()*34, r = 12 + Math.random()*34;
+    const g = x.createRadialGradient(px,py,0,px,py,r); const warm = Math.random() < .3;
+    g.addColorStop(0, warm ? "rgba(255,214,180,.05)" : "rgba(160,180,255,.05)"); g.addColorStop(1, "rgba(160,180,255,0)"); x.fillStyle = g; x.fillRect(px-r, py-r, r*2, r*2); }
+  for(let i=0;i<2600;i++){ const px = Math.random()*W, py = H/2 + gauss()*40; x.fillStyle = `rgba(230,236,255,${Math.random()*.55})`; x.fillRect(px, py, 1.3, 1.3); }
+  x.globalCompositeOperation = "destination-out";                          // dust lane
+  for(let i=0;i<260;i++){ const px = Math.random()*W, py = H/2 + 6*Math.sin(px/90) + gauss()*6, r = 6 + Math.random()*12;
+    const g = x.createRadialGradient(px,py,0,px,py,r); g.addColorStop(0,"rgba(0,0,0,.18)"); g.addColorStop(1,"rgba(0,0,0,0)"); x.fillStyle = g; x.fillRect(px-r, py-r, r*2, r*2); }
+  x.globalCompositeOperation = "destination-in";                           // fade both ends
+  const f = x.createLinearGradient(0,0,W,0); f.addColorStop(0,"rgba(0,0,0,0)"); f.addColorStop(.25,"rgba(0,0,0,1)"); f.addColorStop(.75,"rgba(0,0,0,1)"); f.addColorStop(1,"rgba(0,0,0,0)");
+  x.fillStyle = f; x.fillRect(0,0,W,H);
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(46, 9), new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(cv), transparent:true, opacity:0, depthWrite:false, blending:THREE.AdditiveBlending}));
+  m.position.set(6, 1, -38); m.lookAt(0, 0, 5); m.rotateZ(-.42); return addSky(m, .07);
+})();
+const galaxy = (()=>{
+  const cv = document.createElement("canvas"); cv.width = cv.height = 256; const x = cv.getContext("2d");
+  const core = x.createRadialGradient(128,128,0,128,128,46); core.addColorStop(0,"rgba(255,236,210,.9)"); core.addColorStop(1,"rgba(255,236,210,0)");
+  x.fillStyle = core; x.fillRect(0,0,256,256);
+  for(let i=0;i<2600;i++){ const arm = i%2, t = Math.random(), a = t*4.2 + arm*Math.PI, r = 10 + t*104;
+    const px = 128 + Math.cos(a)*r + (Math.random()-.5)*16*(1-t*.4), py = 128 + Math.sin(a)*r + (Math.random()-.5)*16*(1-t*.4);
+    x.fillStyle = `rgba(${170+Math.random()*80|0},${190+Math.random()*50|0},255,${(.55*(1-t)+.1)*Math.random()})`; x.fillRect(px, py, 1.6, 1.6); }
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(cv), transparent:true, opacity:0, blending:THREE.AdditiveBlending, depthWrite:false, rotation:.5}));
+  s.scale.set(4.2, 1.9, 1); s.position.set(2.8, -4.2, -28); return addSky(s, .15);
+})();
+let marsA = 0;
 
 const orbit = new THREE.Group(); orbit.position.set(0, .12, 0); orbit.rotation.set(1.18, 0, .32); scene.add(orbit);
 {
@@ -3620,8 +3930,11 @@ const ticks = new THREE.Group(); plat.add(ticks);
 /* ---------- build body (spread over a few frames so the page stays responsive) ---------- */
 const root = new THREE.Group(); scene.add(root);
 const B = [[-.35,-.94,-.17],[.35,.89,.17]];
-const skinMat = holoMat("#58b6ff", {op:.42, rim:2.5, base:.035, lines:.9});
+const skinMat = holoMat("#58b6ff", {op:.42, rim:2.5, base:.035, lines:.9, back:.4});
 const skin = new THREE.Mesh(meshSDF(bodyF, B[0], B[1], .0092), skinMat); skin.userData.sys = "whole"; root.add(skin);
+/* eyes: two soft lights on the face, shown only while the camera is in front, so front and back never look alike */
+const eyes = [-1, 1].map(s => { const e = new THREE.Sprite(new THREE.SpriteMaterial({map:DOT, color:0xbfeaff, transparent:true, opacity:0, blending:THREE.AdditiveBlending, depthWrite:false}));
+  e.position.set(s*.025, .742, .079); e.scale.setScalar(.022); root.add(e); return e; });
 await nextFrame();
 const boneMat = holoMat("#d5e6ff", {op:.42, rim:1.5, base:.2, solid:1});
 const skel = new THREE.Mesh(meshSDF(boneF, B[0], B[1], .0072), boneMat); skel.userData.sys = "bone"; root.add(skel);
@@ -3640,7 +3953,7 @@ for(const [k,o] of Object.entries(ORG)){
   await nextFrame();
 }
 const CENTER = {brain:new THREE.Vector3(0,.76,0), heart:new THREE.Vector3(.02,.37,.03), lungs:new THREE.Vector3(0,.4,0), metab:new THREE.Vector3(0,.17,.01), bone:new THREE.Vector3(0,-.3,0), whole:new THREE.Vector3(0,0,0)};
-const DIST = {brain:.95, heart:.85, lungs:1.05, metab:1.05, bone:2.1, whole:2.75};
+const DIST = {brain:1.3, heart:1.2, lungs:1.4, metab:1.4, bone:2.35, whole:2.75};   // camera distance when a system is picked (larger = less zoom)
 const LABEL_AT = {brain:[-.19,.82,0], heart:[.2,.34,.06], lungs:[-.24,.46,0], metab:[-.22,.17,0], bone:[.2,-.36,0], whole:[.29,.64,0]};
 const HOT = [["brain",.76,.13],["heart",.37,.1],["lungs",.4,.17],["metab",.17,.15],["bone",-.3,.3]];
 
@@ -3755,6 +4068,9 @@ function frame(){
   vesselMat.uniforms.uT.value = t; vesselMat.uniforms.uHz.value = st.hr/60;
   vesselMat.uniforms.uCol.value.copy(st.emergency==="heart" ? GRADE[3] : st.sl.heart>0 ? GRADE[st.sl.heart] : C_VES);
   vesselMat.uniforms.uOp.value = sel && sel!=="heart" ? .22 : .8;
+  /* eyes: brightest face-on, gone once the camera passes the side of the head */
+  { const f = tmp.copy(camera.position).sub(root.position).setY(0).normalize().z, eo = Math.max(0, Math.min(1, (f - .15)/.45)) * (layerVis.skin ? .7 : 0);
+    for(const e of eyes) e.material.opacity = eo; }
   /* skin, bones */
   const wlv = st.emergency==="whole" ? 3 : st.sl.whole;
   skinMat.uniforms.uCol.value.copy(wlv>0 ? GRADE[wlv] : C_SKIN);
@@ -3783,8 +4099,17 @@ function frame(){
   const oa = t*.55; guide.position.set(Math.cos(oa)*.78, Math.sin(oa)*.78, 0); guide.scale.setScalar(.075 + .015*Math.sin(t*3));
   for(let i=0;i<NT;i++){ const a = oa - i*.035, f = Math.pow(1 - i/NT, 2); trailPos[i*3] = Math.cos(a)*.78; trailPos[i*3+1] = Math.sin(a)*.78; trailPos[i*3+2] = 0; trailCol[i*3] = f; trailCol[i*3+1] = f*.62; trailCol[i*3+2] = f*.3; }
   trailGeo.attributes.position.needsUpdate = true; trailGeo.attributes.color.needsUpdate = true;
-  orbit.visible = !sel || sel==="whole";
+  orbit.visible = st.hero;   // the orbiting light is a Home-screen motif; My body shows the body only
   ticks.rotation.z = t*.12; earth.material.uniforms.uT.value = t; earth.rotation.y = 1.1 + t*.01;
+  /* the home sky (Sun, planets, Moon, Milky Way): only on the home screen, faded in and out */
+  marsA += ((st.hero ? 1 : 0) - marsA)*Math.min(1, dt*2.5);
+  for(const [o, op] of homeSky){ o.visible = marsA > .01; const m = o.material; if(m.uniforms && m.uniforms.uA) m.uniforms.uA.value = op*marsA; else m.opacity = op*marsA; }
+  mars.rotation.y = .6 + t*.008; jupiter.rotation.y = t*.02; saturnBall.rotation.y = t*.015;
+  route.getPoint(.62 + .3*((t/90)%1), ship.position);
+  /* home: darker sky (less bloom haze, darker clear colour) and a slower turn */
+  if(bloom){ bloom.strength = .5 - .22*marsA; bloom.threshold = .24 + .12*marsA; }
+  renderer.setClearColor(tc.setRGB(.0157*(1-.45*marsA), .0353*(1-.45*marsA), .0706*(1-.45*marsA), THREE.SRGBColorSpace), 1);   // #040912 → darker
+  controls.autoRotateSpeed = .9 - .5*marsA;
   /* scan */
   let sy = -9;
   if(scanT >= 0){ scanT += dt/1.5; if(scanT>1) scanT = -1; else sy = -.95 + scanT*1.85; }
@@ -3809,15 +4134,21 @@ function resize(){
   if(!host) return; const w = host.clientWidth, h = host.clientHeight; if(!w || !h) return;
   renderer.setSize(w, h, false); camera.aspect = w/h;
   const sh = +(host.dataset.shift||0);
-  if(sh && w > 900) camera.setViewOffset(w, h, -w*sh, 0, w, h); else camera.clearViewOffset();
+  /* My body: the canvas fills the screen behind the panels; draw the body centred in the open gap (sx, sy = gap
+     centre as a fraction of the canvas) and scaled by k so it fits there. k < 1 widens the view window. */
+  const sx = +(host.dataset.sx||0), sy = +(host.dataset.sy||0), k = +(host.dataset.k||1);
+  if(sh && w > 900) camera.setViewOffset(w, h, -w*sh, 0, w, h);
+  else if(sx || sy || k !== 1){ const fw = w*k, fh = h*k; camera.setViewOffset(fw, fh, fw/2 - w*(.5 + sx), fh/2 - h*(.5 + sy), w, h); }
+  else camera.clearViewOffset();
   camera.fov = (sh && w <= 900) ? 44 : 36;
   camera.updateProjectionMatrix();
   if(composer) composer.setSize(w, h);
 }
-new ResizeObserver(()=>resize()).observe(document.body);
+{ const ro = new ResizeObserver(()=>resize()); ro.observe(document.body); for(const id of ["canvasHost","heroHost"]){ const el = document.getElementById(id); if(el) ro.observe(el); } }   // the My body stage resizes with the screen, not only with the window
 addEventListener("resize", resize);
 
 window.B3 = {
+  resize,
   update(o){ Object.assign(st, o); },
   select(sys){ st.selected = sys; st.whole = false; if(!st.hero) flyTo(sys); },
   whole(on){ st.whole = on; if(on) flyTo("whole"); else if(st.selected) flyTo(st.selected); },

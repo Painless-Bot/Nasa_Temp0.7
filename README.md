@@ -1,6 +1,6 @@
 # Orbit Guide
 
-**NASA Space Apps Challenge 2026 · Seoul · Team Temp7**
+**NASA Space Apps Challenge 2026 · Seoul · Team Temp0.7**
 Challenge: *Create Health Monitoring Software for Astronauts on Space Missions*
 
 Orbit Guide is a web app that lets astronauts **without medical training** check their own health on board and get **step-by-step emergency guides** that work even when Earth is minutes away.
@@ -54,7 +54,7 @@ AI tools (Claude by Anthropic) were used to help draft code, plain-language text
 
 ## Team
 
-Temp7 — three members, roles shared.
+Temp0.7 — three members, roles shared.
 
 ## References
 
