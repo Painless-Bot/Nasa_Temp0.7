@@ -2176,12 +2176,12 @@ const KO = {
 "Copied ✓": "복사됨 ✓",
 "Copy log": "기록 복사",
 "Copy log and close": "기록 복사 후 닫기",
-"Crewmate collapse: Novak holds the app. Kim's heart rate falls to 38 and SpO₂ to 86%, her card flashes \"Needs help\", and Help Kim opens the guide written for Kim.": "동료 쓰러짐: 앱은 Novak이 들고 있습니다. Kim의 심박이 38, SpO₂가 86%로 떨어지면 카드에 \"도움 필요\"가 깜빡이고, Kim 돕기를 누르면 Kim 기준으로 쓰인 가이드가 열립니다.",
+"Crewmate collapse: Novak holds the app. Kim's heart rate falls to 38 and SpO₂ to 86%, a large alert says Kim needs help now, and Help Kim opens the guide written for Kim.": "동료 쓰러짐: 앱은 Novak이 들고 있습니다. Kim의 심박이 38, SpO₂가 86%로 떨어지면 화면 가운데에 Kim에게 지금 도움이 필요하다는 큰 알림이 뜨고, Kim 돕기를 누르면 Kim 기준으로 쓰인 가이드가 열립니다.",
 "Day 45 on the ISS. Each body part is colored against Commander Kim's own normal range: blue means normal.": "ISS 45일차. 몸의 각 부위가 Kim 사령관의 평소 범위와 비교해 색칠됩니다: 파란색이 정상입니다.",
 "Delivered to Mission Control. Earliest reply in about {0} min.": "관제 센터에 전달됨. 가장 빠른 답신 약 {0}분 뒤.",
 "End this guide?": "이 가이드를 끝낼까요?",
 "End without sending": "보내지 않고 종료",
-"Everything goes to Earth as a plain note that respects the 20-minute one-way delay.": "모든 것이 편도 20분 지연을 고려한 쉬운 노트로 지구에 갑니다.",
+"Everything goes to Earth as a plain note with the real signal delay shown; the flight surgeon's reply waits in the Earth messages inbox.": "모든 것이 실제 통신 지연을 보여 주며 쉬운 노트로 지구에 가고, 비행 군의관의 답신은 지구 통신 보관함에 남습니다.",
 "Fever: temperature passes 38 °C. The skin warms to orange and the card links straight to the fever guide.": "발열: 체온이 38 °C를 넘습니다. 피부가 주황색으로 달아오르고 카드에서 바로 발열 가이드로 갈 수 있습니다.",
 "Filled heart rate, blood pressure, SpO₂, temperature and sleep from the simulated wearable (like CSA Bio-Monitor). Check them, then save.": "심박, 혈압, SpO₂, 체온, 수면을 시뮬레이션 웨어러블(CSA Bio-Monitor 같은)에서 채웠습니다. 확인하고 저장하세요.",
 "Flight surgeon (simulated reply, {0} min later):": "비행 군의관 (시뮬레이션 답신, {0}분 뒤):",
@@ -3847,9 +3847,9 @@ async function runDemo(){
     await scene(6, "Stuffy cabin air: CO₂ builds up and a headache follows. The headache guide is offered on the flight-surgeon card.", ()=>{ reset(); toggleScenario("co2"); });
     await scene(7, "Fever: temperature passes 38 °C. The skin warms to orange and the card links straight to the fever guide.", ()=>{ reset(); toggleScenario("fever"); });
     await scene(8, "On the way to Mars a solar storm multiplies the daily dose. Radiation streaks turn red; the solar storm guide is one tap away.", ()=>{ reset(); S.env="transit"; $("#envSel").value="transit"; toggleScenario("solar"); });
-    await scene(9, "Crewmate collapse: Novak holds the app. Kim's heart rate falls to 38 and SpO₂ to 86%, her card flashes \"Needs help\", and Help Kim opens the guide written for Kim.", ()=>{ reset(); S.env="iss"; $("#envSel").value="iss"; S.me="novak"; renderMeSel(); S.scen.kim=[{id:"collapse", dur:1, end:S.day}]; setCrew("kim");
+    await scene(9, "Crewmate collapse: Novak holds the app. Kim's heart rate falls to 38 and SpO₂ to 86%, a large alert says Kim needs help now, and Help Kim opens the guide written for Kim.", ()=>{ reset(); S.env="iss"; $("#envSel").value="iss"; S.me="novak"; renderMeSel(); S.scen.kim=[{id:"collapse", dur:1, end:S.day}]; setCrew("kim");
       setTimeout(()=>{ if(me.alive){ helpCrew("kim"); setTimeout(()=>{ if(me.alive){ demo = null; startGuide("cpr", "Triage: answered yes", [[qText(PROT.cpr,"kim"),"Yes"]], "kim"); demo = me; } }, 2500); } }, 2500); }, 9000);
-    await scene(10, "Everything goes to Earth as a plain note that respects the 20-minute one-way delay.", ()=>{ reset(); location.hash = "#body"; setTab("body"); toggleScenario("fever"); openDailyNote($("#demoBtn")); setTimeout(()=>me.alive && sendNote(), 900); }, 9000);
+    await scene(10, "Everything goes to Earth as a plain note with the real signal delay shown; the flight surgeon's reply waits in the Earth messages inbox.", ()=>{ reset(); location.hash = "#body"; setTab("body"); toggleScenario("fever"); openDailyNote($("#demoBtn")); setTimeout(()=>me.alive && sendNote(), 900); }, 9000);
   }catch(e){}
   if(me===demo) stopDemo();
 }
