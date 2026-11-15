@@ -520,6 +520,19 @@ button.mrow:hover{background:var(--panel2)}
 .voice-ctl{display:inline-flex;flex-wrap:wrap;gap:6px 8px;align-items:center}.voice-ctl .v-hint{opacity:.95;font-size:12.5px}
 .em-band .lnk{font-size:12.5px;opacity:.95}
 .run-grid{display:grid;grid-template-columns:240px minmax(0,1fr) 320px;gap:14px;align-items:start}
+/* wide screens: the guide fills the window down to the bottom edge and all three columns end on the same line
+   (--run-min is measured by fitRun()). The event log takes the spare height and scrolls inside its card. */
+@media (min-width:1101px){
+  .run-grid{align-items:stretch;min-height:var(--run-min,0px)}
+  .run-grid > .card{display:flex;flex-direction:column}
+  .run-grid > .card > .cur-step{flex:1;display:flex;flex-direction:column}
+  .run-grid > .run-steps{min-height:0}
+  .run-grid > .run-steps > .card-b{flex:1 1 0;min-height:0;overflow:auto;scrollbar-width:thin}
+  .run-grid > aside{min-height:0}
+  .run-grid > aside > .card{flex:1 1 0;min-height:220px;display:flex;flex-direction:column}
+  .run-grid > aside > .card > .card-b{flex:1 1 0;min-height:0;display:flex;flex-direction:column}
+  .run-grid > aside .log{flex:1 1 0;min-height:0;max-height:none}
+}
 @media (max-width:1100px){.run-grid{grid-template-columns:minmax(0,1fr) 300px} .run-steps{grid-column:1/-1}}
 @media (max-width:760px){.run-grid{grid-template-columns:minmax(0,1fr)}}
 .run-steps ol{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:2px}
@@ -586,14 +599,24 @@ button.mrow:hover{background:var(--panel2)}
 .step-art .a-n circle{fill:var(--g3);stroke:var(--panel);stroke-width:2}
 .step-art .a-n text{fill:#fff;font:700 12px var(--f-mono)}
 @media (max-width:640px){.step-art{grid-template-columns:1fr;gap:10px;padding:12px}.step-art svg{max-height:190px}.step-art ol{font-size:15px}}
-.cur-step .acts{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+.cur-step .acts{display:flex;flex-wrap:wrap;gap:12px;margin-top:20px}
+/* main step buttons: large, on the left (same place on every step). Undo / End guide stay small. */
+.cur-step .acts .btn.big{padding:18px 30px;font-size:20px;font-weight:600;border-radius:14px;min-height:62px;min-width:150px}
+.cur-step .acts.sec{margin-top:0;border-top:1px solid var(--line);padding-top:14px}
+.cur-step .grow{flex:1;min-height:22px}
+@media (max-width:640px){.cur-step .acts:not(.sec) .btn.big{flex:1 1 100%;padding:16px 20px;justify-content:center;text-align:center}}
 .cur-step .ex{font-size:12px;color:var(--ink3);margin-top:14px;border-top:1px dashed var(--line);padding-top:8px}
 .timer{margin-top:10px}
 .timer .t{font-family:var(--f-mono);font-size:44px;font-weight:600}
 .timer .bar{height:10px;border-radius:999px;background:var(--panel2);border:1px solid var(--line);overflow:hidden}
 .timer .bar i{display:block;height:100%;background:var(--g3);width:0}
-.cpr{display:flex;gap:18px;align-items:center;margin-top:10px;flex-wrap:wrap}
-.cpr .beat{width:96px;height:96px;border-radius:50%;background:var(--g3);display:grid;place-items:center;color:#fff;font-family:var(--f-mono);font-size:22px;font-weight:600;transition:transform .08s}
+/* CPR step: buttons on the left, the beat on the right with its text centred underneath */
+.cpr-row{display:flex;justify-content:space-between;align-items:flex-end;gap:20px 28px;flex-wrap:wrap;margin-top:20px}
+.cpr-row .acts{margin-top:0}
+.cpr{display:flex;flex-direction:column;gap:12px;align-items:center;text-align:center}
+@media (max-width:640px){.cpr-row .cpr{order:-1;width:100%}.cpr-row .acts{width:100%}}
+.cpr .beat{width:132px;height:132px;flex:none;border-radius:50%;background:var(--g3);display:grid;place-items:center;color:#fff;font-family:var(--f-mono);font-size:32px;font-weight:600;transition:transform .08s}
+.cpr #cprInfo{font-size:17px}
 .cpr .beat.on{transform:scale(1.18)}
 .log{font-family:var(--f-mono);font-size:12.5px;max-height:360px;overflow:auto;display:flex;flex-direction:column;gap:3px}
 .log div{display:grid;grid-template-columns:56px 1fr;gap:6px}
@@ -3430,14 +3453,19 @@ function renderRun(){
     <aside style="display:flex;flex-direction:column;gap:12px">
       <div class="mini3d" id="mini3d"></div>
       <div class="card"><div class="card-h"><h3>${TE("Event log")}</h3><button class="btn" type="button" id="sendLog">✉ ${TE("Send log to Earth")}</button></div><div class="card-b"><div class="log" id="log" aria-live="polite"></div></div></div>
-      <div class="card"><div class="card-h"><h3>${TE("Based on")}</h3></div><div class="card-b">
-        <ul class="based">${p.src.map(k=>{const r=SOURCES[k]; return `<li>${r.url?`<a href="${r.url}" target="_blank" rel="noopener">${esc(r.t)}</a>`:esc(r.t)} <span class="muted">(${esc(r.org)})</span></li>`;}).join("")}</ul>
-        <p class="small muted" style="margin:8px 0 0">${TE("Example procedure written from public space-agency material. Not a flight checklist and not medical advice.")}</p></div></div>
     </aside>
   </div>`;
   renderLog(); bindRun(s); renderSaveWarn(); saveSOS();
-  mount3D(); tickSOS();
+  mount3D(); tickSOS(); fitRun();
 }
+/* how tall the guide must be to reach the bottom of the window (see .run-grid) */
+function fitRun(){
+  const g = $("#sosRun .run-grid"); if(!g) return;
+  g.style.setProperty("--run-min", Math.max(460, innerHeight - (g.getBoundingClientRect().top + scrollY) - 16) + "px");
+  const cur = g.querySelector(".run-steps li.cur"), box = g.querySelector(".run-steps > .card-b");   // keep the current step in view in the step list
+  if(cur && box && box.scrollHeight > box.clientHeight) box.scrollTop = cur.offsetTop - box.offsetTop - box.clientHeight/2 + cur.offsetHeight/2;
+}
+addEventListener("resize", fitRun);
 /* ---------- step pictures: a simple drawing + 3 numbered points under the step text ----------
    A step gets one by naming it (art:"restraint", "hands", "aed", …: the keys of STEP_ART). The numbers on the drawing match
    the numbered points. Inline SVG: no image files, works offline, follows the light/dark theme.
@@ -3603,8 +3631,10 @@ function stepHTML(s, i, p){
   else if(s.type==="timer") body = `<div class="timer"><div class="t mono" id="tmT">${hms(tm ? (tm.dueAt-Date.now())/1000 : s.sec)}</div><div class="bar"><i id="tmBar"></i></div></div>
     <div class="acts">${tm?"":`<button class="btn big danger" type="button" id="tmStart">▶ ${TE("Start timer")}</button>`}<button class="btn big" type="button" data-next>${TE("Done, next step")} →</button></div>
     ${s.sec>LONG_WAIT?`<div class="small muted" style="margin-top:8px">${tm?TE("Waiting. You can leave this screen: a band at the top counts down and turns red when the re-check is due."):TE("Long wait: once started you can leave this screen. A band at the top will remind you.")}</div>`:""}`;
-  else if(s.type==="cpr") body = `<div class="cpr"><div class="beat" id="beat">110</div><div><div class="mono" id="cprInfo"></div><div class="small muted">${TE("110 compressions per minute · 2-minute cycles")}</div><div class="small" id="cprSwap"></div></div></div>
-    <div class="acts"><button class="btn big danger" type="button" id="cprStart">${cprT?"■ "+TE("Stop beat"):"▶ "+TE("Start beat")}</button><button class="btn big" type="button" data-next>${TE("Next step")} →</button></div>`;
+  else if(s.type==="cpr") body = `<div class="cpr-row">
+    <div class="acts"><button class="btn big danger" type="button" id="cprStart">${cprT?"■ "+TE("Stop beat"):"▶ "+TE("Start beat")}</button><button class="btn big" type="button" data-next>${TE("Next step")} →</button></div>
+    <div class="cpr"><div class="beat" id="beat">110</div><div><div class="mono" id="cprInfo"></div><div class="small muted">${TE("110 compressions per minute · 2-minute cycles")}</div><div class="small" id="cprSwap"></div></div></div>
+  </div>`;
   else if(s.type==="measure") body = `<div class="small muted" style="margin-top:6px">${R.patient ? TE("Saved to {0}'s record for today and graded at once.", crewById(R.patient).n) : TE("Kept in the log. Saved to the patient's record once you tap who it is.")}</div><div class="fields" style="margin-top:12px">
       ${[["hr","Heart rate","bpm"],["sbp","Blood pressure (top)","mmHg"],["spo2","SpO₂","%"],["temp","Temperature","°C"]].map(([k,n,u])=>`<div class="fld"><label for="ms-${k}">${TE(n)} (${u})</label><input id="ms-${k}" inputmode="decimal" autocomplete="off" placeholder="${TE("optional")}"></div>`).join("")}
     </div><div class="acts"><button class="btn big danger" type="button" id="msLog">${TE("Log and continue")} →</button><button class="btn big" type="button" id="msWear">⌚ ${TE("Fill from wearable")}</button></div>
@@ -3619,7 +3649,8 @@ function stepHTML(s, i, p){
     ${sub?`<div class="sub">${esc(T(sub))}</div>`:""}
     ${artHTML(s)}
     ${body}
-    <div class="acts" style="margin-top:22px;border-top:1px solid var(--line);padding-top:14px">
+    <div class="grow"></div>
+    <div class="acts sec">
       <button class="btn" type="button" id="prevBtn" ${R.hist.length?"":"disabled"}>← ${TE("Undo last step")}</button>
       <button class="btn" type="button" id="endBtn">${TE("End guide")}</button>
     </div>
@@ -3758,6 +3789,9 @@ function renderMethod(){
   <p class="small">${TE("Exercise is graded on the 7-day average, not one day, so one rest day does not raise a flag.")}</p>
   <h3>${TE("Emergency guides")}</h3>
   <p class="small">${TE("{0} guides. Each can be run for yourself or for a crewmate (CPR only by a crewmate). Peer wording only changes who is addressed, never the medical content. Measurements are saved to the patient's record. Timers have a due time and long waits run in the background with a reminder band. A guide in progress is saved in the browser and can be resumed after a reload. Undo walks back one step at a time, also across guide switches; the log keeps every entry.", PROTOCOLS.length)}</p>
+  <div class="tbl-wrap"><table class="tbl"><tr><th>${TE("Emergency guides")}</th><th>${TE("Based on")}</th></tr>
+  ${PROTOCOLS.map(g=>`<tr><td><strong>${TE(g.title)}</strong></td><td><ul class="based" style="margin:0">${g.src.map(k=>{const r=SOURCES[k]; return `<li>${r.url?`<a href="${r.url}" target="_blank" rel="noopener">${esc(r.t)}</a>`:esc(r.t)} <span class="muted">(${esc(r.org)})</span></li>`;}).join("")}</ul></td></tr>`).join("")}</table></div>
+  <p class="small muted">${TE("Example procedure written from public space-agency material. Not a flight checklist and not medical advice.")}</p>
   <h3>${TE("Data")}</h3>
   <p class="small">${TE("All data is simulated; no real astronaut medical data is used (that requires data-use agreements and ethics approval). Each crew member has fixed baselines plus seeded random noise, so the same settings always give the same numbers. Situations and your check-in entries are applied on top. Ranges are being calibrated against public NASA data (HRP evidence, OSDR Inspiration4 clinical panels). Everything comes from one function, DataSource.build(); to connect real data, replace that function and keep the daily record shape:")}</p>
   <p><code>{day, hr, sbp, spo2, temp, glu, sleep, mood, ex, co2, radDay, radTot, bone, head, vision}</code></p>
