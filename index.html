@@ -154,6 +154,17 @@ body.on-body .crew-menu,body.on-home .crew-menu{background:#0e1829}   /* the hea
 .crew-alert-band .btn{margin-top:6px;background:#fff;color:var(--g3);border:0;border-radius:12px;font-weight:800;font-size:20px;padding:16px 20px;min-height:58px;cursor:pointer}
 .crew-alert-band .btn:hover{filter:brightness(.95)}
 .crew-alert-band[hidden]{display:none}
+/* crewmate in need: a red chip in the empty middle of the header row, on every tab, for as long as the emergency lasts
+   (the big centre alert can be closed; this stays) */
+.need-chip{flex:1 1 auto;min-width:0;display:flex;justify-content:center}
+.need-chip[hidden]{display:none}
+.need-chip .nc{display:inline-flex;align-items:center;gap:6px 12px;flex-wrap:wrap;max-width:100%;background:var(--g3);color:#fff;border-radius:999px;padding:5px 6px 5px 14px;font-weight:700;font-size:14.5px;box-shadow:0 0 0 0 color-mix(in srgb,var(--g3) 50%,transparent);animation:needPulse 1.2s ease-in-out infinite}
+.need-chip .nc .why{font-weight:500;font-size:13px;opacity:.95}
+.need-chip .nc button{background:#fff;color:var(--g3);border:0;border-radius:999px;font-weight:800;font-size:13.5px;padding:5px 12px;cursor:pointer}
+.need-chip .nc button:hover{filter:brightness(.95)}
+.need-chip:not([hidden]) + .cabin-chip{margin-left:0}
+@media (max-width:760px){.need-chip{justify-content:flex-start}}
+@media (max-width:1700px) and (min-width:761px){.need-chip .nc .why{display:none}}   /* keep the header on two rows; the big alert already said why */
 /* simplified screens (ui-ux branch): answer first, details on request */
 .demo-set{position:relative}
 .demo-set > summary{list-style:none;cursor:pointer;font-size:13px}
@@ -709,6 +720,7 @@ dialog::backdrop{background:rgba(3,8,16,.6)}
       </div>
     </details>
     <div class="roster" id="roster" role="group" aria-label="Crew"></div>
+    <div id="needChip" class="need-chip" role="status" hidden></div>
     <div id="cabinBand" class="cabin-chip" role="status" aria-live="polite" hidden></div>
     <div class="badges" id="badges" aria-live="polite"></div>
   </div>
@@ -2506,6 +2518,11 @@ function renderCrewAlert(){
   const rows = need.map(c=>{ const g = todayGrade(c.id);
     return {c, why: SYSTEMS.filter(s=>s.metrics.some(k=>!CABIN_METRICS.includes(k) && g.ml[k]===3)).map(s=>s.id)}; });
   const sig = rows.map(r=>r.c.id+":"+r.why.join("+")).join("|");   // who and what: a new emergency opens it again
+  const nc = $("#needChip");
+  if(nc){ const show = need.length && !(R && !R.finished); nc.hidden = !show;
+    nc.innerHTML = show ? rows.map(r=>`<span class="nc">⚠ ${TE("{0} needs help now", r.c.n)} <span class="why">${TE("Urgent: {0}", r.why.map(id=>T(SYS[id].n)).join(", "))}</span>
+      <button type="button" data-need-help="${r.c.id}">${TE("Help {0}", r.c.n)} →</button></span>`).join("") : "";
+    $$("#needChip [data-need-help]").forEach(b=>b.addEventListener("click", ()=>{ stopDemo(); helpCrew(b.dataset.needHelp); })); }
   if(!need.length || (R && !R.finished) || sig===alertClosed){ const was = !el.hidden; el.hidden = true; el.innerHTML = ""; if(was) alertFocus?.focus?.(); return; }
   const fresh = el.hidden || el.dataset.sig!==sig; el.dataset.sig = sig;
   el.innerHTML = `<div class="ca-box" role="alertdialog" aria-modal="true" aria-labelledby="caH0">
