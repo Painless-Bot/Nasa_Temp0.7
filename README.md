@@ -15,14 +15,19 @@ On a Moon or Mars mission a message to the flight surgeon can take 4–24 minute
 
 ## Features
 
-- **3D body self-check** — tap a glowing body part to see that system's status, your own normal range, a 28-day trend and what to do now. Six systems, four colour-coded levels (Normal, Watch, Act, Urgent).
+- **Home** — a first screen with the 3D body in a quiet space scene (Earth, Moon, Mars and the route between them, the Sun and planets), three large shortcuts (Body check, Daily checklist, Emergency guide) and a one-minute guided demo.
+- **3D body self-check** — the body fills the screen behind floating panels. Tap a glowing part to see that system's status and today's numbers, each with a small bar showing the astronaut's own normal range. Six systems, four colour-coded levels (Normal, Watch, Act, Urgent). The first screen fits the window; the ↓ button opens the 28-day trend, how to measure, how space affects it, and the mission simulator.
 - **Personal baseline** — each value is compared with the astronaut's own first 14 mission days, not only textbook limits, so drift is caught early.
+- **One to-do list** — the steps for today, from the most urgent finding down, in one checklist.
 - **Daily check-in routine** — heart rate, blood pressure, SpO₂, temperature, glucose, exercise, mood and sleep, with how to measure each in space.
-- **"Do I need the flight surgeon?"** — a four-level answer that accounts for the communication delay, plus an auto-written note for Mission Control.
-- **Emergency guides (11)** — triage questions, one step per screen, timers, a CPR rhythm, measurements, a time-stamped event log sent to Earth, and automatic links from urgent readings.
-- **Voice cues** — key steps are spoken as short emphasised phrases (e.g. "Start CPR now! Push hard and fast!"). Not a chatbot.
-- **Hands-free** — say "Next step" to advance when your hands are busy; also "Yes", "No", "Back", "Repeat". Every voice command is written to the log.
-- **Crewmate mode** — guides are reworded when one crew member helps another.
+- **"Do I need the flight surgeon?"** — a four-level answer that accounts for the communication delay, plus an auto-written note for Mission Control and a simulated reply in Earth messages.
+- **Emergency guides (11)** — triage questions, one step per screen with large buttons, simple step pictures, timers, a CPR rhythm, a breathing pacer, measurements (with "Fill from wearable"), a time-stamped event log sent to Earth, and automatic links from urgent readings.
+- **Crewmate alert** — when another crew member's own readings turn Urgent, a large alert appears on every screen with one button that opens the right guide for them. A small ✕ closes it in case of a false alarm.
+- **Cabin alert** — CO₂ and radiation affect the whole crew, so they show as one small header chip with the matching guide.
+- **Voice cues** — key steps are spoken as short emphasised phrases (e.g. "Compressions now! Push hard and fast!"). Not a chatbot.
+- **Hands-free** — when your hands are busy, say "Next" to advance, "Start" / "Stop" for the CPR beat or a timer, and "Yes", "No", "Back", "Repeat". Recognition runs offline on the device. Every voice command is written to the log.
+- **Crewmate mode** — guides are reworded when one crew member helps another; measurements go to the patient's record.
+- **Crew** — pick whose body to view from one drop-down; add or remove crew members and choose "This is me" in Manage crew.
 - **Mission environments** — ISS, Gateway, Moon base, lunar rover, Mars transit, Mars base, each with its own delay, radiation and gravity.
 - **Gamification** — streaks, XP and badges reward doing the routine, never the numbers themselves.
 - **English / 한국어** interface.
@@ -32,7 +37,8 @@ On a Moon or Mars mission a message to the flight surgeon can take 4–24 minute
 Use the GitHub Pages link, or serve the folder locally (`python -m http.server 8000`, then open `http://localhost:8000`). No build step.
 
 - Keep `index.html`, `voice.js` and the `vendor/` folder together.
-- **Offline:** everything works without the internet when the page is served (GitHub Pages after it has loaded, or localhost). three.js r160 is bundled in `vendor/three/` (MIT); hands-free voice commands run on the device with Vosk (`vendor/vosk/`, Apache-2.0, English command words; the 41 MB model loads the first time hands-free is turned on). Web fonts fall back to system fonts.
+- **Offline:** everything works without the internet when the page is served from localhost. three.js r160 is bundled in `vendor/three/` (MIT); hands-free voice commands run on the device with Vosk (`vendor/vosk/`, Apache-2.0, English command words; the 41 MB model loads the first time hands-free is turned on, so turn it on once before a demo). Voice cues use the voices installed on the computer. Web fonts fall back to system fonts. Messages to Earth are simulated, so nothing is sent anywhere.
+- On GitHub Pages the app keeps working offline while the page stays open, but there is no offline cache yet, so a reload needs the internet.
 - Opening `index.html` by double-click also works, but browsers block local module files there, so the 3D body then loads three.js from the jsDelivr CDN (internet needed for 3D only).
 - Hands-free voice commands need microphone permission, so serve the page over **https** (GitHub Pages) or localhost. If the offline engine cannot load, the app falls back to the browser's Web Speech API (Chrome or Edge, network needed).
 - If the 3D body cannot load, every other feature still works.
