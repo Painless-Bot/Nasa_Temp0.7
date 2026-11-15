@@ -3,58 +3,73 @@
 **NASA Space Apps Challenge 2026 · Seoul · Team Temp0.7**
 Challenge: *Create Health Monitoring Software for Astronauts on Space Missions*
 
-Orbit Guide is a web app that lets astronauts **without medical training** check their own health on board and get **step-by-step emergency guides** that work even when Earth is minutes away.
+Orbit Guide helps astronauts **without medical training** look after themselves and each other when Earth is minutes away. NASA already knows how the body changes in space, but that knowledge is written for doctors on Earth. Orbit Guide is the bridge between that knowledge and the crewmate who has to act.
 
-**Live demo:** https://painless-bot.github.io/Nasa_Temp0.7/  <!-- turn on GitHub Pages: Settings → Pages → main / root -->
+| | |
+| --- | --- |
+| **Live app** | https://painless-bot.github.io/Nasa_Temp0.7/ (press **▶ Guided demo** for a 1-minute tour) |
+| **Pitch deck (7 slides, PDF)** | https://painless-bot.github.io/Nasa_Temp0.7/Orbit-Guide-Pitch.pdf |
+| **Source code** | this repository: `index.html`, `voice.js`, `vendor/` |
 
-> Hackathon prototype. Not a medical device and not medical advice. All crew data is simulated.
+> Hackathon prototype. Not a medical device and not medical advice. All crew data is simulated. Emergency guides are example procedures that support, never replace, the onboard checklist and the flight surgeon.
 
-## Why
+## The problem
 
-On a Moon or Mars mission a message to the flight surgeon can take 4–24 minutes each way. The crew has to decide first, and most crew members are not doctors. Orbit Guide turns daily measurements into a plain-language picture of the body and, when something goes wrong, walks the crew through what to do, one step at a time.
+On a Moon or Mars mission a message to the flight surgeon can take up to about 20 minutes each way, so a question and its answer are 40 minutes apart. Care on board starts with a crewmate who may not be a physician, and who may be the one who falls ill. Crews have sensors and checklists; what they lack is a fast answer to "what does this number mean, and what do I do first?"
 
-## Features
+## Three bridges
 
-- **3D body self-check** — tap a glowing body part to see that system's status, your own normal range, a 28-day trend and what to do now. Six systems, four colour-coded levels (Normal, Watch, Act, Urgent).
-- **Personal baseline** — each value is compared with the astronaut's own first 14 mission days, not only textbook limits, so drift is caught early.
-- **Daily check-in routine** — heart rate, blood pressure, SpO₂, temperature, glucose, exercise, mood and sleep, with how to measure each in space.
-- **"Do I need the flight surgeon?"** — a four-level answer that accounts for the communication delay, plus an auto-written note for Mission Control.
-- **Emergency guides (11)** — triage questions, one step per screen, timers, a CPR rhythm, measurements, a time-stamped event log sent to Earth, and automatic links from urgent readings.
-- **Voice cues** — key steps are spoken as short emphasised phrases (e.g. "Start CPR now! Push hard and fast!"). Not a chatbot.
-- **Hands-free** — say "Next step" to advance when your hands are busy; also "Yes", "No", "Back", "Repeat". Every voice command is written to the log.
-- **Crewmate mode** — guides are reworded when one crew member helps another.
-- **Mission environments** — ISS, Gateway, Moon base, lunar rover, Mars transit, Mars base, each with its own delay, radiation and gravity.
-- **Gamification** — streaks, XP and badges reward doing the routine, never the numbers themselves.
-- **English / 한국어** interface.
+1. **Knowledge → person.** A 3D body shows six body systems in four levels (Normal, Watch, Act, Urgent). Every value is judged two ways: against the astronaut's own normal from mission days 1–14, and against fixed clinical and NASA limits; the worse of the two wins, so slow drift is caught before a textbook limit. Tap a part for today's numbers, a small bar of where today sits in the personal range, a trend, what to do now and the source of every limit. A daily check-in says what to measure and how, filled by hand or from a (simulated) wearable.
+2. **Person → person.** When a crewmate's own readings turn Urgent, a large alert in the middle of every screen says who needs help and why; if it is closed, a red chip stays in the header until help starts. One tap opens **11 step-by-step emergency guides** written for the helper ("Tap Kim's shoulders…"). CPR starts at once with a 110-per-minute beat and 2-minute swap alerts. Measure steps can be filled from the patient's wearable, and every reading goes into the patient's record.
+3. **Space → Earth.** Every reading and step becomes a T+ timed log with patient, responder and the patient's usual range, sent to the flight surgeon with the real signal delay shown. The (simulated) reply says what was received and asks for the next piece of information that guide needs; all messages stay in the **Earth messages** inbox.
+
+## Also in the app
+
+- **Voice cues** read key steps aloud; **hands-free commands** ("start", "next", "next step", "yes", "no", "back", "repeat", "stop") run offline on the device. Every voice command is written to the log.
+- **Built for real failures:** a guide in progress survives a crash or reload, timers keep running in the background, any step can be undone, and the log keeps every entry.
+- **Six mission settings:** ISS, Gateway, Moon base, lunar rover, Mars transit and Mars base, each with its own signal delay, radiation dose, gravity and cabin CO₂. Cabin-wide problems (CO₂, solar storm) raise one cabin alert, not a personal alarm for everyone.
+- **Built for stress:** one step per screen, big buttons, plain words, colour plus words and never colour alone. English and 한국어.
+- **Demo helpers:** a 1-minute guided demo, scenario buttons (sleep debt, fever, solar storm, crewmate collapse…) and a "Random reading (demo)" button that fills a realistic normal or abnormal morning check-in.
+
+## Built for Earth too
+
+The same gap exists on Earth: the WHO and World Bank report that half of the world's people lack full access to essential health services. Antarctic stations, ships, remote villages and disaster zones face the same three problems (no doctor nearby, a non-doctor first responder, a link that can drop). Moving Orbit Guide to an Earth site changes only three things: the delay setting, the limits table and the guide list.
 
 ## How to run
 
-Use the GitHub Pages link, or serve the folder locally (`python -m http.server 8000`, then open `http://localhost:8000`). No build step.
+Use the live link, or serve the folder locally (`python -m http.server 8000`, then open `http://localhost:8000`). No install and no build step.
 
 - Keep `index.html`, `voice.js` and the `vendor/` folder together.
 - **Offline:** everything works without the internet when the page is served (GitHub Pages after it has loaded, or localhost). three.js r160 is bundled in `vendor/three/` (MIT); hands-free voice commands run on the device with Vosk (`vendor/vosk/`, Apache-2.0, English command words; the 41 MB model loads the first time hands-free is turned on). Web fonts fall back to system fonts.
 - Opening `index.html` by double-click also works, but browsers block local module files there, so the 3D body then loads three.js from the jsDelivr CDN (internet needed for 3D only).
-- Hands-free voice commands need microphone permission, so serve the page over **https** (GitHub Pages) or localhost. If the offline engine cannot load, the app falls back to the browser's Web Speech API (Chrome or Edge, network needed).
+- Hands-free commands need microphone permission, so serve the page over **https** (GitHub Pages) or localhost. If the offline engine cannot load, the app falls back to the browser's Web Speech API (Chrome or Edge, network needed).
 - If the 3D body cannot load, every other feature still works.
+- All data comes from one function, `DataSource.build()`; to connect real sensor data, replace that function and keep the daily record shape.
 
 ## NASA data and resources
 
-Orbit Guide uses the NASA Human Research Program resources listed for this challenge:
+- **5 Hazards of Human Spaceflight** (NASA HRP): every body system and emergency guide is tagged with its hazard (radiation, isolation and confinement, distance from Earth, gravity fields, hostile closed environment).
+- **Human Health Risks** (NASA HRP): each system and guide links the matching HRP risk page.
+- **Ongoing HRP Research**: background for the daily measurement routine (Standard Measures) and wearable monitoring.
+- **NASA-STD-3001** and its technical briefs: cabin CO₂ limits, career (600 mSv) and solar-storm (250 mSv) radiation limits, decompression sickness steps, and the 11 emergency situations (Appendix E).
+- **NASA OSDR** (Inspiration4 / SOMA clinical panels): the reference the simulated crew ranges are being calibrated against.
+- **Canadian Space Agency** (partner): Bio-Monitor wearable monitoring (the wearable fill), radiation monitoring (the solar storm guide).
 
-- **5 Hazards of Human Spaceflight** — every body system and emergency guide is tagged with the hazard it relates to (radiation, isolation and confinement, distance from Earth, gravity fields, hostile closed environment).
-- **Risks of Human Spaceflight** — each system and guide links the matching HRP risk page.
-- **Ongoing HRP Research** — background for the daily measurement routine (Standard Measures) and wearable/remote monitoring.
-
-Simulated ranges are planned to be calibrated with NASA OSDR Inspiration4 / SOMA clinical panels. Individual astronaut medical records are not public and were not used.
+Individual astronaut medical records are not public and were not used. Thresholds come from the public references below; the personal-baseline rules are our own design. The full list with links is also in the app under **Method, data and sources**.
 
 ## AI use
 
-AI tools (Claude by Anthropic) were used to help draft code, plain-language text, Korean translation and documentation. The team reviewed, tested and edited the output and is responsible for the content.
-<!-- Edit this section to match exactly how your team used AI. -->
+We used Claude (Anthropic) during the hackathon to draft and revise code from our written specs, run browser tests, draft plain-language text, the Korean translation, the slides and the submission text, and to summarize NASA sources and check medical figures. The team set the requirements, made the design decisions, tested every feature and reviewed all text, and is responsible for the result. AI-assisted work is marked in code comments and in commit messages ("AI-assisted (Claude)"). No AI-generated images, video or audio are used: the 3D body and planets are drawn in code, and spoken cues use the device's own voices.
+
+## Open-source code and fonts
+
+- [three.js](https://github.com/mrdoob/three.js) r160, MIT licence (`vendor/three/`)
+- [vosk-browser](https://github.com/ccoreilly/vosk-browser) and the [Vosk small English model](https://alphacephei.com/vosk/models) by Alpha Cephei, Apache License 2.0 (`vendor/vosk/`, see `vendor/vosk/NOTICE.md`)
+- IBM Plex Sans, IBM Plex Sans KR, IBM Plex Mono and Saira Semi Condensed via Google Fonts, SIL Open Font License
 
 ## Team
 
-Temp0.7 — three members, roles shared.
+Temp0.7: three members, roles shared.
 
 ## References
 
@@ -95,6 +110,9 @@ Temp0.7 — three members, roles shared.
 - [Hypoglycemia (low blood glucose) levels](https://diabetes.org/living-with-diabetes/hypoglycemia-low-blood-glucose) — American Diabetes Association
 - [Seven or more hours of sleep per night: a health necessity for adults](https://aasm.org/seven-or-more-hours-of-sleep-per-night-a-health-necessity-for-adults/) — American Academy of Sleep Medicine
 - [Pulse oximetry at home: when a blood oxygen level of 92% or less needs urgent help](https://www.nhs.uk/) — NHS (UK)
+- [Emergency oxygen guideline: target saturation 94–98% for most adults](https://www.brit-thoracic.org.uk/document-library/guidelines/emergency-oxygen/) — British Thoracic Society
+- [High-quality CPR components (2025 guidelines)](https://www.vumc.org/resuscitation-program/sites/default/files/public_files/BLS/Heartsaver/Heartsaver-CPR-AED-Summary-High-Quality-CPR%20Components-2025-Guidelines.pdf) — American Heart Association
+- [Half the world lacks access to essential health services (2017)](https://www.who.int/news-room/detail/13-12-2017-world-bank-and-who-half-the-world-lacks-access-to-essential-health-services-100-million-still-pushed-into-extreme-poverty-because-of-health-expenses) — WHO and World Bank
 - [NASA-STD-3001 Technical Brief: Radiation Protection (solar particle event limit 250 mSv)](https://www.nasa.gov/ochmo/human-spaceflight-and-aviation-standards/) — NASA OCHMO
 - [Venous Haemostasis (NASA and ESA study; related risk: venous thromboembolism during spaceflight)](https://www.nasa.gov/reference/venous-haemostasis/) — NASA / ESA
 - [Panic disorder: what to do during a panic attack](https://www.nhs.uk/mental-health/conditions/panic-disorder/) — NHS (UK)
