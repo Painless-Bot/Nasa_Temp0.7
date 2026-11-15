@@ -1993,6 +1993,9 @@ const KO = {
 "normal": "정상",
 "not yet": "아직",
 "optional": "선택",
+"Fill from wearable": "웨어러블에서 가져오기",
+"Filled from {0}'s wearable (simulated). Check the numbers, then tap Log and continue.": "{0}의 웨어러블 값으로 채웠습니다(시뮬레이션). 숫자를 확인하고 '기록하고 계속'을 누르세요.",
+"the patient": "환자",
 "or one storm ≥ 250 mSv": "또는 폭풍 1회 ≥ 250 mSv",
 "personal baseline only": "개인 기준선만",
 "re-check in": "다시 확인까지",
@@ -3323,7 +3326,8 @@ function stepHTML(s, i, p){
     <div class="acts"><button class="btn big danger" type="button" id="cprStart">${cprT?"■ "+TE("Stop beat"):"▶ "+TE("Start beat")}</button><button class="btn big" type="button" data-next>${TE("Next step")} →</button></div>`;
   else if(s.type==="measure") body = `<div class="small muted" style="margin-top:6px">${R.patient ? TE("Saved to {0}'s record for today and graded at once.", crewById(R.patient).n) : TE("Kept in the log. Saved to the patient's record once you tap who it is.")}</div><div class="fields" style="margin-top:12px">
       ${[["hr","Heart rate","bpm"],["sbp","Blood pressure (top)","mmHg"],["spo2","SpO₂","%"],["temp","Temperature","°C"]].map(([k,n,u])=>`<div class="fld"><label for="ms-${k}">${TE(n)} (${u})</label><input id="ms-${k}" inputmode="decimal" autocomplete="off" placeholder="${TE("optional")}"></div>`).join("")}
-    </div><div class="acts"><button class="btn big danger" type="button" id="msLog">${TE("Log and continue")} →</button></div>`;
+    </div><div class="acts"><button class="btn big danger" type="button" id="msLog">${TE("Log and continue")} →</button><button class="btn big" type="button" id="msWear">⌚ ${TE("Fill from wearable")}</button></div>
+    <div class="small muted" id="msWearMsg" style="margin-top:8px"></div>`;
   else if(s.type==="report") body = `<div class="acts"><button class="btn big danger" type="button" id="repSend">✉ ${TE("Send log to Earth")}</button><button class="btn big" type="button" data-next>${TE("Finish procedure")} ✓</button></div>
     <div class="small muted" style="margin-top:8px">${TE("Do not wait for the reply: keep caring for the patient.")}</div>`;
   else body = `<div class="acts"><button class="btn big danger" type="button" data-next>${TE("Done, next step")} →</button></div>`;
@@ -3353,11 +3357,35 @@ function saveMeasure(vals){
   LS.set("checkins", S.checkins);
   S.view = S.day; renderAll(false);
 }
+/* Simulated wearable reading for a guide's measure step (like CSA Bio-Monitor: HR, BP, SpO2, skin temperature).
+   Values start from the patient's own normal and are shifted the way that emergency usually looks,
+   always inside what a real body can show. The responder still checks them and presses "Log and continue". */
+const WEAR_SHIFT = {           // [hr, sbp, spo2, temp] ranges for this emergency; null = stay near own normal
+  toxic: [[104,122],[118,138],[88,93],null],
+  chest: [[108,128],[142,166],[93,96],null],
+  dcs:   [[88,102],[120,136],[95,97],null],
+  clot:  [[98,112],[118,132],[93,96],null],
+  fever: [[100,116],[108,124],[94,97],[38.3,39.3]],
+  head:  [[72,88],[146,170],[96,98],null],
+  sms:   [[96,112],[96,108],[97,99],null],
+  panic: [[112,132],[136,152],[97,99],null]
+};
+function wearFill(){
+  const base = (R.patient && crewById(R.patient).base) || {hr:70, sbp:120, spo2:97.5, temp:36.7};
+  const sh = WEAR_SHIFT[R.gid] || [];
+  const rnd = (a,b) => a + Math.random()*(b-a), near = (v,d) => v + (Math.random()*2-1)*d;
+  const keys = ["hr","sbp","spo2","temp"], dev = [3, 4, 0.6, 0.15], dp = [0, 0, 0, 1];
+  keys.forEach((k,j)=>{ let v = sh[j] ? rnd(...sh[j]) : near(base[k], dev[j]);
+    v = Math.min(VALID[k][1], Math.max(VALID[k][0], v)); if(k==="spo2") v = Math.min(100, Math.round(v));
+    const el = $("#ms-"+k); if(el) el.value = dp[j] ? v.toFixed(1) : String(Math.round(v)); });
+  const m = $("#msWearMsg"); if(m) m.textContent = T("Filled from {0}'s wearable (simulated). Check the numbers, then tap Log and continue.", R.patient ? crewById(R.patient).n : T("the patient"));
+}
 function bindRun(s){
   const on = (id, f) => { const b = $(id); if(b) b.addEventListener("click", f); };
   $$("#sosRun [data-next]").forEach(b=>b.addEventListener("click", ()=>{ log("Step {0} done: {1}", [stepIdx(R.cur)+1, {t:stText(s)}]); go("next"); }));
   $$("#sosRun [data-ans]").forEach(b=>b.addEventListener("click", ()=>{ const yes = b.dataset.ans==="yes"; log("Q: {0} → {1}", [{t:stText(s)},{t:yes?"Yes":"No"}]); go(yes ? s.yes : s.no, yes?"Yes":"No"); }));
   on("#prevBtn", back);
+  on("#msWear", wearFill);
   on("#endBtn", ()=>{ $("#confirmBox").innerHTML = `<div class="confirm"><strong>${TE("End this guide?")}</strong> ${TE("Send the log to Earth first so the flight surgeon has the record.")}
     <div class="acts" style="margin-top:10px"><button class="btn danger" type="button" id="cfSend">${TE("Send log and end")}</button><button class="btn" type="button" id="cfEnd">${TE("End without sending")}</button><button class="btn" type="button" id="cfKeep">${TE("Keep going")}</button></div></div>`;
     on("#cfSend", ()=>{ log("Guide ended by crew."); openEmergencyLog(); $("#noteDlg").addEventListener("close", exitGuide, {once:true}); });
