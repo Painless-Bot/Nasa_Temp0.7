@@ -25,7 +25,11 @@ On a Moon or Mars mission a message to the flight surgeon can take up to about 2
 
 ## Also in the app
 
-- **Voice cues** read key steps aloud; **hands-free commands** ("start", "next", "next step", "yes", "no", "back", "repeat", "stop") run offline on the device. Every voice command is written to the log.
+- **Home:** the 3D body in a quiet space scene (Earth, Moon, Mars and the route between them, the Sun and planets), three large shortcuts (Body check, Daily checklist, Emergency guide) and the guided demo.
+- **My body fits one screen:** the body fills the window behind floating panels, and one to-do list orders today's steps from the most urgent finding down. The ↓ button opens the 28-day trend, how to measure, how space affects each value, and the mission simulator.
+- **Guides built for the moment:** large buttons in the same place on every step, simple step pictures (for example hand placement for CPR), a breathing pacer, timers and the CPR rhythm.
+- **Voice cues** read key steps aloud as short phrases (e.g. "Compressions now! Push hard and fast!"); not a chatbot. **Hands-free commands** run offline on the device: "next" to advance, "start" / "stop" for the CPR beat or a timer, and "yes", "no", "back", "repeat". Every voice command is written to the log.
+- **Crew:** pick whose body to view from one drop-down; add or remove crew members and choose "This is me" in Manage crew. In crewmate mode, measurements go to the patient's record.
 - **Built for real failures:** a guide in progress survives a crash or reload, timers keep running in the background, any step can be undone, and the log keeps every entry.
 - **Six mission settings:** ISS, Gateway, Moon base, lunar rover, Mars transit and Mars base, each with its own signal delay, radiation dose, gravity and cabin CO₂. Cabin-wide problems (CO₂, solar storm) raise one cabin alert, not a personal alarm for everyone.
 - **Built for stress:** one step per screen, big buttons, plain words, colour plus words and never colour alone. English and 한국어.
@@ -40,7 +44,8 @@ The same gap exists on Earth: the WHO and World Bank report that half of the wor
 Use the live link, or serve the folder locally (`python -m http.server 8000`, then open `http://localhost:8000`). No install and no build step.
 
 - Keep `index.html`, `voice.js` and the `vendor/` folder together.
-- **Offline:** everything works without the internet when the page is served (GitHub Pages after it has loaded, or localhost). three.js r160 is bundled in `vendor/three/` (MIT); hands-free voice commands run on the device with Vosk (`vendor/vosk/`, Apache-2.0, English command words; the 41 MB model loads the first time hands-free is turned on). Web fonts fall back to system fonts.
+- **Offline:** everything works without the internet when the page is served from localhost. three.js r160 is bundled in `vendor/three/` (MIT); hands-free voice commands run on the device with Vosk (`vendor/vosk/`, Apache-2.0, English command words; the 41 MB model loads the first time hands-free is turned on, so turn it on once before a demo). Voice cues use the voices installed on the computer. Web fonts fall back to system fonts. Messages to Earth are simulated, so nothing is sent anywhere.
+- On GitHub Pages the app keeps working offline while the page stays open, but there is no offline cache yet, so a reload needs the internet.
 - Opening `index.html` by double-click also works, but browsers block local module files there, so the 3D body then loads three.js from the jsDelivr CDN (internet needed for 3D only).
 - Hands-free commands need microphone permission, so serve the page over **https** (GitHub Pages) or localhost. If the offline engine cannot load, the app falls back to the browser's Web Speech API (Chrome or Edge, network needed).
 - If the 3D body cannot load, every other feature still works.
